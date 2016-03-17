@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# gnx -- algorithms for graphs and networks
+# Copyright (C) 2016 Minh Van Nguyen <mvngu.name AT gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, see <http://www.gnu.org/licenses/>.
+
+# Enable the full test suite.  This script does the following in order to
+# enable the full test suite:
+#
+# (1) Insert hooks into the gnx library as well as the build system of gnx.
+#     The inserted hooks allow us to test that gnx correctly handles
+#     out-of-memory scenarios.
+
+###########################################################################
+# how to use this script
+###########################################################################
+
+# How to use this script.
+usage() {
+    cat << EOF
+usage: $0 options
+
+Enable the full test suite.
+
+OPTIONS:
+-h --help       Show this message.
+-a --installoc  Whether to have src/alloc.h as part of the installed public
+                interface.  Possible values are: yes | no
+EOF
+}
+
+# Get command line arguments.
+INSTALL_ALLOC=""
+args=$(getopt --longoptions "help,installoc:" -o "ha:" -- "$@")
+eval set -- "$args"
+while test "$#" -ge 1; do
+    case "$1" in
+        --)
+            # no more options
+            shift
+            break
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -a|--installoc)
+            INSTALL_ALLOC="$2"
+            shift
+            ;;
+    esac
+    shift
+done
+
+# Sanity checks.
+if test -z x"$INSTALL_ALLOC"; then
+    usage
+    exit 1
+fi
+if test x"$INSTALL_ALLOC" != x"yes" && test x"$INSTALL_ALLOC" != x"no"; then
+    usage
+    exit 1
+fi
+
+###########################################################################
+# start here
+###########################################################################
+
+rootdir=@abs_top_srcdir@
+srcdir="$rootdir"/src
+testdir="$rootdir"/tests
+
+# Compile gnx with our custom wrappers to various library functions.  With
+# wrappers to library functions, we can test certain behaviors of gnx such as
+# whether gnx correctly handles low-memory scenarios.  To use our wrapper
+# functions, we need to insert a number of hooks into the gnx library as well
+# as the build system of gnx.
+
+scriptdir="$testdir"/scripts/hook
+
+script="$scriptdir"/src_gnx.py
+target="$srcdir"/gnx.h
+@PYTHON@ "$script" --target "$target" --installoc "$INSTALL_ALLOC"
+
+script="$scriptdir"/src_makefile.py
+target="$srcdir"/Makefile.am
+@PYTHON@ "$script" --target "$target" --installoc "$INSTALL_ALLOC"
+
+script="$scriptdir"/tests_makefile.py
+target="$testdir"/Makefile.am
+@PYTHON@ "$script" --target "$target"

@@ -1,0 +1,123 @@
+{
+   g_hash_table_new_full/g_malloc0
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+}
+{
+   g_hash_table_new_full/g_private_get
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_private_get
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+}
+
+{
+   g_log/malloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_private_get
+   fun:g_get_charset
+   fun:g_log_default_handler
+   fun:g_logv
+   fun:g_log
+}
+{
+   g_log/g_malloc0
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_get_charset
+   fun:g_log_default_handler
+   fun:g_logv
+   fun:g_log
+}
+{
+   g_log/g_private_get
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_private_get
+   fun:g_logv
+   fun:g_log
+}
+{
+   g_log/g_strdup
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_malloc
+   fun:g_strdup
+   fun:g_get_charset
+   fun:g_log_default_handler
+   fun:g_logv
+   fun:g_log
+}
+
+{
+   g_ptr_array_new_full/g_malloc0
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_ptr_array_new_full
+}
+{
+   g_ptr_array_new_full/g_private_get
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:g_private_get
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_ptr_array_new_full
+}
+{
+   g_random_double
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_rand_new_with_seed_array
+   fun:g_rand_new
+   fun:g_random_double
+}
+{
+   g_random_double_range
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_rand_new_with_seed_array
+   fun:g_rand_new
+   fun:g_random_double_range
+}
+{
+   g_random_int
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_rand_new_with_seed_array
+   fun:g_rand_new
+   fun:g_random_int
+}
+{
+   g_random_int_range
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:g_malloc0
+   fun:g_rand_new_with_seed_array
+   fun:g_rand_new
+   fun:g_random_int_range
+}

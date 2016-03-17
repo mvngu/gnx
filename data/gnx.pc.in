@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: gnx
+Description: algorithms for graphs and networks
+Version: @VERSION@
+Libs: -L${libdir} -lgnx
+Cflags: -I${includedir}/gnx
