@@ -88,7 +88,7 @@ testdir="$rootdir"/test
 # functions, we need to insert a number of hooks into the gnx library as well
 # as the build system of gnx.
 
-scriptdir="$testdir"/scripts/hook
+scriptdir="$testdir"/script/hook
 
 script="$scriptdir"/src_gnx.py
 target="$srcdir"/gnx.h
