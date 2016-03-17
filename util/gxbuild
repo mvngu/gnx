@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+# gnx -- algorithms for graphs and networks
+# Copyright (C) 2016 Minh Van Nguyen <mvngu.name AT gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, see <http://www.gnu.org/licenses/>.
+
+# Compile gnx from scratch.
+#
+# You must run this script from the gnx root directory.
+#
+# This script builds gnx with a set of compiler flags that are useful for
+# catching a lot of bugs.  You can use this script to see whether your changes
+# to gnx result in a clean build.
+
+PROJECT=gnx && declare -r PROJECT
+UTILDIR=$(dirname "$0") && declare -r UTILDIR
+ROOTDIR=$(dirname "$UTILDIR") && declare -r ROOTDIR
+
+cd "$ROOTDIR"
+test -f autogen.sh || {
+    echo "Run this script in the top-level ${PROJECT} directory."
+    exit 1
+}
+bootstrap=$(realpath autogen.sh) && declare -r bootstrap
+
+###########################################################################
+# how to use this script
+###########################################################################
+
+# How to use this script.
+usage() {
+    cat << EOF
+usage: $0 options
+
+Compile gnx from scratch.
+
+OPTIONS:
+-h --help     Show this message.
+-a --gassert  Do we enable glib assertions?  Possible values: yes | no
+-c --gcov     Build with gcov to enable coverage analysis of gnx and its
+              test suite.  Possible values: yes | no
+EOF
+}
+
+# Get command line arguments.
+ASSERT=""
+GCOV=""
+args=$(getopt --longoptions "help,gassert:,gcov:" -o "ha:c:" -- "$@")
+eval set -- "$args"
+while [[ "$#" -ge 1 ]]; do
+    case "$1" in
+        --)
+            # no more options
+            shift
+            break
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -a|--gassert)
+            ASSERT="$2"
+            shift
+            ;;
+        -c|--gcov)
+            GCOV="$2"
+            shift
+            ;;
+    esac
+    shift
+done
+
+# Sanity checks.
+if [[ -z "$ASSERT" ]] || [[ -z "$GCOV" ]]; then
+    usage
+    exit 1
+fi
+if [[ "$ASSERT" != "yes" ]] && [[ "$ASSERT" != "no" ]]; then
+    usage
+    exit 1
+fi
+if [[ "$GCOV" != "yes" ]] && [[ "$GCOV" != "no" ]]; then
+    usage
+    exit 1
+fi
+declare -r ASSERT
+declare -r GCOV
+
+###########################################################################
+# script starts here
+###########################################################################
+
+# Compiles gnx from scratch.
+#
+# @param $1 Whether to build with glib assertions.  Most functions in gnx
+#        are written with assertion functions from glib.  Assertions are one
+#        form of sanity checks to document our assumptions via code rather
+#        than via comments.  A wrong assumption would result in an assert error
+#        and gnx aborts.  For performance, you can disable glib assertions.
+# @param $2 Whether to build with gcov for coverage analysis of gnx and its
+#        test suite.
+main() {
+    local arch
+    local assert
+    local chartype
+    local color
+    local coverage
+    local debug
+    local mycflags
+    local optimize
+    local prefix
+    local standard
+    local warning
+
+    assert="$1" && declare -r assert
+    coverage="$2" && declare -r coverage
+    arch="-m64 -march=native -mtune=native" && declare -r arch
+    chartype="-funsigned-char"
+    color="-fdiagnostics-color=always" && declare -r color
+    debug="-g" && declare -r debug
+    optimize="-O2" && declare -r optimize
+    standard="-std=c99 -ansi -pedantic-errors" && declare -r standard
+    warning="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion"
+    warning="${warning} -Wdeclaration-after-statement -Wextra -Wfloat-equal"
+    warning="${warning} -Wformat -Wformat-nonliteral -Wformat-security"
+    warning="${warning} -Winline -Wlogical-op -Wmissing-declarations"
+    warning="${warning} -Wmissing-format-attribute -Wmissing-prototypes"
+    warning="${warning} -Wno-overlength-strings -Wpointer-arith -Wshadow"
+    warning="${warning} -Wstrict-prototypes"
+    warning="${warning} -Wwrite-strings" && declare -r warning
+    mycflags="${arch} ${chartype} ${color} ${debug} ${optimize} ${standard}"
+    mycflags="${mycflags} ${warning}"
+
+    if [[ "$assert" == "yes" ]]; then
+        mycflags="${mycflags} -UG_DISABLE_ASSERT"
+    elif [[ "$assert" == "no" ]]; then
+        mycflags="${mycflags} -DG_DISABLE_ASSERT"
+    else
+        usage
+        exit 1
+    fi
+
+    if [[ "$coverage" == "yes" ]]; then
+        mycflags="${mycflags} -fprofile-arcs -ftest-coverage"
+    fi
+    declare -r mycflags
+
+    prefix="${HOME}/usr" && declare -r prefix
+
+    "$UTILDIR"/gxclean                                                     \
+        && "$bootstrap"                                                    \
+        && env CFLAGS="$mycflags" ./configure                              \
+               --prefix="$prefix"                                          \
+               --enable-full-testsuite                                     \
+               --enable-install-alloc                                      \
+        && make
+
+    return 0
+}
+
+main "$ASSERT" "$GCOV"

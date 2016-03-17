@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+# gnx -- algorithms for graphs and networks
+# Copyright (C) 2016 Minh Van Nguyen <mvngu.name AT gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, see <http://www.gnu.org/licenses/>.
+
+# Tell git to track some files or to remove some changes from those files.
+
+###########################################################################
+# how to use this script
+###########################################################################
+
+# How to use this script.
+usage() {
+    cat << EOF
+usage: $0 options
+
+Tell git to track a bunch of files or to remove some changes.
+
+OPTIONS:
+-h --help       Show this message.
+-r --root path  The top-level project directory of gnx.
+-a --add        Tell git to track a bunch of files.  Cannot use this option
+                together with --checkout.
+-c --checkout   Tell git to remove changes from a bunch of files.  Cannot use
+                this option together with --add
+EOF
+}
+
+# Get command line arguments.
+ROOTDIR=""
+ADD=""
+CHECKOUT=""
+args=$(getopt --longoptions "help,root:,add,checkout" -o "hr:ac" -- "$@")
+eval set -- "$args"
+while [[ "$#" -ge 1 ]]; do
+    case "$1" in
+        --)
+            # no more options
+            shift
+            break
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -r|--root)
+            ROOTDIR="$2"
+            shift
+            ;;
+        -a|--add)
+            ADD="yes"
+            shift
+            ;;
+        -c|--checkout)
+            CHECKOUT="yes"
+            shift
+            ;;
+    esac
+    shift
+done
+
+# Sanity checks.
+if [[ -z "$ROOTDIR" ]]; then
+    usage
+    exit 1
+fi
+if [[ -n "$ADD" ]] && [[ -n "$CHECKOUT" ]]; then
+    usage
+    exit 1
+fi
+declare -r ROOTDIR
+declare -r ADD
+declare -r CHECKOUT
+
+###########################################################################
+# start here
+###########################################################################
+
+PROJECT=gnx && declare -r PROJECT
+
+cd "$ROOTDIR"
+test -f autogen.sh || {
+    echo "Run this script in the top-level ${PROJECT} directory."
+    exit 1
+}
+
+declare -a files=(                                                         \
+    src/gnx.h                                                              \
+        src/Makefile.am                                                    \
+        tests/Makefile.am)
+
+if [[ "$ADD" == "yes" ]]; then
+    git add "${files[@]}"
+fi
+
+if [[ "$CHECKOUT" == "yes" ]]; then
+    git checkout "${files[@]}"
+fi
