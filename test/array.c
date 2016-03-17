@@ -132,12 +132,6 @@ new_no_memory(void)
     assert(!gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS));
     assert(ENOMEM == errno);
 
-    /* cannot allocate memory for the array cells */
-    /* alloc_size++; */
-    /* gnx_alloc_set_limit(alloc_size); */
-    /* assert(!gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS)); */
-    /* assert(ENOMEM == errno); */
-
     gnx_alloc_reset_limit();
 #endif
 }
