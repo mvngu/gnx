@@ -6,4 +6,4 @@ SUBDIRS =                                                                  \
 	build                                                              \
 	doc                                                                \
 	src                                                                \
-	tests
+	test

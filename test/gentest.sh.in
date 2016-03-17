@@ -80,7 +80,7 @@ fi
 
 rootdir=@abs_top_srcdir@
 srcdir="$rootdir"/src
-testdir="$rootdir"/tests
+testdir="$rootdir"/test
 
 # Compile gnx with our custom wrappers to various library functions.  With
 # wrappers to library functions, we can test certain behaviors of gnx such as
@@ -98,6 +98,6 @@ script="$scriptdir"/src_makefile.py
 target="$srcdir"/Makefile.am
 @PYTHON@ "$script" --target "$target" --installoc "$INSTALL_ALLOC"
 
-script="$scriptdir"/tests_makefile.py
+script="$scriptdir"/test_makefile.py
 target="$testdir"/Makefile.am
 @PYTHON@ "$script" --target "$target"
