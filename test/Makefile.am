@@ -20,4 +20,5 @@ AM_CPPFLAGS =                                                              \
 	$(NULL)
 ### GNX_HOOK:D_ALLOC_TEST
 
-test_programs =
+test_programs =                                                            \
+	array

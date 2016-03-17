@@ -15,14 +15,19 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GNX_H
-#define GNX_H
+#ifndef GNX_ARRAY_H
+#define GNX_ARRAY_H
 
-#define GNX_H_INSIDE
+#if !defined(GNX_H_INSIDE) && !defined(GNX_COMPILATION)
+#error "Only <gnx.h> can be included directly."
+#endif
 
-#include "array.h"
-/* GNX_HOOK:ALLOC_H */
+#include "type.h"
 
-#undef GNX_H_INSIDE
+/* create and destroy */
+void gnx_destroy_array(GnxArray *array);
+GnxArray* gnx_init_array(void);
+GnxArray* gnx_init_array_full(const unsigned int *capacity,
+                              const GnxBool destroy);
 
-#endif  /* GNX_H */
+#endif  /* GNX_ARRAY_H */

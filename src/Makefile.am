@@ -2,16 +2,16 @@ lib_LTLIBRARIES = libgnx.la
 
 MAIN_HEADERFILE = gnx.h
 
-GNX_HEADERFILES =
+GNX_HEADERFILES =                                                          \
+	array.h
 ### GNX_HOOK:ALLOC_H
 
-noinst_HEADERS =                                                           \
-	algo.h                                                             \
-	sanity.h
+noinst_HEADERS =
 ### GNX_HOOK:NO_INSTALL_ALLOC_H
 noinst_HEADERS += alloc.h
 
-GNX_SRC =
+GNX_SRC =                                                                  \
+	array.c
 ### GNX_HOOK:ALLOC_C
 
 libgnx_la_SOURCES =                                                        \
