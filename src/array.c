@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "array.h"
+#include "sanity.h"
 
 /**
  * @file array.h
@@ -33,6 +34,55 @@
  * an array with a default capacity.  Destroy an array via the function
  * gnx_destroy_array().
  */
+
+/**
+ * @brief Appends an element to an array.
+ *
+ * The array might possibly be resized to accommodate the element.  Even after
+ * a resize, the capacity of the array must not exceed #GNX_MAXIMUM_ELEMENTS.
+ *
+ * @param array We want to append an element to this array.
+ * @param elem Append this element to the given array.  We do not make a copy
+ *        of this element, but only copy the pointer.  Thus it is your
+ *        responsibility to ensure that the element exists at least for the
+ *        duration of the array itself.
+ * @return Nonzero if the given element is successfully appended to the array;
+ *         zero otherwise.  If we are unable to allocate memory, then we set
+ *         @c errno to @c ENOMEM and return zero.
+ */
+int
+gnx_array_append(GnxArray *array,
+                 int *elem)
+{
+    gnxintptr *new_cell;
+    unsigned int new_capacity;
+
+    errno = 0;
+    gnx_i_check_array(array);
+    g_return_if_fail(elem);
+
+    /* Possibly resize the array by doubling the current capacity. */
+    if (array->size >= array->capacity) {
+        new_capacity = array->capacity << 1;
+        g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
+
+        new_cell = (gnxintptr *)realloc(array->cell,
+                                        new_capacity * sizeof(gnxintptr));
+        if (!new_cell) {
+            errno = ENOMEM;
+            return GNX_FAILURE;
+        }
+
+        array->capacity = new_capacity;
+        array->cell = new_cell;
+    }
+
+    /* Append the element to the array. */
+    array->cell[array->size] = elem;
+    (array->size)++;
+
+    return GNX_SUCCESS;
+}
 
 /**
  * @brief Destroys an array of integers.
