@@ -47,6 +47,10 @@
                                   * allocation size must be a power of 2.
                                   */
 
+#define GNX_FAILURE (0)  /**< @hideinitializer
+                          * Signifies that an operation has failed.
+                          */
+
 #define GNX_MAXIMUM_ELEMENTS                                               \
     ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
                                   * The maximum number of elements in a
@@ -54,6 +58,11 @@
                                   * value depends on the maximum value of an
                                   * @c int type.
                                   */
+
+#define GNX_SUCCESS (!GNX_FAILURE)  /**< @hideinitializer
+                                     * Signifies that an operation was
+                                     * successful.
+                                     */
 
 /**************************************************************************
  * enumerations
