@@ -1,0 +1,156 @@
+/* gnx -- algorithms for graphs and networks
+ * Copyright (C) 2016 Minh Van Nguyen <mvngu.name AT gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <errno.h>
+#include <stdlib.h>
+
+#include "queue.h"
+
+/**
+ * @file queue.h
+ * @brief Queue of integers.
+ *
+ * A queue does not make its own copy of any element that is appended to it.
+ * Rather, the queue copies the pointer that is passed in and stores that
+ * pointer.  It is your responsibility to ensure that any element that is
+ * appended to the queue exists for the duration of the queue itself.  For
+ * further details on the queue data structure, see the
+ * <a href="https://en.wikipedia.org/wiki/Queue_(abstract_data_type)">Wikipedia article</a>.
+ *
+ * Use the function gnx_init_queue() or gnx_init_queue_full() to initialize a
+ * new queue of integers.  Destroy a queue via the function gnx_destroy_queue().
+ */
+
+/**
+ * @brief Destroys a queue of integers.
+ *
+ * @param queue We want to destroy this queue.  The queue must have been
+ *        initialized via gnx_init_queue() or gnx_init_queue_full().
+ */
+void
+gnx_destroy_queue(GnxQueue *queue)
+{
+    unsigned int i;
+
+    if (!queue)
+        return;
+    if (queue->cell) {
+        if (GNX_FREE_ELEMENTS & queue->free_elem) {
+            for (i = 0; i < queue->size; i++) {
+                if (queue->cell[i]) {
+                    free(queue->cell[i]);
+                    queue->cell[i] = NULL;
+                }
+            }
+        }
+        free(queue->cell);
+        queue->cell = NULL;
+    }
+    free(queue);
+    queue = NULL;
+}
+
+/**
+ * @brief Initializes a queue of integers.
+ *
+ * The queue is initialized with default settings.  In particular, the queue is
+ * set to not release the memory of its elements when you destroy the queue via
+ * the function gnx_destroy_queue().  It is your responsibility to ensure that
+ * any element appended to the queue exists for the duration of the queue and
+ * that you must release the memory of the elements as necessary.
+ *
+ * @return An initialized queue.  Note that you are responsible for releasing
+ *         the memory of elements in the queue.  See the return value of
+ *         gnx_init_queue_full().
+ */
+GnxQueue*
+gnx_init_queue(void)
+{
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+    return gnx_init_queue_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+}
+
+/**
+ * @brief Initializes a queue of integers.
+ *
+ * @sa gnx_init_queue() Initializes a queue with default settings.
+ *
+ * @param capacity The initial capacity of the queue.  This is assumed to be a
+ *        positive power of two, but must not exceed #GNX_MAXIMUM_ELEMENTS.  A
+ *        large initial capacity ensures that we do not need to constantly
+ *        resize the queue when we append a large number of elements.
+ * @param destroy Whether to release the memory of each element as part of the
+ *        destroy procedure.  Possible values are #GNX_FREE_ELEMENTS or
+ *        #GNX_DONT_FREE_ELEMENTS.  If #GNX_FREE_ELEMENTS, then calling the
+ *        function gnx_destroy_queue() will release the memory of each element
+ *        of the queue, in addition to destroying the queue itself.  This
+ *        option should only be used if each element to be appended has memory
+ *        that is allocated on the heap, i.e. via @c calloc(), @c malloc(), or
+ *        @c realloc().  Using this option with stack memory will result in
+ *        undefined behavior. If #GNX_DONT_FREE_ELEMENTS, then it is your
+ *        responsibility to release the memory of each element in the queue.
+ *        You can also use this option if each element has memory that is
+ *        allocated on the stack.
+ * @return An initialized queue of integers with zero elements and the given
+ *         capacity.  When you no longer need the queue, you must destroy the
+ *         queue via the function gnx_destroy_queue(). If we are unable to
+ *         allocate memory, then @c errno is set to @c ENOMEM and we return
+ *         @c NULL.
+ */
+GnxQueue*
+gnx_init_queue_full(const unsigned int *capacity,
+                    const GnxBool destroy)
+{
+    GnxQueue *queue;
+
+    errno = 0;
+    g_return_if_fail(capacity);
+    g_return_if_fail((*capacity > 1) && (*capacity <= GNX_MAXIMUM_ELEMENTS));
+    /* If n > 1 is an unsigned integer, then n is a power of two provided that
+     *
+     * n & (n - 1) == 0
+     *
+     * If n > 1 is a power of two, then its binary representation has exactly
+     * one bit set to 1 at some position k and all other bits are set to 0.
+     * Then the integer n - 1 has all bits from position 0 to k - 1 set to 1.
+     * Thus the bit-wise AND of n and n - 1 must be zero.
+     */
+    g_return_if_fail(!((*capacity) & (*capacity - 1)));
+    g_return_if_fail((GNX_FREE_ELEMENTS & destroy)
+                     || (GNX_DONT_FREE_ELEMENTS & destroy));
+
+    queue = (GnxQueue *)malloc(sizeof(GnxQueue));
+    if (!queue)
+        goto cleanup;
+
+    queue->free_elem = destroy;
+    queue->i = 0;
+    queue->j = 0;
+    queue->size = 0;
+    queue->capacity = *capacity;
+    queue->cell
+        = (gnxintptr *)malloc(sizeof(gnxintptr) * queue->capacity);
+    if (!queue->cell)
+        goto cleanup;
+
+    return queue;
+
+cleanup:
+    errno = ENOMEM;
+    gnx_destroy_queue(queue);
+    return NULL;
+}

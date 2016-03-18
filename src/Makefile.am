@@ -3,7 +3,8 @@ lib_LTLIBRARIES = libgnx.la
 MAIN_HEADERFILE = gnx.h
 
 GNX_HEADERFILES =                                                          \
-	array.h
+	array.h                                                            \
+	queue.h
 ### GNX_HOOK:ALLOC_H
 
 noinst_HEADERS =                                                           \
@@ -13,6 +14,7 @@ noinst_HEADERS += alloc.h
 
 GNX_SRC =                                                                  \
 	array.c                                                            \
+	queue.c                                                            \
 	sanity.c
 ### GNX_HOOK:ALLOC_C
 

@@ -108,4 +108,18 @@ typedef struct {
     gnxintptr *cell;        /**< The actual array of integers. */
 } GnxArray;
 
+/**
+ * @brief A queue of integers.
+ */
+typedef struct {
+    GnxBool free_elem;      /**< Whether to release the memory of each element
+                             * in the queue.
+                             */
+    unsigned int i;         /**< The index of the head of the queue. */
+    unsigned int j;         /**< The index of the tail of the queue. */
+    unsigned int size;      /**< How many elements are in the queue. */
+    unsigned int capacity;  /**< The maximum possible number of elements. */
+    gnxintptr *cell;        /**< An array of the elements of the queue. */
+} GnxQueue;
+
 #endif  /* GNX_TYPE_H */

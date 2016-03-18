@@ -21,4 +21,5 @@ AM_CPPFLAGS =                                                              \
 ### GNX_HOOK:D_ALLOC_TEST
 
 test_programs =                                                            \
-	array
+	array                                                              \
+	queue
