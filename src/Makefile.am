@@ -6,12 +6,14 @@ GNX_HEADERFILES =                                                          \
 	array.h
 ### GNX_HOOK:ALLOC_H
 
-noinst_HEADERS =
+noinst_HEADERS =                                                           \
+	sanity.h
 ### GNX_HOOK:NO_INSTALL_ALLOC_H
 noinst_HEADERS += alloc.h
 
 GNX_SRC =                                                                  \
-	array.c
+	array.c                                                            \
+	sanity.c
 ### GNX_HOOK:ALLOC_C
 
 libgnx_la_SOURCES =                                                        \
