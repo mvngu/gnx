@@ -85,6 +85,34 @@ gnx_array_append(GnxArray *array,
 }
 
 /**
+ * @brief Removes the last element of an array.
+ *
+ * @param array We want to remove the last element of this array.  If you
+ *        initialized the array with #GNX_DONT_FREE_ELEMENTS, then only the
+ *        pointer is removed.  We do not release the memory that the pointer
+ *        references.  It is your responsibility to ensure that the memory that
+ *        the pointer references is released when no longer needed.  If the
+ *        array was initialized with #GNX_FREE_ELEMENTS, then we will release
+ *        the memory that the element occupies.
+ * @return Nonzero if we successfully removed the last element of the array;
+ *         zero otherwise.  If the array is empty, then we return zero.
+ */
+int
+gnx_array_delete_tail(GnxArray *array)
+{
+    gnx_i_check_array(array);
+    if (!array->size)
+        return GNX_FAILURE;
+
+    (array->size)--;
+    if (GNX_FREE_ELEMENTS & array->free_elem)
+        free(array->cell[array->size]);
+    array->cell[array->size] = NULL;
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Whether an array contains a given element.
  *
  * We perform a linear search in the array.  The time complexity is @f$O(n)@f$
