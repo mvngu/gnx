@@ -34,4 +34,8 @@ GnxArray* gnx_init_array_full(const unsigned int *capacity,
 int gnx_array_append(GnxArray *array,
                      int *elem);
 
+/* query */
+int gnx_array_has(const GnxArray *array,
+                  const int *elem);
+
 #endif  /* GNX_ARRAY_H */

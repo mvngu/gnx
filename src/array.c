@@ -85,6 +85,36 @@ gnx_array_append(GnxArray *array,
 }
 
 /**
+ * @brief Whether an array contains a given element.
+ *
+ * We perform a linear search in the array.  The time complexity is @f$O(n)@f$
+ * for an array with @f$n@f$ elements.
+ *
+ * @param array Search this array for an element.
+ * @param elem Whether the given array has this element.
+ * @return Nonzero if the given element is in the array; zero otherwise.  If
+ *         the array is empty, then we return zero.
+ */
+int
+gnx_array_has(const GnxArray *array,
+              const int *elem)
+{
+    unsigned int i;
+
+    gnx_i_check_array(array);
+    g_return_if_fail(elem);
+    if (!array->size)
+        return GNX_FAILURE;
+
+    for (i = 0; i < array->size; i++) {
+        if (*elem == *(array->cell[i]))
+            return GNX_SUCCESS;
+    }
+
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Destroys an array of integers.
  *
  * @param array We want to destroy this array.  The array must have been

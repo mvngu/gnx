@@ -35,6 +35,14 @@ static void append_no_memory(void);
 static void append_resize(void);
 static void append_three(void);
 
+/* has an element: search */
+static void has_empty(void);
+static void has_first(void);
+static void has_last(void);
+static void has_middle(void);
+static void has_not(void);
+static void has_random(void);
+
 /* new: create and destroy */
 static void new_capacity_256(void);
 static void new_capacity_default(void);
@@ -159,6 +167,161 @@ append_three(void)
 }
 
 /**************************************************************************
+ * has an element: search
+ *************************************************************************/
+
+static void
+has(void)
+{
+    has_empty();
+    has_first();
+    has_last();
+    has_middle();
+    has_not();
+    has_random();
+}
+
+/* Search for an element in an empty array.
+ */
+static void
+has_empty(void)
+{
+    GnxArray *array;
+    const int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    array = gnx_init_array();
+    assert(0 == array->size);
+    assert(!gnx_array_has(array, &elem));
+
+    gnx_destroy_array(array);
+}
+
+/* Search for an element that is at the start of the array.
+ */
+static void
+has_first(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const int target = a;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+    assert(gnx_array_has(array, &target));
+
+    gnx_destroy_array(array);
+}
+
+/* Search for an element that is at the end of the array.
+ */
+static void
+has_last(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const int target = c;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+    assert(gnx_array_has(array, &target));
+
+    gnx_destroy_array(array);
+}
+
+/* Search for an element that is in the middle of the array.
+ */
+static void
+has_middle(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const int target = b;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+    assert(gnx_array_has(array, &target));
+
+    gnx_destroy_array(array);
+}
+
+/* Search for an element that is not in the array.
+ */
+static void
+has_not(void)
+{
+    GnxArray *array;
+    int *elem, target;
+    const unsigned int capacity = 64;
+    const unsigned int size = (unsigned int)g_random_int_range(4, 51);
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+
+    /* Append a bunch of random elements to the array. */
+    while (array->size < size) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_array_append(array, elem));
+    }
+    assert(size == array->size);
+
+    /* Generate an element that is not in the array. */
+    do {
+        target = (int)g_random_int_range(INT_MIN, INT_MAX);
+    } while (gnx_array_has(array, &target));
+
+    assert(!gnx_array_has(array, &target));
+
+    gnx_destroy_array(array);
+}
+
+/* Search for a random element in the array.
+ */
+static void
+has_random(void)
+{
+    GnxArray *array;
+    int *elem, target;
+    const int high = 100;
+    const int low = -100;
+    const unsigned int capacity = 64;
+    const unsigned int size = (unsigned int)g_random_int_range(4, 51);
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+
+    /* Append a bunch of random elements to the array. */
+    while (array->size < size) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(low, high);
+        assert(gnx_array_append(array, elem));
+    }
+    assert(size == array->size);
+
+    /* Generate a random element that is in the array. */
+    do {
+        target = (int)g_random_int_range(low, high);
+    } while (!gnx_array_has(array, &target));
+
+    assert(gnx_array_has(array, &target));
+
+    gnx_destroy_array(array);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -270,6 +433,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/array/append", append);
+    g_test_add_func("/array/has", has);
     g_test_add_func("/array/new", new);
 
     return g_test_run();
