@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>  /* memmove */
 
 #include "array.h"
 #include "sanity.h"
@@ -85,7 +86,63 @@ gnx_array_append(GnxArray *array,
 }
 
 /**
+ * @brief Removes an element from an array.
+ *
+ * After a successful removal of the element at index @f$i@f$, all elements
+ * from index @f$i + 1@f$ upward will be shifted down by one position.
+ *
+ * @sa gnx_array_delete_tail() Removes the tail element of an array.
+ *
+ * @param array We want to remove an element from this array.
+ * @param i Remove from the array the element at this index.  The index must be
+ *        less than the size of the array.  If you initialized the array with
+ *        #GNX_DONT_FREE_ELEMENTS, then only the pointer is removed.  We do not
+ *        remove the memory that the pointer references.  It is your
+ *        responsibility to ensure that the memory that the pointer references
+ *        is released when no longer needed.  If the array was initialized with
+ *        #GNX_FREE_ELEMENTS, then we will release the memory that the element
+ *        occupies.
+ * @return Nonzero if we successfully removed the element at the given index;
+ *         zero otherwise.  If the array is empty, then we return zero.
+ */
+int
+gnx_array_delete(GnxArray *array,
+                 const unsigned int *i)
+{
+    unsigned int ncell;
+    unsigned int size;
+
+    gnx_i_check_array(array);
+    g_return_if_fail(i);
+
+    size = array->size;
+    if (!size)
+        return GNX_FAILURE;
+
+    g_return_if_fail(*i < size);
+    if ((1 == size) || (*i == (size - 1)))
+        return gnx_array_delete_tail(array);
+
+    /* The number of cells to shift downward can be computed as the number of
+     * cells from index i + 1 to the index of the last cell (which is the size
+     * of the array minus one).  Hence the formula:
+     *
+     * #cells to shift down = (index of last cell) - (index of target cell)
+     */
+    if (GNX_FREE_ELEMENTS & array->free_elem)
+        free(array->cell[*i]);
+    ncell = size - 1 - (*i);
+    (void)memmove(&(array->cell[*i]), &(array->cell[*i + 1]),
+                  sizeof(gnxintptr) * ncell);
+    (array->size)--;
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Removes the last element of an array.
+ *
+ * @sa gnx_array_delete() Removes an array element given a position index.
  *
  * @param array We want to remove the last element of this array.  If you
  *        initialized the array with #GNX_DONT_FREE_ELEMENTS, then only the

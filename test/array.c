@@ -35,6 +35,13 @@ static void append_no_memory(void);
 static void append_resize(void);
 static void append_three(void);
 
+/* delete an element */
+static void delete_empty(void);
+static void delete_first(void);
+static void delete_last(void);
+static void delete_middle(void);
+static void delete_random(void);
+
 /* delete the tail element */
 static void delete_tail_empty(void);
 static void delete_tail_free(void);
@@ -168,6 +175,137 @@ append_three(void)
     assert(a == *(array->cell[0]));
     assert(b == *(array->cell[1]));
     assert(c == *(array->cell[2]));
+
+    gnx_destroy_array(array);
+}
+
+/**************************************************************************
+ * delete an element
+ *************************************************************************/
+
+static void
+delete(void)
+{
+    delete_empty();
+    delete_first();
+    delete_last();
+    delete_middle();
+    delete_random();
+}
+
+/* Deletes an element from an empty array.
+ */
+static void
+delete_empty(void)
+{
+    GnxArray *array;
+    const unsigned int i = 0;
+
+    array = gnx_init_array();
+    assert(0 == array->size);
+    assert(!gnx_array_delete(array, &i));
+    assert(0 == array->size);
+
+    gnx_destroy_array(array);
+}
+
+/* Delete the first element.
+ */
+static void
+delete_first(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int i = 0;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+
+    assert(gnx_array_delete(array, &i));
+    assert(2 == array->size);
+    assert(b == *(array->cell[0]));
+    assert(c == *(array->cell[1]));
+
+    gnx_destroy_array(array);
+}
+
+/* Delete the last element.
+ */
+static void
+delete_last(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int i = 2;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+
+    assert(gnx_array_delete(array, &i));
+    assert(2 == array->size);
+    assert(a == *(array->cell[0]));
+    assert(b == *(array->cell[1]));
+
+    gnx_destroy_array(array);
+}
+
+/* Delete the middle element.
+ */
+static void
+delete_middle(void)
+{
+    GnxArray *array;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int i = 1;
+
+    array = gnx_init_array();
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+
+    assert(gnx_array_delete(array, &i));
+    assert(2 == array->size);
+    assert(a == *(array->cell[0]));
+    assert(c == *(array->cell[1]));
+
+    gnx_destroy_array(array);
+}
+
+/* Delete a random element of an array.
+ */
+static void
+delete_random(void)
+{
+    GnxArray *array;
+    int *elem;
+    unsigned int i;
+    const unsigned int capacity = 32;
+    const unsigned int size = (unsigned int)g_random_int_range(4, 33);
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_array_append(array, elem));
+    }
+    assert(size == array->size);
+
+    i = (unsigned int)g_random_int_range(0, (int)size);
+    assert(gnx_array_delete(array, &i));
+    assert((size - 1) == array->size);
 
     gnx_destroy_array(array);
 }
@@ -547,6 +685,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/array/append", append);
+    g_test_add_func("/array/delete", delete);
     g_test_add_func("/array/delete-tail", delete_tail);
     g_test_add_func("/array/has", has);
     g_test_add_func("/array/new", new);
