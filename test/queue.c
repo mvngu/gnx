@@ -132,6 +132,8 @@ append_no_memory(void)
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_queue_append(queue, elem));
     assert(ENOMEM == errno);
+    assert(size == queue->size);
+    assert(queue->size == queue->capacity);
 
     free(elem);
     gnx_destroy_queue(queue);
