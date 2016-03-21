@@ -17,8 +17,10 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>  /* memcpy */
 
 #include "queue.h"
+#include "sanity.h"
 
 /**
  * @file queue.h
@@ -153,4 +155,116 @@ cleanup:
     errno = ENOMEM;
     gnx_destroy_queue(queue);
     return NULL;
+}
+
+/**
+ * @brief Appends an element to a queue.
+ *
+ * We assume that the current number of elements in the queue is less than
+ * #GNX_MAXIMUM_ELEMENTS.
+ *
+ * @param queue We want to append an element to this queue.
+ * @param elem Append this element to the given queue.  It is your
+ *        responsibility to ensure that this element exists for the duration of
+ *        the queue.
+ * @return Nonzero if we successfully appended the element to the queue; zero
+ *         otherwise.  If we are unable to allocate memory, then we set
+ *         @c errno to @c ENOMEM and return zero.
+ */
+int
+gnx_queue_append(GnxQueue *queue,
+                 int *elem)
+{
+    gnxintptr *new_cell;
+    unsigned int ncell, new_capacity;
+
+    gnx_i_check_queue(queue);
+    g_return_if_fail(elem);
+    g_return_if_fail(queue->size < GNX_MAXIMUM_ELEMENTS);
+
+    /* The queue is empty.  The given element is now the head of the queue. */
+    if (!queue->size) {
+        queue->cell[0] = elem;
+        queue->i = 0;  /* Index of the head. */
+        queue->j = 0;  /* Index of the tail. */
+        queue->size = 1;
+        return GNX_SUCCESS;
+    }
+
+    /* Possibly resize the queue by doubling the current capacity. */
+    if (queue->size >= queue->capacity) {
+        new_capacity = queue->capacity << 1;
+        g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
+        new_cell = (gnxintptr *)malloc(sizeof(gnxintptr) * new_capacity);
+        if (!new_cell) {
+            errno = ENOMEM;
+            return GNX_FAILURE;
+        }
+
+        /* Copy elements over to the new array.  Let i be the index of the head
+         * of the queue and let j be the index of the tail of the queue.  Let s
+         * be the size of the queue and let c be the capacity of the queue.
+         */
+        if (queue->i <= queue->j) {
+            /* If i <= j, then the queue has not wrapped around the array.
+             * Thus we only need to copy the block of memory between the
+             * indices i and j, inclusive.  Then i <= j and s >= c if and only
+             * if i = 0 and j = s - 1.  We do not need to reset i and j after
+             * the copy operation.
+             */
+            g_assert(!queue->i);
+            g_assert(queue->j == (queue->size - 1));
+            (void)memcpy(&(new_cell[0]), &(queue->cell[0]),
+                         sizeof(gnxintptr) * (queue->size));
+        } else {
+            /* If i > j, then the queue has wrapped around the array and so we
+             * need to copy two blocks of memory.  The first block of memory is
+             * from i to the index of the last element in the array.  The
+             * second block of memory is from 0 to j.  With s and c as above,
+             * we have i > j and s >= c if and only if j = i - 1.  After the
+             * copy operation, we must set i = 0 and j = s - 1.
+             */
+            g_assert(queue->j == (queue->i - 1));
+            ncell = queue->size - queue->i;
+            (void)memcpy(&(new_cell[0]), &(queue->cell[queue->i]),
+                         sizeof(gnxintptr) * ncell);
+            (void)memcpy(&(new_cell[ncell]), &(queue->cell[0]),
+                         sizeof(gnxintptr) * (queue->j + 1));
+        }
+
+        free(queue->cell);
+        queue->cell = new_cell;
+        queue->capacity = new_capacity;
+        queue->i = 0;
+        queue->j = queue->size - 1;
+    }
+
+    /* Now append the element to the queue. */
+    if (queue->i <= queue->j) {
+        /* If i <= j, then we need to consider two cases. */
+        if (queue->j < (queue->capacity - 1)) {
+            /* The first case is that j < c - 1.  In this case, we have not yet
+             * reached the end of the array.  The new element is simply
+             * inserted at position j + 1.
+             */
+            (queue->j)++;
+        } else {
+            /* In the second case, we have j = c - 1 and thus we have reached
+             * the end of the array.  Here, we need to wrap around and insert
+             * the new element at position 0.  Of course we assume that 0 < i.
+             */
+            g_assert(queue->i > 0);
+            queue->j = 0;
+        }
+    } else {
+        /* If i > j, then the array has already wrapped around.  In this case,
+         * we have j < i - 1.  The new element is inserted at position j + 1.
+         */
+        g_assert(queue->j < (queue->i - 1));
+        (queue->j)++;
+    }
+    queue->cell[queue->j] = elem;
+    (queue->size)++;
+
+    return GNX_SUCCESS;
 }

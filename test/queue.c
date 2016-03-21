@@ -29,12 +29,172 @@
  * prototypes for internal helper functions
  *************************************************************************/
 
+/* append */
+static void append_empty(void);
+static void append_maximum(void);
+static void append_no_memory(void);
+static void append_random(void);
+static void append_resize(void);
+
 /* new: create and destroy */
 static void new_capacity_512(void);
 static void new_default_capacity(void);
 static void new_free(void);
 static void new_minimum_capacity(void);
 static void new_no_memory(void);
+
+/**************************************************************************
+ * append
+ *************************************************************************/
+
+static void
+append(void)
+{
+    append_empty();
+    append_maximum();
+    append_no_memory();
+    append_random();
+    append_resize();
+}
+
+/* Append an element to an empty queue.
+ */
+static void
+append_empty(void)
+{
+    GnxQueue *queue;
+    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    queue = gnx_init_queue();
+    assert(gnx_queue_append(queue, &elem));
+    assert(1 == queue->size);
+    assert(0 == queue->i);
+    assert(0 == queue->j);
+    assert(elem == *(queue->cell[0]));
+
+    gnx_destroy_queue(queue);
+}
+
+/* Fill a queue to capacity without triggering a resize.
+ */
+static void
+append_maximum(void)
+{
+    GnxQueue *queue;
+    int *list;
+    unsigned int i;
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
+
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+    assert(0 == queue->i);
+    assert((size - 1) == queue->j);
+
+    for (i = 0; i < size; i++)
+        assert(list[i] == *(queue->cell[i]));
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
+
+/* Test the function gnx_queue_append() in low-memory scenarios.
+ */
+static void
+append_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxQueue *queue;
+    int alloc_size, *elem;
+    unsigned int i;
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
+
+    /* Populate a queue to capacity. */
+    queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, elem));
+    }
+    assert(size == queue->size);
+    assert(queue->size == queue->capacity);
+
+    /* Cannot allocate memory to resize the queue. */
+    elem = (int *)malloc(sizeof(int));
+    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    alloc_size = 0;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_queue_append(queue, elem));
+    assert(ENOMEM == errno);
+
+    free(elem);
+    gnx_destroy_queue(queue);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Fill a queue with a random number of elements.
+ */
+static void
+append_random(void)
+{
+    GnxQueue *queue;
+    int *elem;
+    unsigned int i;
+    const int high = (int)GNX_DEFAULT_ALLOC_SIZE;
+    const int low = 2;
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+    const unsigned int size = (unsigned int)g_random_int_range(low, high);
+
+    assert(size < GNX_DEFAULT_ALLOC_SIZE);
+    queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, elem));
+    }
+    assert(size == queue->size);
+    assert(0 == queue->i);
+    assert((size - 1) == queue->j);
+
+    gnx_destroy_queue(queue);
+}
+
+/* Trigger a resize of a queue.
+ */
+static void
+append_resize(void)
+{
+    GnxQueue *queue;
+    int *list;
+    unsigned int i;
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE + 1;
+
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+    assert((GNX_DEFAULT_ALLOC_SIZE << 1) == queue->capacity);
+    assert(0 == queue->i);
+    assert((size - 1) == queue->j);
+
+    for (i = 0; i < size; i++)
+        assert(list[i] == *(queue->cell[i]));
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
 
 /**************************************************************************
  * new: create and destroy
@@ -158,6 +318,7 @@ main(int argc,
 {
     g_test_init(&argc, &argv, NULL);
 
+    g_test_add_func("/queue/append", append);
     g_test_add_func("/queue/new", new);
 
     return g_test_run();

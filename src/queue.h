@@ -30,4 +30,8 @@ GnxQueue* gnx_init_queue(void);
 GnxQueue* gnx_init_queue_full(const unsigned int *capacity,
                               const GnxBool destroy);
 
+/* insert and remove */
+int gnx_queue_append(GnxQueue *queue,
+                     int *elem);
+
 #endif  /* GNX_QUEUE_H */
