@@ -36,3 +36,16 @@ gnx_i_check_array(const GnxArray *array)
     g_return_if_fail(array->cell);
     g_return_if_fail(array->capacity > 1);
 }
+
+/**
+ * @brief Some sanity checks on a queue.
+ *
+ * @param queue The queue to check.
+ */
+void
+gnx_i_check_queue(const GnxQueue *queue)
+{
+    g_return_if_fail(queue);
+    g_return_if_fail(queue->cell);
+    g_return_if_fail(queue->capacity > 1);
+}

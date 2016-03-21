@@ -25,5 +25,6 @@
 #include "type.h"
 
 void gnx_i_check_array(const GnxArray *array);
+void gnx_i_check_queue(const GnxQueue *queue);
 
 #endif  /* GNX_SANITY_H */
