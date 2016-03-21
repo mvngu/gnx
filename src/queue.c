@@ -268,3 +268,22 @@ gnx_queue_append(GnxQueue *queue,
 
     return GNX_SUCCESS;
 }
+
+/**
+ * @brief Peeks at the head of the queue.
+ *
+ * Peeking at an element should not modify the element or the queue in any way.
+ *
+ * @param queue We want to peek at the element at the head of this queue.
+ * @return The element at the head of the queue.  If the queue is empty, then
+ *         we return @c NULL.
+ */
+int*
+gnx_queue_peek(const GnxQueue *queue)
+{
+    gnx_i_check_queue(queue);
+    if (!queue->size)
+        return NULL;
+
+    return queue->cell[queue->i];
+}

@@ -43,6 +43,11 @@ static void new_free(void);
 static void new_minimum_capacity(void);
 static void new_no_memory(void);
 
+/* peek */
+static void peek_empty(void);
+static void peek_one(void);
+static void peek_random(void);
+
 /**************************************************************************
  * append
  *************************************************************************/
@@ -311,6 +316,89 @@ new_no_memory(void)
 }
 
 /**************************************************************************
+ * peek
+ *************************************************************************/
+
+static void
+peek(void)
+{
+    peek_empty();
+    peek_one();
+    peek_random();
+}
+
+/* Peek at an empty queue.
+ */
+static void
+peek_empty(void)
+{
+    GnxQueue *queue;
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+
+    queue = gnx_init_queue();
+    assert(0 == queue->size);
+    assert(capacity == queue->capacity);
+    assert(!gnx_queue_peek(queue));
+    assert(0 == queue->size);
+    assert(capacity == queue->capacity);
+
+    gnx_destroy_queue(queue);
+}
+
+/* Peek at a queue that has one element.
+ */
+static void
+peek_one(void)
+{
+    GnxQueue *queue;
+    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+
+    queue = gnx_init_queue();
+    assert(gnx_queue_append(queue, &elem));
+    assert(1 == queue->size);
+    assert(capacity == queue->capacity);
+    assert(elem == *gnx_queue_peek(queue));
+    assert(1 == queue->size);
+    assert(capacity == queue->capacity);
+
+    gnx_destroy_queue(queue);
+}
+
+/* Peek at a queue that has a random number of elements.
+ */
+static void
+peek_random(void)
+{
+    GnxQueue *queue;
+    int *elem, *first;
+    unsigned int i;
+    const unsigned int capacity = 32;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 33);
+
+    assert(size <= capacity);
+    queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
+
+    first = (int *)malloc(sizeof(int));
+    *first = (int)g_random_int_range(INT_MIN, INT_MAX);
+    assert(gnx_queue_append(queue, first));
+
+    for (i = 1; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, elem));
+    }
+    assert(size == queue->size);
+    assert(capacity == queue->capacity);
+
+    assert(*first == *gnx_queue_peek(queue));
+    assert(size == queue->size);
+    assert(capacity == queue->capacity);
+
+    gnx_destroy_queue(queue);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -322,6 +410,7 @@ main(int argc,
 
     g_test_add_func("/queue/append", append);
     g_test_add_func("/queue/new", new);
+    g_test_add_func("/queue/peek", peek);
 
     return g_test_run();
 }
