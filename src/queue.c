@@ -287,3 +287,80 @@ gnx_queue_peek(const GnxQueue *queue)
 
     return queue->cell[queue->i];
 }
+
+/**
+ * @brief Removes the head of the queue.
+ *
+ * After an element is removed from the head of the queue, it is your
+ * responsibility to ensure that you release the memory of that element (as
+ * appropriate).
+ *
+ * @param queue We want to remove the head of this queue.
+ * @return The element that was previously at the head of the queue.  If the
+ *         queue is empty, then we return @c NULL.
+ */
+int*
+gnx_queue_pop(GnxQueue *queue)
+{
+    int *elem, *head;
+    unsigned int idx;
+
+    gnx_i_check_queue(queue);
+    if (!queue->size)
+        return NULL;
+
+    elem = queue->cell[queue->i];
+    queue->cell[queue->i] = NULL;
+
+    if (1 == queue->size) {
+        queue->i = 0;
+        queue->j = 0;
+        queue->size = 0;
+        return elem;
+    }
+
+    g_assert(queue->size > 1);
+    /* Let i and j be the head and tail indices, respectively, of the queue.
+     * Let s and c be the size and capacity, respectively, of the queue.
+     */
+    if (queue->i < queue->j) {
+        /* If i < j, then we have not wrapped around the array.  In that case,
+         * we set the head to NULL and increment i by one.
+         */
+        (queue->i)++;
+    } else {
+        /* The index of the last element in the array. */
+        idx = queue->capacity - 1;
+
+        /* Note that i =/= j since the queue has at least two elements.  If
+         * i > j, then we have wrapped around the array.  Here, we have two
+         * cases to consider.
+         */
+        if (queue->i < idx) {
+            /* If i < c - 1, then we simply set the head to NULL and increment
+             * i by one.
+             */
+            (queue->i)++;
+        } else {
+            /* If i = c - 1, then the head must wrap around to the beginning of
+             * the array.  That is, we set the head to NULL and set i = 0.
+             */
+            queue->i = 0;
+        }
+    }
+    (queue->size)--;
+
+    /* If the size of the queue is now 1, then we move the only remaining
+     * element to the start of the array.
+     */
+    if (1 == queue->size) {
+        g_assert(queue->i == queue->j);
+        head = queue->cell[queue->i];
+        queue->cell[queue->i] = NULL;
+        queue->cell[0] = head;
+        queue->i = 0;
+        queue->j = 0;
+    }
+
+    return elem;
+}

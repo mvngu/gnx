@@ -48,6 +48,14 @@ static void peek_empty(void);
 static void peek_one(void);
 static void peek_random(void);
 
+/* pop */
+static void pop_empty(void);
+static void pop_maximum(void);
+static void pop_one(void);
+static void pop_random(void);
+static void pop_resize_wrap(void);
+static void pop_wrap(void);
+
 /**************************************************************************
  * append
  *************************************************************************/
@@ -399,6 +407,228 @@ peek_random(void)
 }
 
 /**************************************************************************
+ * pop
+ *************************************************************************/
+
+static void
+pop(void)
+{
+    pop_empty();
+    pop_maximum();
+    pop_one();
+    pop_random();
+    pop_resize_wrap();
+    pop_wrap();
+}
+
+/* Pop from an empty queue.
+ */
+static void
+pop_empty(void)
+{
+    GnxQueue *queue;
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+
+    queue = gnx_init_queue();
+    assert(0 == queue->size);
+    assert(capacity == queue->capacity);
+    assert(!gnx_queue_pop(queue));
+    assert(0 == queue->size);
+    assert(capacity == queue->capacity);
+
+    gnx_destroy_queue(queue);
+}
+
+/* Pop from a queue that has been populated to capacity.
+ */
+static void
+pop_maximum(void)
+{
+    GnxQueue *queue;
+    int *elem, *list;
+    unsigned int i;
+    const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
+    const unsigned int size = capacity;
+
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    /* Populate the queue to capacity. */
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+    assert(capacity == queue->capacity);
+    assert(0 == queue->i);
+    assert((size - 1) == queue->j);
+
+    /* Pop until empty. */
+    i = 0;
+    while (queue->size) {
+        elem = gnx_queue_pop(queue);
+        assert(elem);
+        assert(*elem == list[i]);
+        i++;
+    }
+    assert(0 == queue->size);
+    assert(capacity == queue->capacity);
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
+
+/* Pop from a queue that has one element.
+ */
+static void
+pop_one(void)
+{
+    GnxQueue *queue;
+    int *elem;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    queue = gnx_init_queue();
+    assert(gnx_queue_append(queue, &a));
+    assert(1 == queue->size);
+
+    elem = gnx_queue_pop(queue);
+    assert(a == *elem);
+    assert(0 == queue->size);
+    assert(0 == queue->i);
+    assert(0 == queue->j);
+
+    gnx_destroy_queue(queue);
+}
+
+/* Pop from a queue that has a random number of elements.
+ */
+static void
+pop_random(void)
+{
+    GnxQueue *queue;
+    int *list;
+    unsigned int i;
+    const int high = GNX_DEFAULT_ALLOC_SIZE + 1;
+    const int low = 2;
+    const unsigned int size = (unsigned int)g_random_int_range(low, high);
+
+    assert(size <= GNX_DEFAULT_ALLOC_SIZE);
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+
+    /* Pop down to only one element. */
+    while (queue->size > 1)
+        assert(gnx_queue_pop(queue));
+    assert(1 == queue->size);
+    assert(0 == queue->i);
+    assert(0 == queue->j);
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
+
+/* Get a queue to wrap around and then trigger a resize.
+ */
+static void
+pop_resize_wrap(void)
+{
+    GnxQueue *queue;
+    int elem, *list;
+    unsigned int i;
+    const unsigned int pop_size = (unsigned int)g_random_int_range(5, 21);
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
+
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    /* Populate to capacity. */
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+
+    /* Pop a random number of elements. */
+    for (i = 0; i < pop_size; i++)
+        assert(gnx_queue_pop(queue));
+
+    /* Insert the same number of random elements. */
+    for (i = 0; i < pop_size; i++)
+        assert(gnx_queue_append(queue, &(list[i])));
+
+    /* Trigger a resize.  After the resize, the head of the queue now has
+     * index 0.
+     */
+    assert(size == queue->size);
+    assert(queue->i);
+    elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    assert(GNX_DEFAULT_ALLOC_SIZE == queue->capacity);
+    assert(gnx_queue_append(queue, &elem));
+    assert(0 == queue->i);
+    assert(size == queue->j);
+    assert((size + 1) == queue->size);
+    assert((GNX_DEFAULT_ALLOC_SIZE << 1) == queue->capacity);
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
+
+/* Get a queue to wrap around.
+ */
+static void
+pop_wrap(void)
+{
+    GnxQueue *queue;
+    int *elem, *list;
+    unsigned int i;
+    const unsigned int pop_size = (unsigned int)g_random_int_range(1, 21);
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
+
+    list = (int *)malloc(sizeof(int) * size);
+    queue = gnx_init_queue();
+
+    /* Populate to capacity. */
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_queue_append(queue, &(list[i])));
+    }
+    assert(size == queue->size);
+
+    /* Pop a random number of elements. */
+    for (i = 0; i < pop_size; i++)
+        assert(gnx_queue_pop(queue));
+    assert((size - pop_size) == queue->size);
+    assert(pop_size == queue->i);
+    assert((size - 1) == queue->j);
+
+    /* Insert the same number of random elements. */
+    for (i = 0; i < pop_size; i++)
+        assert(gnx_queue_append(queue, &(list[i])));
+    assert(size == queue->size);
+    assert(pop_size == queue->i);
+    assert((queue->i - 1) == queue->j);
+
+    /* Compare elements. */
+    i = pop_size;
+    while (queue->size) {
+        elem = gnx_queue_pop(queue);
+        assert(*elem == list[i]);
+        i++;
+        if (i >= size)
+            i = 0;
+    }
+
+    free(list);
+    gnx_destroy_queue(queue);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -411,6 +641,7 @@ main(int argc,
     g_test_add_func("/queue/append", append);
     g_test_add_func("/queue/new", new);
     g_test_add_func("/queue/peek", peek);
+    g_test_add_func("/queue/pop", pop);
 
     return g_test_run();
 }

@@ -33,6 +33,7 @@ GnxQueue* gnx_init_queue_full(const unsigned int *capacity,
 /* insert and remove */
 int gnx_queue_append(GnxQueue *queue,
                      int *elem);
+int* gnx_queue_pop(GnxQueue *queue);
 
 /* query */
 int* gnx_queue_peek(const GnxQueue *queue);
