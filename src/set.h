@@ -15,17 +15,18 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GNX_H
-#define GNX_H
+#ifndef GNX_SET_H
+#define GNX_SET_H
 
-#define GNX_H_INSIDE
+#if !defined(GNX_H_INSIDE) && !defined(GNX_COMPILATION)
+#error "Only <gnx.h> can be included directly."
+#endif
 
-#include "array.h"
-#include "queue.h"
-#include "set.h"
-#include "stack.h"
-/* GNX_HOOK:ALLOC_H */
+#include "type.h"
 
-#undef GNX_H_INSIDE
+/* create and destroy */
+void gnx_destroy_set(GnxSet *set);
+GnxSet* gnx_init_set(void);
+GnxSet* gnx_init_set_full(const GnxBool destroy);
 
-#endif  /* GNX_H */
+#endif  /* GNX_SET_H */

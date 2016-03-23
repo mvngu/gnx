@@ -88,6 +88,7 @@ typedef enum {
  *************************************************************************/
 
 typedef int* gnxintptr;  /**< An @c int pointer. */
+typedef void* gnxptr;    /**< An untyped pointer. */
 
 /**************************************************************************
  * data structures
@@ -121,6 +122,46 @@ typedef struct {
     unsigned int capacity;  /**< The maximum possible number of elements. */
     gnxintptr *cell;        /**< An array of the elements of the queue. */
 } GnxQueue;
+
+/**
+ * @brief A set of integers.
+ *
+ * The set is implemented as a hash table with only keys and no values.
+ * Collision is resolved via separate chaining.  We use the universal family of
+ * hash functions introduced by Woelfel @cite Woelfel2003; for further details
+ * see the
+ * <a href="https://en.wikipedia.org/wiki/Universal_hashing">Wikipedia article</a>.
+ */
+typedef struct {
+    GnxBool free_elem;      /**< Whether the set can directly free its own
+                             * elements as part of the destroy procedure.
+                             */
+    unsigned int k;         /**< The exponent that is used to compute the
+                             * number of buckets.
+                             */
+    unsigned int capacity;  /**< How many buckets.  This must be a power of 2.
+                             */
+    unsigned int size;      /**< How many entries in the set. */
+    gnxptr *bucket;         /**< The array of buckets. */
+    unsigned int b;         /**< How many bits are used to represent the
+                             * <tt>unsigned int</tt> type.
+                             */
+    unsigned int d;         /**< The difference @f$b - k@f$. */
+    unsigned int a;         /**< Parameter of the hash function.  This is an
+                             * odd integer that is chosen uniformly at random
+                             * from the range @f$[1,\, 2^b - 1]@f$, where
+                             * @f$b@f$ is the number of bits in the
+                             * representation of an <tt>unsigned int</tt> type.
+                             */
+    unsigned int c;         /**< Parameter of the hash function.  This is an
+                             * integer that is chosen uniformly at random from
+                             * the range @f$[0,\, 2^{b-k} - 1]@f$, where
+                             * @f$b@f$ is the number of bits in the
+                             * representation of an <tt>unsigned int</tt> type
+                             * and @f$k@f$ is the exponent for computing the
+                             * number of buckets.
+                             */
+} GnxSet;
 
 /**
  * @brief A stack of integers.

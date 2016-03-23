@@ -23,4 +23,5 @@ AM_CPPFLAGS =                                                              \
 test_programs =                                                            \
 	array                                                              \
 	queue                                                              \
+	set                                                                \
 	stack
