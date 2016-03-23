@@ -36,6 +36,11 @@ static void new_free(void);
 static void new_minimum_capacity(void);
 static void new_no_memory(void);
 
+/* pop */
+static void pop_empty(void);
+static void pop_one(void);
+static void pop_random(void);
+
 /* push */
 static void push_empty(void);
 static void push_no_memory(void);
@@ -145,6 +150,79 @@ new_no_memory(void)
 }
 
 /**************************************************************************
+ * pop
+ *************************************************************************/
+
+static void
+pop(void)
+{
+    pop_empty();
+    pop_one();
+    pop_random();
+}
+
+static void
+pop_empty(void)
+{
+    GnxStack *stack;
+
+    stack = gnx_init_stack();
+    assert(0 == stack->size);
+    assert(!gnx_stack_pop(stack));
+    assert(0 == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+static void
+pop_one(void)
+{
+    GnxStack *stack;
+    int a, *b;
+
+    a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    stack = gnx_init_stack();
+    assert(gnx_stack_push(stack, &a));
+    assert(1 == stack->size);
+
+    b = gnx_stack_pop(stack);
+    assert(a == *b);
+    assert(0 == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+static void
+pop_random(void)
+{
+    GnxStack *stack;
+    int *elem, *list;
+    unsigned int i;
+    const unsigned int capacity = 32;
+    const unsigned int size = (unsigned int)g_random_int_range(32, 51);
+
+    list = (int *)malloc(sizeof(int) * size);
+    stack = gnx_init_stack_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_stack_push(stack, &(list[i])));
+    }
+    assert(size == stack->size);
+
+    i = size - 1;
+    while (stack->size) {
+        elem = gnx_stack_pop(stack);
+        assert(*elem == list[i]);
+        i--;
+    }
+    assert(0 == stack->size);
+
+    free(list);
+    gnx_destroy_stack(stack);
+}
+
+/**************************************************************************
  * push
  *************************************************************************/
 
@@ -244,6 +322,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/stack/new", new);
+    g_test_add_func("/stack/pop", pop);
     g_test_add_func("/stack/push", push);
 
     return g_test_run();

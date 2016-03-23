@@ -31,6 +31,7 @@ GnxStack* gnx_init_stack_full(const unsigned int *capacity,
                               const GnxBool destroy);
 
 /* insert and delete */
+int* gnx_stack_pop(GnxStack *stack);
 int gnx_stack_push(GnxStack *stack,
                    int *elem);
 

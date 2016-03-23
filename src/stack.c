@@ -130,6 +130,34 @@ cleanup:
 }
 
 /**
+ * @brief Pops an element off a stack.
+ *
+ * @param stack We want to pop an element off this stack.  The stack must not
+ *        be empty.
+ * @return The element at the top of the stack.  It is your responsibility to
+ *         ensure that when you no longer need the element, you release the
+ *         memory of the element as appropriate.  If the stack is empty, then
+ *         we return @c NULL.
+ */
+int*
+gnx_stack_pop(GnxStack *stack)
+{
+    int *elem;
+
+    gnx_i_check_stack(stack);
+    if (!stack->size)
+        return NULL;
+
+    (stack->size)--;
+    elem = stack->array->cell[stack->size];
+    stack->array->cell[stack->size] = NULL;
+    (stack->array->size)--;
+    g_assert(stack->size == stack->array->size);
+
+    return elem;
+}
+
+/**
  * @brief Pushes an element on top of a stack.
  *
  * @param stack We want to push an element onto this stack.
