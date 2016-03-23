@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "array.h"
+#include "sanity.h"
 #include "stack.h"
 
 /**
@@ -126,4 +127,36 @@ cleanup:
     errno = ENOMEM;
     gnx_destroy_stack(stack);
     return NULL;
+}
+
+/**
+ * @brief Pushes an element on top of a stack.
+ *
+ * @param stack We want to push an element onto this stack.
+ * @param elem Push this element onto the given stack.  It is your
+ *        responsibility to ensure that this element exists for the duration of
+ *        the stack.  With this element, the size of the stack must not exceed
+ *        #GNX_MAXIMUM_ELEMENTS.  In other words, we assume that the current
+ *        size of the stack is less than #GNX_MAXIMUM_ELEMENTS.
+ * @return Nonzero if we successfully pushed the given element onto the stack;
+ *         zero otherwise.  If we are unable to allocate memory, then we set
+ *         @c errno to @c ENOMEM and return zero.
+ */
+int
+gnx_stack_push(GnxStack *stack,
+               int *elem)
+{
+    errno = 0;
+    gnx_i_check_stack(stack);
+    g_return_if_fail(elem);
+    g_return_if_fail(stack->size < GNX_MAXIMUM_ELEMENTS);
+
+    if (!gnx_array_append(stack->array, elem)) {
+        errno = ENOMEM;
+        return GNX_FAILURE;
+    }
+
+    (stack->size)++;
+    g_assert(stack->size == stack->array->size);
+    return GNX_SUCCESS;
 }

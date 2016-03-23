@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <gnx.h>
 
@@ -34,6 +35,11 @@ static void new_default_capacity(void);
 static void new_free(void);
 static void new_minimum_capacity(void);
 static void new_no_memory(void);
+
+/* push */
+static void push_empty(void);
+static void push_no_memory(void);
+static void push_random(void);
 
 /**************************************************************************
  * new: create and destroy
@@ -139,6 +145,95 @@ new_no_memory(void)
 }
 
 /**************************************************************************
+ * push
+ *************************************************************************/
+
+static void
+push(void)
+{
+    push_empty();
+    push_no_memory();
+    push_random();
+}
+
+/* Push an element onto an empty stack.
+ */
+static void
+push_empty(void)
+{
+    GnxStack *stack;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    stack = gnx_init_stack();
+    assert(0 == stack->size);
+    assert(gnx_stack_push(stack, &a));
+    assert(1 == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+/* Test the function gnx_stack_push() under low-memory scenarios.
+ */
+static void
+push_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxStack *stack;
+    int alloc_size, *elem;
+    unsigned int i;
+    const unsigned int capacity = 16;
+    const unsigned int size = capacity;
+
+    stack = gnx_init_stack_full(&capacity, GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_stack_push(stack, elem));
+    }
+    assert(size == stack->size);
+
+    /* Cannot allocate memory for a stack element. */
+    elem = (int *)malloc(sizeof(int));
+    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    alloc_size = 0;
+    gnx_alloc_set_limit(alloc_size);
+    assert(size == stack->size);
+    assert(!gnx_stack_push(stack, elem));
+    assert(ENOMEM == errno);
+    assert(size == stack->size);
+
+    free(elem);
+    gnx_destroy_stack(stack);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Push a random number of elements onto a stack.
+ */
+static void
+push_random(void)
+{
+    GnxStack *stack;
+    int *elem;
+    unsigned int i;
+    const unsigned int capacity = 32;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 33);
+
+    assert(size <= capacity);
+    stack = gnx_init_stack_full(&capacity, GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_stack_push(stack, elem));
+    }
+    assert(size == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -149,6 +244,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/stack/new", new);
+    g_test_add_func("/stack/push", push);
 
     return g_test_run();
 }
