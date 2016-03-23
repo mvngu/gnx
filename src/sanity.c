@@ -49,3 +49,15 @@ gnx_i_check_queue(const GnxQueue *queue)
     g_return_if_fail(queue->cell);
     g_return_if_fail(queue->capacity > 1);
 }
+
+/**
+ * @brief Some sanity checks for a stack.
+ *
+ * @param stack Perform some sanity checks on this stack.
+ */
+void
+gnx_i_check_stack(const GnxStack *stack)
+{
+    g_return_if_fail(stack);
+    gnx_i_check_array(stack->array);
+}
