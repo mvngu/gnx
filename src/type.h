@@ -122,4 +122,12 @@ typedef struct {
     gnxintptr *cell;        /**< An array of the elements of the queue. */
 } GnxQueue;
 
+/**
+ * @brief A stack of integers.
+ */
+typedef struct {
+    GnxArray *array;    /**< The array of elements of the stack. */
+    unsigned int size;  /**< How many elements are in the stack. */
+} GnxStack;
+
 #endif  /* GNX_TYPE_H */
