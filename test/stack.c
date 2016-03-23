@@ -36,6 +36,11 @@ static void new_free(void);
 static void new_minimum_capacity(void);
 static void new_no_memory(void);
 
+/* peek */
+static void peek_empty(void);
+static void peek_one(void);
+static void peek_random(void);
+
 /* pop */
 static void pop_empty(void);
 static void pop_one(void);
@@ -147,6 +152,81 @@ new_no_memory(void)
 
     gnx_alloc_reset_limit();
 #endif
+}
+
+/**************************************************************************
+ * peek
+ *************************************************************************/
+
+static void
+peek(void)
+{
+    peek_empty();
+    peek_one();
+    peek_random();
+}
+
+/* Peek at the top of an empty stack.
+ */
+static void
+peek_empty(void)
+{
+    GnxStack *stack;
+
+    stack = gnx_init_stack();
+    assert(0 == stack->size);
+    assert(!gnx_stack_peek(stack));
+    assert(0 == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+/* Peek at a stack that has one element.
+ */
+static void
+peek_one(void)
+{
+    GnxStack *stack;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int *elem;
+
+    stack = gnx_init_stack();
+    assert(gnx_stack_push(stack, &a));
+    assert(1 == stack->size);
+
+    elem = gnx_stack_peek(stack);
+    assert(a == *elem);
+    assert(1 == stack->size);
+
+    gnx_destroy_stack(stack);
+}
+
+/* Peek at a stack that has a random number of elements.
+ */
+static void
+peek_random(void)
+{
+    GnxStack *stack;
+    int *elem, *list;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    list = (int *)malloc(sizeof(int) * size);
+    stack = gnx_init_stack();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_stack_push(stack, &(list[i])));
+    }
+    assert(size == stack->size);
+
+    elem = gnx_stack_peek(stack);
+    assert(elem);
+    assert(*elem == list[size - 1]);
+    assert(size == stack->size);
+
+    free(list);
+    gnx_destroy_stack(stack);
 }
 
 /**************************************************************************
@@ -322,6 +402,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/stack/new", new);
+    g_test_add_func("/stack/peek", peek);
     g_test_add_func("/stack/pop", pop);
     g_test_add_func("/stack/push", push);
 

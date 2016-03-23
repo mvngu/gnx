@@ -130,6 +130,23 @@ cleanup:
 }
 
 /**
+ * @brief Peeks at the content at the top of a stack.
+ *
+ * @param stack We want to peek at the top of this stack.
+ * @return The element at the top of the given stack.  If the stack is empty,
+ *         then we return @c NULL.
+ */
+int*
+gnx_stack_peek(const GnxStack *stack)
+{
+    gnx_i_check_stack(stack);
+    if (!stack->size)
+        return NULL;
+
+    return stack->array->cell[stack->size - 1];
+}
+
+/**
  * @brief Pops an element off a stack.
  *
  * @param stack We want to pop an element off this stack.  The stack must not

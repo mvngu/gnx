@@ -35,4 +35,7 @@ int* gnx_stack_pop(GnxStack *stack);
 int gnx_stack_push(GnxStack *stack,
                    int *elem);
 
+/* query */
+int* gnx_stack_peek(const GnxStack *stack);
+
 #endif  /* GNX_STACK_H */
