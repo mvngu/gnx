@@ -130,7 +130,7 @@ main() {
     chartype="-funsigned-char"
     color="-fdiagnostics-color=always" && declare -r color
     debug="-g" && declare -r debug
-    optimize="-O2" && declare -r optimize
+    optimize="-O3" && declare -r optimize
     standard="-std=c99 -ansi -pedantic-errors" && declare -r standard
     warning="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion"
     warning="${warning} -Wdeclaration-after-statement -Wextra -Wfloat-equal"
