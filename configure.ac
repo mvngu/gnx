@@ -143,14 +143,14 @@ AC_CONFIG_FILES(
      data/gnx.pc
      doc/Makefile
      src/Makefile
-     test/gentest.sh
-     test/Makefile])
+     tests/gentest.sh
+     tests/Makefile])
 
 AC_OUTPUT
 
 # Assume that we are building with GCC.  If Python is found and we enable the
 # full test suite, then we generate further test code for the test suite.
-testdir=test
+testdir=tests
 if test x"$GCC" = x"yes"; then
     if test x"$HAVE_PYTHON" = x"yes" && test x"$ENABLE_FULL_TEST" = x"yes"; then
         if test -f "$testdir"/gentest.sh; then

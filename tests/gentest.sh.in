@@ -80,7 +80,7 @@ fi
 
 rootdir=@abs_top_srcdir@
 srcdir="$rootdir"/src
-testdir="$rootdir"/test
+testdir="$rootdir"/tests
 
 # Compile gnx with our custom wrappers to various library functions.  With
 # wrappers to library functions, we can test certain behaviors of gnx such as

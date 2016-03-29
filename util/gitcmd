@@ -100,7 +100,7 @@ test -f autogen.sh || {
 declare -a files=(                                                         \
     src/gnx.h                                                              \
         src/Makefile.am                                                    \
-        test/Makefile.am)
+        tests/Makefile.am)
 
 if [[ "$ADD" == "yes" ]]; then
     git add "${files[@]}"
