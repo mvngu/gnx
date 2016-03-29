@@ -26,6 +26,7 @@
 
 void gnx_i_check_array(const GnxArray *array);
 void gnx_i_check_queue(const GnxQueue *queue);
+void gnx_i_check_set(const GnxSet *set);
 void gnx_i_check_stack(const GnxStack *stack);
 
 #endif  /* GNX_SANITY_H */

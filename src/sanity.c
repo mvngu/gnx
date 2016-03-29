@@ -51,6 +51,18 @@ gnx_i_check_queue(const GnxQueue *queue)
 }
 
 /**
+ * @brief Some sanity checks for a set.
+ *
+ * @param set Perform some sanity checks on this set.
+ */
+void
+gnx_i_check_set(const GnxSet *set)
+{
+    g_return_if_fail(set);
+    g_return_if_fail(set->bucket);
+}
+
+/**
  * @brief Some sanity checks for a stack.
  *
  * @param stack Perform some sanity checks on this stack.
