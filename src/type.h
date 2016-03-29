@@ -51,6 +51,13 @@
                           * Signifies that an operation has failed.
                           */
 
+#define GNX_MAXIMUM_BUCKETS                                                \
+    ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
+                                  * The maximum number of buckets in a set or
+                                  * hash table.  This maximum value depends on
+                                  * the maximum value of an @c int type.
+                                  */
+
 #define GNX_MAXIMUM_ELEMENTS                                               \
     ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
                                   * The maximum number of elements in a
