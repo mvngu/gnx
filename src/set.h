@@ -29,4 +29,8 @@ void gnx_destroy_set(GnxSet *set);
 GnxSet* gnx_init_set(void);
 GnxSet* gnx_init_set_full(const GnxBool destroy);
 
+/* insert and remove */
+int gnx_set_add(GnxSet *set,
+                int *elem);
+
 #endif  /* GNX_SET_H */

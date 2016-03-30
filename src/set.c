@@ -15,10 +15,12 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 
 #include "array.h"
+#include "sanity.h"
 #include "set.h"
 
 /**
@@ -34,6 +36,197 @@
  * initialize a set of integers.  Destroy a set via the function
  * gnx_destroy_set().
  */
+
+/**************************************************************************
+ * prototypes for internal helper functions
+ *************************************************************************/
+
+static int* gnx_i_has(const GnxSet *set,
+                      const int *elem,
+                      unsigned int *i,
+                      unsigned int *j);
+static inline unsigned int gnx_i_hash(const int *key,
+                                      const unsigned int *a,
+                                      const unsigned int *c,
+                                      const unsigned int *d);
+static int gnx_i_resize(GnxSet *set);
+
+/**************************************************************************
+ * internal helper functions
+ *************************************************************************/
+
+/**
+ * @brief Whether a set has a given element.
+ *
+ * @param set We want to search in this set.
+ * @param elem Search the set for this element.
+ * @param i This will hold the bucket index to which the element is hashed.  If
+ *        you do not want the bucket index, pass @c NULL.
+ * @param j This will hold the entry index within the bucket where the element
+ *        resides.  If you do not want the entry index, pass @c NULL.
+ * @return A pointer to the given element if the element is in the set; @c NULL
+ *         otherwise.  We also return @c NULL if the set is empty.
+ */
+static int*
+gnx_i_has(const GnxSet *set,
+          const int *elem,
+          unsigned int *i,
+          unsigned int *j)
+{
+    GnxArray *bucket;
+    unsigned int idx, jdx;
+
+    idx = gnx_i_hash(elem, &(set->a), &(set->c), &(set->d));
+    if (i)
+        *i = idx;
+
+    if (!set->size)
+        return NULL;
+
+    bucket = (GnxArray *)(set->bucket[idx]);
+    if (!bucket)
+        return NULL;
+
+    /* Linear search through the entries of the bucket. */
+    for (jdx = 0; jdx < bucket->size; jdx++) {
+        if (*elem == *(bucket->cell[jdx])) {
+            if (j)
+                *j = jdx;
+            return bucket->cell[jdx];
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Hash of the given key.
+ *
+ * @param key We want to hash this key.
+ * @param a A parameter of the hash function.  This is an odd integer.
+ * @param c Another parameter of the hash function.  This is an integer.
+ * @param d Still another parameter of the hash function.  This is the
+ *        difference between the number of bits in the representation of an
+ *        <tt>unsigned int</tt> type, and the exponent that is used to compute
+ *        the number of buckets.
+ * @return The hash of the given key.  This is also the index of a bucket in
+ *         a set.
+ */
+static inline unsigned int
+gnx_i_hash(const int *key,
+           const unsigned int *a,
+           const unsigned int *c,
+           const unsigned int *d)
+{
+    unsigned int x = (unsigned int)(*key);
+    /* Note that the numerator ax + c can wrap around because each operand is
+     * an unsigned int.  We expect the wrap around because the numerator is
+     * meant to be reduced modulo 2^b, where b is the number of bits in the
+     * representation of an unsigned int.  The wrapping behavior of arithmetic
+     * with operands that are unsigned ints is equivalent to arithmetic modulo
+     * 2^b.
+     */
+    return (((*a) * x) + (*c)) >> (*d);
+}
+
+/**
+ * @brief Resize a set.
+ *
+ * The set is resized by doubling its current number of buckets.  Each element
+ * in the set is also rehashed.
+ *
+ * @param set We want to resize this set.
+ * @return Nonzero if the set was successfully resized; zero otherwise.  If we
+ *         are unable to allocate memory, then we set @c errno to @c ENOMEM and
+ *         return zero.
+ */
+static int
+gnx_i_resize(GnxSet *set)
+{
+    GnxArray *new_bucket, *old_bucket;
+    gnxptr *new_bucket_array;
+    int *key;
+    unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
+    const unsigned int bucket_capacity = 2;
+
+    errno = 0;
+    new_k = set->k + 1;
+    new_capacity = set->capacity << 1;
+    g_assert(new_k <= set->b);
+    g_assert((1u << new_k) == new_capacity);
+    g_assert(new_capacity <= GNX_MAXIMUM_BUCKETS);
+    new_d = set->b - new_k;
+
+    /* The parameter a is part of the Woelfel universal family of hash
+     * functions.  The parameter is an odd integer that is chosen uniformly at
+     * random from the range [1, 2^b - 1].
+     */
+    do {
+        new_a = (unsigned int)g_random_int();
+    } while (!(new_a & 1));
+
+    /* The parameter c is part of the Woelfel universal family of hash
+     * functions.  The parameter is an integer that is chosen uniformly at
+     * random from the range [0, 2^(b - k) - 1].
+     */
+    new_c = (unsigned int)g_random_int_range(0, 1 << new_d);
+
+    new_bucket_array = (gnxptr *)calloc(new_capacity, sizeof(gnxptr));
+    if (!new_bucket_array)
+        goto cleanup;
+
+    /* Rehash each entry. */
+    for (i = 0; i < set->capacity; i++) {
+        old_bucket = (GnxArray *)(set->bucket[i]);
+        if (!old_bucket)
+            continue;
+
+        /* Rehash each entry j of the old bucket i.  The entry is then moved
+         * to a new bucket.  Finally, we release the memory for the old bucket.
+         */
+        for (j = 0; j < old_bucket->size; j++) {
+            key = old_bucket->cell[j];
+            idx = gnx_i_hash(key, &new_a, &new_c, &new_d);
+            if (!(new_bucket_array[idx])) {
+                new_bucket
+                    = gnx_init_array_full(&bucket_capacity, set->free_elem);
+                if (!new_bucket)
+                    goto cleanup;
+                new_bucket_array[idx] = new_bucket;
+            }
+            new_bucket = (GnxArray *)(new_bucket_array[idx]);
+            assert(gnx_array_append(new_bucket, key));
+        }
+        gnx_destroy_array(old_bucket);
+        set->bucket[i] = NULL;
+    }
+    free(set->bucket);
+
+    /* Set the new parameters of the set. */
+    set->k = new_k;
+    set->capacity = new_capacity;
+    set->bucket = new_bucket_array;
+    set->d = new_d;
+    set->a = new_a;
+    set->c = new_c;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (new_bucket_array) {
+        for (i = 0; i < new_capacity; i++) {
+            gnx_destroy_array((GnxArray *)(new_bucket_array[i]));
+            new_bucket_array[i] = NULL;
+        }
+        free(new_bucket_array);
+    }
+    return GNX_FAILURE;
+}
+
+/**************************************************************************
+ * public interface
+ *************************************************************************/
 
 /**
  * @brief Destroys a set.
@@ -168,4 +361,81 @@ cleanup:
     errno = ENOMEM;
     gnx_destroy_set(set);
     return NULL;
+}
+
+/**
+ * @brief Inserts an element into a set.
+ *
+ * @param set We want to insert an element into this set.
+ * @param elem Add this element to the set.  It is your responsibility to
+ *        ensure that this element exists for the duration of the set.
+ * @return Nonzero if the element is successfully inserted into the set; zero
+ *         otherwise.  We also return zero if the element is already in the
+ *         set.  For an insertion to be successful, the given element must not
+ *         already be in the set.
+ */
+int
+gnx_set_add(GnxSet *set,
+            int *elem)
+{
+    GnxArray *bucket;
+    int created_bucket = 0;  /* Whether a new bucket has been created. */
+    unsigned int i;
+    const unsigned int capacity = 2;
+
+    errno = 0;
+    gnx_i_check_set(set);
+    g_return_if_fail(elem);
+
+    if (gnx_i_has(set, elem, &i, NULL))
+        return GNX_FAILURE;
+
+    /* Initialize a new empty bucket, which is represented as an array.  Note
+     * that we do not allow the underlying array to release the memory of its
+     * elements.  The destruction and release of memory must be handled by the
+     * function gnx_destroy_set().
+     */
+    if (!(set->bucket[i])) {
+        bucket = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+        if (!bucket)
+            goto cleanup;
+        set->bucket[i] = bucket;
+        created_bucket = 1;
+    }
+
+    bucket = (GnxArray *)(set->bucket[i]);
+    if (!gnx_array_append(bucket, elem))
+        goto cleanup;
+
+    /* Possibly resize the set by doubling the current number of buckets.  The
+     * threshold on the load factor of the set is 3/4.  A resize will not be
+     * triggered provided that
+     *
+     *   n      3
+     * ----- < ---
+     *  2^k     4
+     *
+     * where m = 2^k is the number of buckets.  If b is the number of bits in
+     * the representation of an unsigned int type, then k <= b.  Solving the
+     * inequality for n yields
+     *
+     * n < 3 * (2^(k-2))
+     */
+    if ((set->size + 1) >= (3u << (set->k - 2))) {
+        if (!gnx_i_resize(set)) {
+            assert(gnx_array_delete_tail(bucket));
+            goto cleanup;
+        }
+    }
+    (set->size)++;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (created_bucket) {
+        gnx_destroy_array((GnxArray *)(set->bucket[i]));
+        set->bucket[i] = NULL;
+    }
+    return GNX_FAILURE;
 }
