@@ -111,7 +111,8 @@ gnx_init_set(void)
  *        #GNX_DONT_FREE_ELEMENTS, then you are responsible for releasing the
  *        memory of each element in the set.  You can also use this option if
  *        each element of the set has memory that is allocated on the stack.
- * @return An initialized set.  When you no longer need the set, you must
+ * @return An initialized set whose number of buckets is determined by
+ *         #GNX_DEFAULT_ALLOC_SIZE.  When you no longer need the set, you must
  *         destroy the set via the function gnx_destroy_set().  If we are
  *         unable to allocate memory, then @c errno is set to @c ENOMEM and we
  *         return @c NULL.
