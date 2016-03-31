@@ -76,9 +76,7 @@ def insert_hooks(target, installoc, prefix):
             if line.strip() == ld_hook:
                 code += line
                 invariant = "libgnx_la_CFLAGS += -Wl,--wrap"
-                hook = "%s,g_hash_table_new_full\n" % invariant
-                hook += "%s,g_queue_new\n" % invariant
-                hook += "%s,calloc\n" % invariant
+                hook = "%s,calloc\n" % invariant
                 hook += "%s,malloc\n" % invariant
                 hook += "%s,realloc\n" % invariant
                 code += decorate_hook(hook, begin, tag, end)
