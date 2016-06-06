@@ -120,8 +120,10 @@ gnx_init_queue_full(const unsigned int *capacity,
     GnxQueue *queue;
 
     errno = 0;
-    g_return_if_fail(capacity);
-    g_return_if_fail((*capacity > 1) && (*capacity <= GNX_MAXIMUM_ELEMENTS));
+    g_return_val_if_fail(capacity, NULL);
+    g_return_val_if_fail((*capacity > 1)
+                         && (*capacity <= GNX_MAXIMUM_ELEMENTS),
+                         NULL);
     /* If n > 1 is an unsigned integer, then n is a power of two provided that
      *
      * n & (n - 1) == 0
@@ -131,9 +133,10 @@ gnx_init_queue_full(const unsigned int *capacity,
      * Then the integer n - 1 has all bits from position 0 to k - 1 set to 1.
      * Thus the bit-wise AND of n and n - 1 must be zero.
      */
-    g_return_if_fail(!((*capacity) & (*capacity - 1)));
-    g_return_if_fail((GNX_FREE_ELEMENTS & destroy)
-                     || (GNX_DONT_FREE_ELEMENTS & destroy));
+    g_return_val_if_fail(!((*capacity) & (*capacity - 1)), NULL);
+    g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
+                         || (GNX_DONT_FREE_ELEMENTS & destroy),
+                         NULL);
 
     queue = (GnxQueue *)malloc(sizeof(GnxQueue));
     if (!queue)
@@ -179,8 +182,8 @@ gnx_queue_append(GnxQueue *queue,
     unsigned int ncell, new_capacity;
 
     gnx_i_check_queue(queue);
-    g_return_if_fail(elem);
-    g_return_if_fail(queue->size < GNX_MAXIMUM_ELEMENTS);
+    g_return_val_if_fail(elem, GNX_FAILURE);
+    g_return_val_if_fail(queue->size < GNX_MAXIMUM_ELEMENTS, GNX_FAILURE);
 
     /* The queue is empty.  The given element is now the head of the queue. */
     if (!queue->size) {
