@@ -60,7 +60,7 @@ gnx_array_append(GnxArray *array,
 
     errno = 0;
     gnx_i_check_array(array);
-    g_return_if_fail(elem);
+    g_return_val_if_fail(elem, GNX_FAILURE);
 
     /* Possibly resize the array by doubling the current capacity. */
     if (array->size >= array->capacity) {
@@ -113,13 +113,13 @@ gnx_array_delete(GnxArray *array,
     unsigned int size;
 
     gnx_i_check_array(array);
-    g_return_if_fail(i);
+    g_return_val_if_fail(i, GNX_FAILURE);
 
     size = array->size;
     if (!size)
         return GNX_FAILURE;
 
-    g_return_if_fail(*i < size);
+    g_return_val_if_fail(*i < size, GNX_FAILURE);
     if ((1 == size) || (*i == (size - 1)))
         return gnx_array_delete_tail(array);
 
@@ -187,7 +187,7 @@ gnx_array_has(const GnxArray *array,
     unsigned int i;
 
     gnx_i_check_array(array);
-    g_return_if_fail(elem);
+    g_return_val_if_fail(elem, GNX_FAILURE);
     if (!array->size)
         return GNX_FAILURE;
 
@@ -286,8 +286,10 @@ gnx_init_array_full(const unsigned int *capacity,
     GnxArray *array;
 
     errno = 0;
-    g_return_if_fail(capacity);
-    g_return_if_fail((*capacity > 1) && (*capacity <= GNX_MAXIMUM_ELEMENTS));
+    g_return_val_if_fail(capacity, NULL);
+    g_return_val_if_fail((*capacity > 1)
+                         && (*capacity <= GNX_MAXIMUM_ELEMENTS),
+                         NULL);
     /* If n > 1 is an unsigned integer, then n is a power of two provided that
      *
      * n & (n - 1) == 0
@@ -297,9 +299,10 @@ gnx_init_array_full(const unsigned int *capacity,
      * Then the integer n - 1 has all bits from position 0 to k - 1 set to 1.
      * Thus the bit-wise AND of n and n - 1 must be zero.
      */
-    g_return_if_fail(!((*capacity) & (*capacity - 1)));
-    g_return_if_fail((GNX_FREE_ELEMENTS & destroy)
-                     || (GNX_DONT_FREE_ELEMENTS & destroy));
+    g_return_val_if_fail(!((*capacity) & (*capacity - 1)), NULL);
+    g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
+                         || (GNX_DONT_FREE_ELEMENTS & destroy),
+                         NULL);
 
     array = (GnxArray *)malloc(sizeof(GnxArray));
     if (!array)
