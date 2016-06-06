@@ -131,7 +131,7 @@ main() {
     color="-fdiagnostics-color=always" && declare -r color
     debug="-g" && declare -r debug
     optimize="-O3" && declare -r optimize
-    standard="-std=c99 -ansi -pedantic-errors" && declare -r standard
+    standard="-std=c99 -pedantic-errors" && declare -r standard
     warning="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual -Wconversion"
     warning="${warning} -Wdeclaration-after-statement -Wextra -Wfloat-equal"
     warning="${warning} -Wformat -Wformat-nonliteral -Wformat-security"
