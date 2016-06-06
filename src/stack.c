@@ -193,8 +193,8 @@ gnx_stack_push(GnxStack *stack,
 {
     errno = 0;
     gnx_i_check_stack(stack);
-    g_return_if_fail(elem);
-    g_return_if_fail(stack->size < GNX_MAXIMUM_ELEMENTS);
+    g_return_val_if_fail(elem, GNX_FAILURE);
+    g_return_val_if_fail(stack->size < GNX_MAXIMUM_ELEMENTS, GNX_FAILURE);
 
     if (!gnx_array_append(stack->array, elem)) {
         errno = ENOMEM;
