@@ -385,7 +385,7 @@ gnx_set_add(GnxSet *set,
 
     errno = 0;
     gnx_i_check_set(set);
-    g_return_if_fail(elem);
+    g_return_val_if_fail(elem, GNX_FAILURE);
 
     if (gnx_i_has(set, elem, &i, NULL))
         return GNX_FAILURE;
