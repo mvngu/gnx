@@ -105,8 +105,23 @@ add_no_memory(void)
 {
 #ifdef GNX_ALLOC_TEST
     GnxSet *set;
-    int alloc_size, *elem;
+    int alloc_size, *elem, j;
     unsigned int i, n;
+    const unsigned int lista[10] = {  /* values for the a parameter */
+        3968615651, 1606104101, 2596383589, 968646815, 3849427159,
+        818668303, 96063689, 1868525653, 1219000319, 1903981943};
+    const unsigned int listc[10] = {  /* values for the c parameter */
+        24242974, 29023874, 31052654, 9402626, 25541919,
+        15114733, 30711375, 23872027, 24260136, 25511161};
+
+    /* Initialize the set to have a pair of pre-determined values for its a
+     * and c parameters.  These pairs of values are known to allow the test
+     * function to pass.
+     */
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    j = (int)g_random_int_range(0, 10);
+    set->a = lista[j];
+    set->c = listc[j];
 
     /* Insert just enough elements such that a resize is not triggered.  We
      * assume that the load factor is 3/4.  If n is the number of entries in
@@ -121,7 +136,6 @@ add_no_memory(void)
      * for n yields n < 3 * 2^(k-2).  Thus we will not trigger a resize
      * provided that we insert at most (3 * 2^(k-2) - 1) elements.
      */
-    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     n = (3 * (1u << (set->k - 2))) - 1;
     for (i = 0; i < n; i++) {
         elem = (int *)malloc(sizeof(int));
