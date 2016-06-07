@@ -146,7 +146,7 @@ add_no_memory(void)
     assert(!gnx_set_add(set, elem));
     assert(ENOMEM == errno);
 
-    /* Cannot allocate memory to create a bucket for the bucket array.  */
+    /* Cannot allocate memory to create a bucket for the bucket array. */
     alloc_size++;
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_set_add(set, elem));
