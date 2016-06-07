@@ -98,6 +98,6 @@ script="$scriptdir"/src_makefile.py
 target="$srcdir"/Makefile.am
 @PYTHON@ "$script" --target "$target" --installoc "$INSTALL_ALLOC"
 
-script="$scriptdir"/test_makefile.py
+script="$scriptdir"/tests_makefile.py
 target="$testdir"/Makefile.am
 @PYTHON@ "$script" --target "$target"
