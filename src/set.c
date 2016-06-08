@@ -245,7 +245,7 @@ gnx_destroy_set(GnxSet *set)
     if (set->bucket) {
         for (i = 0; i < set->capacity; i++) {
             bucket = (GnxArray *)(set->bucket[i]);
-            if (bucket) {
+            if (bucket && bucket->cell) {
                 if (GNX_FREE_ELEMENTS & set->free_elem) {
                     for (j = 0; j < bucket->size; j++) {
                         if (bucket->cell[j]) {
