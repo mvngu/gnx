@@ -33,4 +33,8 @@ GnxSet* gnx_init_set_full(const GnxBool destroy);
 int gnx_set_add(GnxSet *set,
                 int *elem);
 
+/* query */
+int* gnx_set_has(const GnxSet *set,
+                 const int *elem);
+
 #endif  /* GNX_SET_H */

@@ -38,6 +38,11 @@ static void add_no_memory(void);
 static void add_one(void);
 static void add_resize(void);
 
+/* has an element */
+static void has_empty(void);
+static void has_member(void);
+static void has_non_member(void);
+
 /* new: create and destroy */
 static void new_dont_free_elements(void);
 static void new_free_elements(void);
@@ -221,6 +226,82 @@ add_resize(void)
 }
 
 /**************************************************************************
+ * has an element
+ *************************************************************************/
+
+static void
+has(void)
+{
+    has_empty();
+    has_member();
+    has_non_member();
+}
+
+/* Search an empty set. */
+static void
+has_empty(void)
+{
+    GnxSet *set;
+    const int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    set = gnx_init_set();
+    assert(0 == set->size);
+    assert(!gnx_set_has(set, &a));
+
+    gnx_destroy_set(set);
+}
+
+/* Search for elements that exist in a set. */
+static void
+has_member(void)
+{
+    GnxSet *set;
+    int *list;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)i;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    for (i = 0; i < size; i++)
+        assert(gnx_set_has(set, &(list[i])));
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/* Search for elements that do not exist in a set. */
+static void
+has_non_member(void)
+{
+    GnxSet *set;
+    int elem, *list;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)i;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    elem = (int)size;
+    assert(!gnx_set_has(set, &elem));
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/**************************************************************************
  * new set: create and destroy
  *************************************************************************/
 
@@ -328,6 +409,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/set/add", add);
+    g_test_add_func("/set/has", has);
     g_test_add_func("/set/new", new);
 
     return g_test_run();

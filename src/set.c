@@ -439,3 +439,20 @@ cleanup:
     }
     return GNX_FAILURE;
 }
+
+/**
+ * @brief Whether a set has a given element.
+ *
+ * @param set We want to search this set.
+ * @param elem Search the set for this element.
+ * @return A pointer to the given element if the element is in the set; @c NULL
+ *         otherwise.  We also return @c NULL if the set is empty.
+ */
+int*
+gnx_set_has(const GnxSet *set,
+            const int *elem)
+{
+    gnx_i_check_set(set);
+    g_return_val_if_fail(elem, NULL);
+    return gnx_i_has(set, elem, NULL, NULL);
+}
