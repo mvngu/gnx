@@ -260,6 +260,9 @@ static void
 new_free_elements(void)
 {
     GnxSet *set;
+    int *elem;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(set);
@@ -272,6 +275,13 @@ new_free_elements(void)
     assert(set->a <= UINT_MAX);
     assert(1 == set->a % 2);
     assert(set->c <= (1u << set->d));
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_set_add(set, elem));
+    }
+    assert(size == set->size);
 
     gnx_destroy_set(set);
 }
