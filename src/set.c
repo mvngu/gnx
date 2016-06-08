@@ -441,6 +441,41 @@ cleanup:
 }
 
 /**
+ * @brief Removes an element from a set.
+ *
+ * @param set We want to remove an element from this set.
+ * @param elem Remove this element from the given set.
+ * @return Nonzero if the element was found and successfully removed from the
+ *         set; zero otherwise.  We also return zero if the set is empty or the
+ *         element is not in the set.
+ */
+int
+gnx_set_delete(GnxSet *set,
+               const int *elem)
+{
+    GnxArray *bucket;
+    unsigned int i, j;
+
+    gnx_i_check_set(set);
+    g_return_val_if_fail(elem, GNX_FAILURE);
+
+    if (!(set->size))
+        return GNX_FAILURE;
+    if (!gnx_i_has(set, elem, &i, &j))
+        return GNX_FAILURE;
+
+    bucket = (GnxArray *)(set->bucket[i]);
+    assert(gnx_array_delete(bucket, &j));
+    if (!(bucket->size)) {
+        gnx_destroy_array(bucket);
+        set->bucket[i] = NULL;
+    }
+    (set->size)--;
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Whether a set has a given element.
  *
  * @param set We want to search this set.

@@ -38,6 +38,13 @@ static void add_no_memory(void);
 static void add_one(void);
 static void add_resize(void);
 
+/* delete elements */
+static void delete_empty(void);
+static void delete_non_member(void);
+static void delete_one(void);
+static void delete_random_dont_free_elements(void);
+static void delete_random_free_elements(void);
+
 /* has an element */
 static void has_empty(void);
 static void has_member(void);
@@ -226,6 +233,179 @@ add_resize(void)
 }
 
 /**************************************************************************
+ * delete elements
+ *************************************************************************/
+
+static void
+delete(void)
+{
+    delete_empty();
+    delete_non_member();
+    delete_one();
+    delete_random_dont_free_elements();
+    delete_random_free_elements();
+}
+
+/* Delete elements from an empty set. */
+static void
+delete_empty(void)
+{
+    GnxSet *set;
+    const int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    /* The set was configured to not release memory. */
+    set = gnx_init_set();
+    assert(0 == set->size);
+    assert(!gnx_set_delete(set, &elem));
+    assert(0 == set->size);
+    gnx_destroy_set(set);
+
+    /* The set was configured to release memory. */
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    assert(0 == set->size);
+    assert(!gnx_set_delete(set, &elem));
+    assert(0 == set->size);
+    gnx_destroy_set(set);
+}
+
+/* Delete an element that is not in a set. */
+static void
+delete_non_member(void)
+{
+    GnxSet *set;
+    int elem, *list;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)i;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    elem = (int)size;
+    assert(!gnx_set_has(set, &elem));
+    assert(!gnx_set_delete(set, &elem));
+    assert(size == set->size);
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/* Delete from a set that has one element. */
+static void
+delete_one(void)
+{
+    GnxSet *set;
+    int *elem;
+
+    /***********************************************************************
+     * The set was configured to not release memory.
+     **********************************************************************/
+
+    set = gnx_init_set();
+    elem = (int *)malloc(sizeof(int));
+    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    assert(gnx_set_add(set, elem));
+    assert(1 == set->size);
+
+    assert(gnx_set_has(set, elem));
+    assert(gnx_set_delete(set, elem));
+    assert(0 == set->size);
+
+    free(elem);
+    gnx_destroy_set(set);
+
+    /***********************************************************************
+     * The set was configured to release memory.
+     **********************************************************************/
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    elem = (int *)malloc(sizeof(int));
+    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    assert(gnx_set_add(set, elem));
+    assert(1 == set->size);
+
+    assert(gnx_set_has(set, elem));
+    assert(gnx_set_delete(set, elem));
+    assert(0 == set->size);
+
+    gnx_destroy_set(set);
+}
+
+/* Choose an element uniformly at random from a set and delete that element
+ * from the set.  The set was configured to not release memory.
+ */
+static void
+delete_random_dont_free_elements(void)
+{
+    GnxSet *set;
+    int *list;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    for (i = 0; i < size; i++) {
+        list[i] = (int)i;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    i = (unsigned int)g_random_int_range(0, (int)size);
+    assert(gnx_set_has(set, &(list[i])));
+    assert(gnx_set_delete(set, &(list[i])));
+    assert((size - 1) == set->size);
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/* Choose an element uniformly at random from a set and delete that element
+ * from the set.  The set was configured to release memory.
+ */
+static void
+delete_random_free_elements(void)
+{
+    GnxSet *set;
+    int *elem, has_target, target;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    has_target = FALSE;  /* Have we chosen an element to delete? */
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_set_add(set, elem));
+
+        /* Choose only one element for deletion. */
+        if (!has_target && g_random_boolean()) {
+            target = *elem;
+            has_target = TRUE;
+        }
+
+        /* By default, we use the first element as the target for deletion.
+         * This is to prevent the case where none of the elements is chosen.
+         */
+        if (!i)
+            target = *elem;
+    }
+    assert(size == set->size);
+
+    assert(gnx_set_has(set, &target));
+    assert(gnx_set_delete(set, &target));
+    assert((size - 1) == set->size);
+
+    gnx_destroy_set(set);
+}
+
+/**************************************************************************
  * has an element
  *************************************************************************/
 
@@ -409,6 +589,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/set/add", add);
+    g_test_add_func("/set/delete", delete);
     g_test_add_func("/set/has", has);
     g_test_add_func("/set/new", new);
 

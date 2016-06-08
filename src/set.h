@@ -32,6 +32,8 @@ GnxSet* gnx_init_set_full(const GnxBool destroy);
 /* insert and remove */
 int gnx_set_add(GnxSet *set,
                 int *elem);
+int gnx_set_delete(GnxSet *set,
+                   const int *elem);
 
 /* query */
 int* gnx_set_has(const GnxSet *set,
