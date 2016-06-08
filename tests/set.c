@@ -238,6 +238,7 @@ static void
 new_dont_free_elements(void)
 {
     GnxSet *set;
+    int a, b, c;
 
     set = gnx_init_set();
     assert(set);
@@ -250,6 +251,18 @@ new_dont_free_elements(void)
     assert(set->a <= UINT_MAX);
     assert(1 == set->a % 2);
     assert(set->c <= (1u << set->d));
+
+    /* Generate some unique integers and add them to the set. */
+    a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    do {
+        b = (int)g_random_int_range(INT_MIN, INT_MAX);
+    } while (a == b);
+    do {
+        c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    } while ((c == a) || (c == b));
+    assert(gnx_set_add(set, &a));
+    assert(gnx_set_add(set, &b));
+    assert(gnx_set_add(set, &c));
 
     gnx_destroy_set(set);
 }
