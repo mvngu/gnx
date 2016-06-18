@@ -491,3 +491,102 @@ gnx_set_has(const GnxSet *set,
     g_return_val_if_fail(elem, NULL);
     return gnx_i_has(set, elem, NULL, NULL);
 }
+
+/**
+ * @brief Initializes an iterator over the elements of a set.
+ *
+ * @param iter Initialize this iterator.  The iterator is usually allocated on
+ *        the runtime stack.
+ * @param set We want to iterate over the elements of this set.
+ */
+void
+gnx_set_iter_init(GnxSetIter *iter,
+                  GnxSet *set)
+{
+    iter->bootstrap = TRUE;
+    iter->set = set;
+    iter->i = 0;
+    iter->j = 0;
+}
+
+/**
+ * @brief Iterate to the next element of a set.
+ *
+ * The order in which we iterate over the elements of a set is not the same as
+ * the order in which the elements were inserted into the set.
+ *
+ * @param iter An iterator that has been initialized via the function
+ *        gnx_set_iter_init().
+ * @param elem This will hold the next element in the set.  If @c NULL, then we
+ *        will ignore the next element.
+ * @return Nonzero if we have not yet reached the end of the set; zero
+ *         otherwise.  If zero, then we have reached the end of the set and the
+ *         iterator is now invalid.  We also return zero if the set is empty.
+ */
+int
+gnx_set_iter_next(GnxSetIter *iter,
+                  gnxintptr *elem)
+{
+    GnxArray *bucket;
+    int i;
+
+    g_return_val_if_fail(iter, GNX_FAILURE);
+    gnx_i_check_set(iter->set);
+
+    /* If we are bootstrapping the process, then we look for the first element
+     * to which we can iterate.
+     */
+    if (iter->bootstrap) {
+        /* The set is empty. */
+        if (!(iter->set->size))
+            return GNX_FAILURE;
+
+        /* The index of the first bucket with at least one entry. */
+        i = -1;
+        do {
+            i++;
+            bucket = (GnxArray *)(iter->set->bucket[i]);
+        } while (!bucket);
+        iter->i = (unsigned int)i;
+
+        /* The first entry within the first non-empty bucket. */
+        g_assert(bucket->size);
+        iter->j = 0;
+        if (elem)
+            *elem = bucket->cell[iter->j];
+
+        iter->bootstrap = FALSE;
+        return GNX_SUCCESS;
+    }
+
+    /* We have already iterated over the first element of the set.  Start from
+     * the current element and iterate to the next element of the set.
+     */
+    bucket = (GnxArray *)(iter->set->bucket[iter->i]);
+    for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
+        if (elem)
+            *elem = bucket->cell[iter->j];
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted the current bucket.  Find the next bucket that has at
+     * least one entry.
+     */
+    (iter->i)++;
+    while (iter->i < (iter->set->capacity)) {
+        bucket = (GnxArray *)(iter->set->bucket[iter->i]);
+        if (!bucket) {
+            (iter->i)++;
+            continue;
+        }
+
+        g_assert(bucket->size);
+        iter->j = 0;
+        if (elem)
+            *elem = bucket->cell[iter->j];
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted all buckets. */
+    return GNX_FAILURE;
+}

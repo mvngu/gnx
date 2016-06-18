@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #include <gnx.h>
@@ -49,6 +50,12 @@ static void delete_random_free_elements(void);
 static void has_empty(void);
 static void has_member(void);
 static void has_non_member(void);
+
+/* iterator */
+static void iter_count(void);
+static void iter_empty(void);
+static void iter_one(void);
+static void iter_random(void);
 
 /* new: create and destroy */
 static void new_dont_free_elements(void);
@@ -482,6 +489,140 @@ has_non_member(void)
 }
 
 /**************************************************************************
+ * iterator
+ *************************************************************************/
+
+static void
+iter(void)
+{
+    iter_count();
+    iter_empty();
+    iter_one();
+    iter_random();
+}
+
+/* Count the number of elements in a set. */
+static void
+iter_count(void)
+{
+    GnxSet *set;
+    GnxSetIter iter;
+    int *elem;
+    unsigned int i;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 51);
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        elem = (int *)malloc(sizeof(int));
+        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        assert(gnx_set_add(set, elem));
+    }
+
+    gnx_set_iter_init(&iter, set);
+    i = 0;
+    while (gnx_set_iter_next(&iter, NULL))
+        i++;
+
+    assert(i == set->size);
+
+    gnx_destroy_set(set);
+}
+
+/* Iterate over an empty set. */
+static void
+iter_empty(void)
+{
+    GnxSet *set;
+    GnxSetIter iter;
+
+    set = gnx_init_set();
+    assert(0 == set->size);
+
+    gnx_set_iter_init(&iter, set);
+    assert(!gnx_set_iter_next(&iter, NULL));
+
+    gnx_destroy_set(set);
+}
+
+/* Iterate over a set that has exactly one element. */
+static void
+iter_one(void)
+{
+    gnxintptr elem;
+    GnxSet *set;
+    GnxSetIter iter;
+    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+
+    set = gnx_init_set();
+    assert(gnx_set_add(set, &a));
+    assert(1 == set->size);
+
+    gnx_set_iter_init(&iter, set);
+    assert(gnx_set_iter_next(&iter, &elem));
+    assert(*elem == a);
+    assert(!gnx_set_iter_next(&iter, NULL));
+
+    gnx_destroy_set(set);
+}
+
+/* Iterate over a set that has a random number of elements. */
+static void
+iter_random(void)
+{
+    gnxintptr e;
+    GnxSet *set;
+    GnxSetIter iter;
+    int elem, *list, unique;
+    unsigned int i, j;
+    const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    /* Generate a bunch of unique random integers.  The size of the list is
+     * chosen such that we do not trigger a resize of the set.  Here we assume
+     * that a resize of the set will not be triggered provided that the number
+     * of elements inserted into the set is kept below 3 * 2^(k-2), where k is
+     * the exponent that is used to compute the number of buckets.  In other
+     * words, a resize will not be triggered provided that the load factor is
+     * kept below the threshold of 3/4.
+     */
+    for (i = 0; i < size; i++) {
+        unique = FALSE;
+        do {
+            elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+            for (j = 0; j < i; j++) {
+                if (elem == list[j])
+                    break;
+            }
+            if (j >= i)
+                unique = TRUE;
+        } while (!unique);
+
+        list[i] = elem;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    /* Check that all the elements that were inserted into the set are the
+     * elements of the list.
+     */
+    gnx_set_iter_init(&iter, set);
+    while (gnx_set_iter_next(&iter, &e)) {
+        elem = *e;
+        for (i = 0; i < size; i++) {
+            if (elem == list[i])
+                break;
+        }
+        assert(i < size);
+    }
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/**************************************************************************
  * new set: create and destroy
  *************************************************************************/
 
@@ -591,6 +732,7 @@ main(int argc,
     g_test_add_func("/set/add", add);
     g_test_add_func("/set/delete", delete);
     g_test_add_func("/set/has", has);
+    g_test_add_func("/set/iter", iter);
     g_test_add_func("/set/new", new);
 
     return g_test_run();

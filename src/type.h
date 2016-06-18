@@ -171,6 +171,19 @@ typedef struct {
 } GnxSet;
 
 /**
+ * @brief An iterator over the elements of a set.
+ *
+ * An iterator is usually allocated on the runtime stack and then initialized
+ * via the function gnx_set_iter_init().
+ */
+typedef struct {
+    gboolean bootstrap;  /**< Are we bootstrapping the process? */
+    GnxSet *set;         /**< Iterate over this set. */
+    unsigned int i;      /**< The bucket index. */
+    unsigned int j;      /**< The entry index within a bucket. */
+} GnxSetIter;
+
+/**
  * @brief A stack of integers.
  */
 typedef struct {

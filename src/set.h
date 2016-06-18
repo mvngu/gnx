@@ -39,4 +39,10 @@ int gnx_set_delete(GnxSet *set,
 int* gnx_set_has(const GnxSet *set,
                  const int *elem);
 
+/* iterator */
+void gnx_set_iter_init(GnxSetIter *iter,
+                       GnxSet *set);
+int gnx_set_iter_next(GnxSetIter *iter,
+                      gnxintptr *elem);
+
 #endif  /* GNX_SET_H */
