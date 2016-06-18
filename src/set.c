@@ -441,6 +441,33 @@ cleanup:
 }
 
 /**
+ * @brief Chooses an element from a set.
+ *
+ * Note that this function does not randomly choose an element from a set.  The
+ * function merely iterates over the set and returns as soon as an element is
+ * found.
+ *
+ * @param set Choose an element from this set.
+ * @return An element from the given set.  If the set is empty, then we return
+ *         @c NULL.
+ */
+int*
+gnx_set_any_element(GnxSet *set)
+{
+    GnxSetIter iter;
+    gnxintptr elem;
+
+    gnx_i_check_set(set);
+    if (!(set->size))
+        return NULL;
+
+    gnx_set_iter_init(&iter, set);
+    assert(gnx_set_iter_next(&iter, &elem));
+
+    return elem;
+}
+
+/**
  * @brief Removes an element from a set.
  *
  * @param set We want to remove an element from this set.

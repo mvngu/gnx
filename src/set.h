@@ -36,6 +36,7 @@ int gnx_set_delete(GnxSet *set,
                    const int *elem);
 
 /* query */
+int* gnx_set_any_element(GnxSet *set);
 int* gnx_set_has(const GnxSet *set,
                  const int *elem);
 

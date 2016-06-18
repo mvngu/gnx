@@ -39,6 +39,11 @@ static void add_no_memory(void);
 static void add_one(void);
 static void add_resize(void);
 
+/* any element */
+static void any_empty(void);
+static void any_one(void);
+static void any_random(void);
+
 /* delete elements */
 static void delete_empty(void);
 static void delete_non_member(void);
@@ -236,6 +241,102 @@ add_resize(void)
     assert(1 == set->a % 2);
     assert(set->c <= (1u << set->d));
 
+    gnx_destroy_set(set);
+}
+
+/**************************************************************************
+ * any element
+ *************************************************************************/
+
+static void
+any(void)
+{
+    any_empty();
+    any_one();
+    any_random();
+}
+
+/* Choose an element from an empty set. */
+static void
+any_empty(void)
+{
+    GnxSet *set;
+
+    set = gnx_init_set();
+    assert(0 == set->size);
+    assert(!gnx_set_any_element(set));
+    assert(0 == set->size);
+
+    gnx_destroy_set(set);
+}
+
+/* Choose an element from a set that has exactly one element. */
+static void
+any_one(void)
+{
+    GnxSet *set;
+    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int *target;
+
+    set = gnx_init_set();
+    assert(gnx_set_add(set, &elem));
+    assert(1 == set->size);
+
+    target = gnx_set_any_element(set);
+    assert(*target == elem);
+    assert(1 == set->size);
+
+    gnx_destroy_set(set);
+}
+
+/* Choose an element from a set that has a random number of elements. */
+static void
+any_random(void)
+{
+    GnxSet *set;
+    int elem, *list, *target, unique;
+    unsigned int i, j;
+    const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
+
+    list = (int *)malloc(sizeof(int) * size);
+    set = gnx_init_set();
+
+    /* Generate a bunch of unique random integers.  The size of the list is
+     * chosen such that we do not trigger a resize of the set.  Here we assume
+     * that a resize of the set will not be triggered provided that the number
+     * of elements inserted into the set is kept below 3 * 2^(k-2), where k is
+     * the exponent that is used to compute the number of buckets.  In other
+     * words, a resize will not be triggered provided that the load factor is
+     * kept below the threshold of 3/4.
+     */
+    for (i = 0; i < size; i++) {
+        unique = FALSE;
+        do {
+            elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+            for (j = 0; j < i; j++) {
+                if (elem == list[j])
+                    break;
+            }
+            if (j >= i)
+                unique = TRUE;
+        } while (!unique);
+
+        list[i] = elem;
+        assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    /* Check that any element that is chosen from the set is an element of
+     * the list.
+     */
+    target = gnx_set_any_element(set);
+    for (i = 0; i < size; i++) {
+        if (*target == list[i])
+            break;
+    }
+    assert(i < size);
+
+    free(list);
     gnx_destroy_set(set);
 }
 
@@ -730,6 +831,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/set/add", add);
+    g_test_add_func("/set/any", any);
     g_test_add_func("/set/delete", delete);
     g_test_add_func("/set/has", has);
     g_test_add_func("/set/iter", iter);
