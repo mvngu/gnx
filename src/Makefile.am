@@ -4,6 +4,7 @@ MAIN_HEADERFILE = gnx.h
 
 GNX_HEADERFILES =                                                          \
 	array.h                                                            \
+	dict.h                                                             \
 	queue.h                                                            \
 	set.h                                                              \
 	stack.h
@@ -16,6 +17,7 @@ noinst_HEADERS += alloc.h
 
 GNX_SRC =                                                                  \
 	array.c                                                            \
+	dict.c                                                             \
 	queue.c                                                            \
 	sanity.c                                                           \
 	set.c                                                              \

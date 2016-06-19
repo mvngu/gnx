@@ -84,10 +84,28 @@ typedef enum {
                                   * container, we directly release the memory
                                   * of those elements.
                                   */
-    GNX_DONT_FREE_ELEMENTS = 1 << 1  /**< @hideinitializer
-                                      * Do not release the memory of the
-                                      * elements in a container.
-                                      */
+    GNX_DONT_FREE_ELEMENTS = 1 << 1,  /**< @hideinitializer
+                                       * Do not release the memory of the
+                                       * elements in a container.
+                                       */
+    GNX_FREE_KEYS = 1 << 2,        /**< @hideinitializer
+                                    * When we no longer need the keys of a hash
+                                    * table, we directly release the memory of
+                                    * those keys.
+                                    */
+    GNX_DONT_FREE_KEYS = 1 << 3,   /**< @hideinitializer
+                                    * Do not release the memory of the keys of
+                                    * a hash table.
+                                    */
+    GNX_FREE_VALUES = 1 << 4,      /**< @hideinitializer
+                                    * When we no longer need the values of a
+                                    * hash table, we directly release the
+                                    * memory of those values.
+                                    */
+    GNX_DONT_FREE_VALUES = 1 << 5  /**< @hideinitializer
+                                    * Do not release the memory of the values
+                                    * of a hash table.
+                                    */
 } GnxBool;
 
 /**************************************************************************
@@ -115,6 +133,48 @@ typedef struct {
     unsigned int size;      /**< How many elements in the array. */
     gnxintptr *cell;        /**< The actual array of integers. */
 } GnxArray;
+
+/**
+ * @brief A hash table.
+ *
+ * The hash table is implemented with integer keys.  Collision is resolved via
+ * separate chaining.  We use the universal family of hash functions introduced
+ * by Woelfel @cite Woelfel2003; for further details see the
+ * <a href="https://en.wikipedia.org/wiki/Universal_hashing">Wikipedia article</a>.
+ */
+typedef struct {
+    GnxBool free_key;       /**< Whether to release the memory of each key in
+                             * the hash table.
+                             */
+    GnxBool free_value;     /**< Whether to release the memory of each value
+                             * in the hash table.
+                             */
+    unsigned int k;         /**< The exponent that is used to compute the number
+                             * of buckets.
+                             */
+    unsigned int capacity;  /**< How many buckets.  This must be a power of 2.
+                             */
+    unsigned int size;      /**< How many entries in the hash table. */
+    gnxptr *bucket;         /**< The array of buckets. */
+    unsigned int b;         /**< How many bits are used to represent the
+                             * <tt>unsigned int</tt> type.
+                             */
+    unsigned int d;         /**< The difference @f$b - k@f$. */
+    unsigned int a;         /**< Parameter of the hash function.  This is an
+                             * odd integer that is chosen uniformly at random
+                             * from the range @f$[1,\, 2^b - 1]@f$, where
+                             * @f$b@f$ is the number of bits in the
+                             * representation of an <tt>unsigned int</tt> type.
+                             */
+    unsigned int c;         /**< Parameter of the hash function.  This is an
+                             * integer that is chosen uniformly at random from
+                             * the range @f$[0,\, 2^{b-k} - 1]@f$, where
+                             * @f$b@f$ is the number of bits in the
+                             * representation of an <tt>unsigned int</tt> type
+                             * and @f$k@f$ is the exponent for computing the
+                             * number of buckets.
+                             */
+} GnxDict;
 
 /**
  * @brief A queue of integers.

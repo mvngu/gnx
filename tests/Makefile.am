@@ -22,6 +22,7 @@ AM_CPPFLAGS =                                                              \
 
 test_programs =                                                            \
 	array                                                              \
+	dict                                                               \
 	queue                                                              \
 	set                                                                \
 	stack
