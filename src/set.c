@@ -379,7 +379,7 @@ gnx_set_add(GnxSet *set,
             int *elem)
 {
     GnxArray *bucket;
-    int created_bucket = 0;  /* Whether a new bucket has been created. */
+    int created_bucket = FALSE;  /* Whether a new bucket has been created. */
     unsigned int i;
     const unsigned int capacity = 2;
 
