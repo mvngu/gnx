@@ -22,23 +22,23 @@
 
 /**
  * @file dict.h
- * @brief Hash table with integer keys.
+ * @brief Dictionary with integer keys.
  *
- * A hash table does not make its own copy of any entry that is inserted.
+ * A dictionary does not make its own copy of any entry that is inserted.
  * Rather, we copy the pointers for key and value that are passed in and store
  * those pointers.  It is your responsibility to ensure that any key/value pair
- * that is inserted into the hash table exists for the duration of the table
- * itself.
+ * that is inserted into the dictionary exists for the duration of the
+ * dictionary itself.
  *
  * Use either of the functions gnx_init_dict() or gnx_init_dict_full() to
- * initialize a new hash table.  Destroy a hash table via the function
+ * initialize a new dictionary.  Destroy a dictionary via the function
  * gnx_destroy_dict().
  */
 
 /**
- * @brief Destroys a hash table.
+ * @brief Destroys a dictionary.
  *
- * @param dict We want to destroy this hash table.
+ * @param dict We want to destroy this dictionary.
  */
 void
 gnx_destroy_dict(GnxDict *dict)
@@ -56,15 +56,15 @@ gnx_destroy_dict(GnxDict *dict)
 }
 
 /**
- * @brief Initializes a new hash table.
+ * @brief Initializes a new dictionary.
  *
- * The hash table is initialized with default settings.  In particular, the
- * table will not release the memory of its keys and values.  It is your
+ * The dictionary is initialized with default settings.  In particular, the
+ * dictionary will not release the memory of its keys and values.  It is your
  * responsibility to ensure that the memory of the keys and values are released
  * as appropriate.
  *
  * @sa gnx_init_dict_full() This function gives you full control over how a
- *     hash table will be initialized.
+ *     dictionary will be initialized.
  *
  * @return See the return values of gnx_init_dict_full().
  */
@@ -75,40 +75,39 @@ gnx_init_dict(void)
 }
 
 /**
- * @brief Initializes a new hash table.
+ * @brief Initializes a new dictionary.
  *
- * This function gives you full control over how a hash table will be
+ * This function gives you full control over how a dictionary will be
  * initialized.
  *
- * @sa gnx_init_dict() This function initializes a hash table with default
+ * @sa gnx_init_dict() This function initializes a dictionary with default
  *     settings.
  *
- * @param free_key Whether to release the memory of each key in the hash
- *        table.  The possible values are #GNX_FREE_KEYS and
- *        #GNX_DONT_FREE_KEYS.  If #GNX_FREE_KEYS, then the memory of each key
- *        will be released when you destroy the hash table via
- *        gnx_destroy_dict().  This option should only be used if each key to
- *        be inserted has memory that is allocated on the heap, i.e. via
- *        @c calloc(), @c malloc(), or @c realloc().  Using this option with
- *        stack memory will result in undefined behavior.  If
- *        #GNX_DONT_FREE_KEYS, then you are responsible for releasing the
- *        memory of each key in the hash table.  You can also use this option
- *        if each key has memory that is allocated on the stack.
- * @param free_value Whether to release the memory of each value in the hash
- *        table.  The possibilities are #GNX_FREE_VALUES and
+ * @param free_key Whether to release the memory of each key in the dictionary.
+ *        The possible values are #GNX_FREE_KEYS and #GNX_DONT_FREE_KEYS.  If
+ *        #GNX_FREE_KEYS, then the memory of each key will be released when you
+ *        destroy the dictionary via gnx_destroy_dict().  This option should
+ *        only be used if each key to be inserted has memory that is allocated
+ *        on the heap, i.e. via @c calloc(), @c malloc(), or @c realloc().
+ *        Using this option with stack memory will result in undefined
+ *        behavior.  If #GNX_DONT_FREE_KEYS, then you are responsible for
+ *        releasing the memory of each key in the dictionary.  You can also use
+ *        this option if each key has memory that is allocated on the stack.
+ * @param free_value Whether to release the memory of each value in the
+ *        dictionary.  The possibilities are #GNX_FREE_VALUES and
  *        #GNX_DONT_FREE_VALUES.  If #GNX_FREE_VALUES, then the memory of each
- *        value will be released when you destroy the hash table via
+ *        value will be released when you destroy the dictionary via
  *        gnx_destroy_dict().  This option should only be used if each value to
  *        be inserted has memory that is allocated on the heap, i.e. via
  *        @c calloc(), @c malloc(), or @c realloc().  Using this option with
  *        stack memory will result in undefined behavior.  If
  *        #GNX_DONT_FREE_VALUES, then you are responsible for releasing the
- *        memory of each value in the hash table.  You can also use this option
+ *        memory of each value in the dictionary.  You can also use this option
  *        if each value has memory that is allocated on the stack.
- * @return An initialized hash table.  When you no longer need the hash table,
- *         you must destroy the table via the function gnx_destroy_dict().  If
- *         we are unable to allocate memory, then we set @c errno to @c ENOMEM
- *         and return @c NULL.
+ * @return An initialized dictionary.  When you no longer need the dictionary,
+ *         you must destroy the dictionary via the function gnx_destroy_dict().
+ *         If we are unable to allocate memory, then we set @c errno to
+ *         @c ENOMEM and return @c NULL.
  */
 GnxDict*
 gnx_init_dict_full(const GnxBool free_key,
@@ -133,9 +132,9 @@ gnx_init_dict_full(const GnxBool free_key,
     dict->free_value = free_value;
     dict->k = GNX_DEFAULT_EXPONENT;           /* Default exponent in 2^k. */
     dict->capacity = GNX_DEFAULT_ALLOC_SIZE;  /* Default number of buckets. */
-    dict->size = 0;                           /* Hash table initially empty. */
+    dict->size = 0;                           /* Dictionary initially empty. */
 
-    /* The hash table is represented as an array of buckets.  Each array
+    /* The dictionary is represented as an array of buckets.  Each array
      * element is initialized to zero.  If an element is non-zero, then we know
      * that the corresponding bucket has at least one key/value entry.  If an
      * element is zero, then the corresponding bucket is empty.
