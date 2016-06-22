@@ -400,7 +400,7 @@ gnx_set_add(GnxSet *set,
         if (!bucket)
             goto cleanup;
         set->bucket[i] = bucket;
-        created_bucket = 1;
+        created_bucket = TRUE;
     }
 
     bucket = (GnxArray *)(set->bucket[i]);
