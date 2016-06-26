@@ -38,6 +38,9 @@
 /**
  * @brief Destroys a dictionary.
  *
+ * The given dictionary must have been initialized by either of the functions
+ * gnx_init_dict() or gnx_init_dict_full().
+ *
  * @param dict We want to destroy this dictionary.
  */
 void
