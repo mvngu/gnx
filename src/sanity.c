@@ -38,6 +38,18 @@ gnx_i_check_array(const GnxArray *array)
 }
 
 /**
+ * @brief Some sanity checks for a dictionary.
+ *
+ * @param dict Perform some sanity checks on this dictionary.
+ */
+void
+gnx_i_check_dict(const GnxDict *dict)
+{
+    g_return_if_fail(dict);
+    g_return_if_fail(dict->bucket);
+}
+
+/**
  * @brief Some sanity checks on a queue.
  *
  * @param queue The queue to check.
