@@ -7,7 +7,8 @@ GNX_HEADERFILES =                                                          \
 	dict.h                                                             \
 	queue.h                                                            \
 	set.h                                                              \
-	stack.h
+	stack.h                                                            \
+	type.h
 ### GNX_HOOK:ALLOC_H
 
 noinst_HEADERS =                                                           \
