@@ -162,7 +162,7 @@ __wrap_realloc(void *ptr,
 
     return new_ptr;
 #else
-    return __real_alloc(ptr, new_size);
+    return __real_realloc(ptr, new_size);
 #endif
 }
 
