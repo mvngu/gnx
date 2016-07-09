@@ -46,11 +46,39 @@
 void
 gnx_destroy_dict(GnxDict *dict)
 {
+    GnxBucket *bucket;
+    GnxNode *node;
+    int free_key, free_value;
+    unsigned int i, j;
+
     if (!dict)
         return;
     if (dict->bucket) {
-        /* FIXME: free keys */
-        /* FIXME: free values */
+        free_key = GNX_FREE_KEYS & dict->free_key;
+        free_value = GNX_FREE_VALUES & dict->free_value;
+
+        for (i = 0; i < dict->capacity; i++) {
+            bucket = (GnxBucket *)(dict->bucket[i]);
+            if (bucket) {
+                for (j = 0; j < bucket->size; j++) {
+                    node = (GnxNode *)(bucket->node[j]);
+                    if (free_key) {
+                        free(node->key);
+                        node->key = NULL;
+                    }
+                    if (free_value) {
+                        free(node->value);
+                        node->value = NULL;
+                    }
+                    free(node);
+                    bucket->node[j] = NULL;
+                }
+                free(bucket->node);
+                bucket->node = NULL;
+                free(bucket);
+                dict->bucket[i] = NULL;
+            }
+        }
         free(dict->bucket);
         dict->bucket = NULL;
     }
