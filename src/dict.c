@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "dict.h"
+#include "sanity.h"
 
 /**
  * @file dict.h
@@ -34,6 +35,313 @@
  * initialize a new dictionary.  Destroy a dictionary via the function
  * gnx_destroy_dict().
  */
+
+/**************************************************************************
+ * internal data structures
+ *************************************************************************/
+
+/* @cond */
+/* An entry of a bucket.  Each bucket entry is a key/value pair.
+ */
+typedef struct {
+    unsigned int *key;  /* The key of a bucket entry. */
+    gnxptr value;       /* The value of a bucket entry. */
+} GnxNode;
+/* @endcond */
+
+/* @cond */
+/* A bucket of entries.  In effect we say that a bucket is an array of nodes.
+ */
+typedef struct {
+    unsigned int size;      /* How many nodes are in the bucket. */
+    unsigned int capacity;  /* The maximum possible number of entries in a
+                             * bucket.  When the bucket reaches capacity, we
+                             * must first resize the bucket before inserting
+                             * a new node.
+                             */
+    gnxptr *node;           /* The array of nodes. */
+} GnxBucket;
+/* @endcond */
+
+/**************************************************************************
+ * prototypes for internal helper functions
+ *************************************************************************/
+
+static int gnx_i_append_node(GnxBucket *bucket,
+                             unsigned int *key,
+                             gnxptr value);
+static GnxNode* gnx_i_has(const GnxDict *dict,
+                          const unsigned int *key,
+                          unsigned int *i,
+                          unsigned int *j);
+static inline unsigned int gnx_i_hash(const unsigned int *key,
+                                      const unsigned int *a,
+                                      const unsigned int *c,
+                                      const unsigned int *d);
+static int gnx_i_resize_dict(GnxDict *dict);
+
+/**************************************************************************
+ * internal helper functions
+ *************************************************************************/
+
+/**
+ * @brief Append a new entry to a bucket.
+ *
+ * We assume that the key of the entry is not already in the bucket.
+ *
+ * @param bucket We want to append a new entry to this bucket.
+ * @param key The key of the new entry.  This key is assumed to be different
+ *        from all other keys in the bucket.
+ * @param value The value of the new entry.
+ * @return Nonzero if we successfully appended the given entry to the bucket;
+ *         zero otherwise.  If we are unable to allocate memory for the new
+ *         entry, then we set @c errno to @c ENOMEM and return zero.
+ */
+static int
+gnx_i_append_node(GnxBucket *bucket,
+                  unsigned int *key,
+                  gnxptr value)
+{
+    GnxNode *node;
+    gnxptr *new_node;
+    unsigned int new_capacity;
+
+    errno = 0;
+
+    /* Possibly resize the bucket by doubling its current capacity. */
+    if (bucket->size >= bucket->capacity) {
+        new_capacity = bucket->capacity << 1;
+        g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
+        new_node
+            = (gnxptr *)realloc(bucket->node, new_capacity * sizeof(gnxptr));
+        if (!new_node)
+            goto cleanup;
+
+        bucket->node = new_node;
+        bucket->capacity = new_capacity;
+    }
+
+    /* Append the new entry to the bucket. */
+    node = (GnxNode *)malloc(sizeof(GnxNode));
+    if (!node)
+        goto cleanup;
+    node->key = key;
+    node->value = value;
+    bucket->node[bucket->size] = node;
+    (bucket->size)++;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    return GNX_FAILURE;
+}
+
+/**
+ * @brief Whether a dictionary has a given key.
+ *
+ * @param dict We want to search in this dictionary.
+ * @param key Search the dictionary for this key.
+ * @param i This will hold the bucket index to which the key is hashed.  If
+ *        you do not want the bucket index, pass @c NULL.
+ * @param j This will hold the entry index within the bucket where the
+ *        key/value pair resides.  If you do not want the entry index, pass
+ *        @c NULL.
+ * @return A pointer to the found key/value pair if the given key is in the
+ *         dictionary; @c NULL otherwise.  We also return @c NULL if the
+ *         dictionary is empty.
+ */
+static GnxNode*
+gnx_i_has(const GnxDict *dict,
+          const unsigned int *key,
+          unsigned int *i,
+          unsigned int *j)
+{
+    GnxBucket *bucket;
+    GnxNode *node;
+    unsigned int idx, jdx;
+
+    idx = gnx_i_hash(key, &(dict->a), &(dict->c), &(dict->d));
+    if (i)
+        *i = idx;
+
+    /* The dictionary is empty.  Therefore the given key is not in the
+     * dictionary.
+     */
+    if (!dict->size)
+        return NULL;
+
+    /* The bucket to which the key hashes is empty.  Therefore the given key
+     * is not in the dictionary.
+     */
+    bucket = (GnxBucket *)(dict->bucket[idx]);
+    if (!bucket)
+        return NULL;
+
+    /* Linear search through the entries of the bucket. */
+    for (jdx = 0; jdx < bucket->size; jdx++) {
+        node = (GnxNode *)(bucket->node[jdx]);
+        if (*key == *(node->key)) {
+            if (j)
+                *j = jdx;
+            return node;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief Hash of the given key.
+ *
+ * @param key We want to hash this key.
+ * @param a A parameter of the hash function.  This is an odd integer.
+ * @param c Another parameter of the hash function.  This is an integer.
+ * @param d Still another parameter of the hash function.  This is the
+ *        difference between the number of bits in the representation of an
+ *        <tt>unsigned int</tt> type, and the exponent that is used to compute
+ *        the number of buckets.
+ * @return The hash of the given key.  This is also the index of a bucket in
+ *         a dictionary.
+ */
+static inline unsigned int
+gnx_i_hash(const unsigned int *key,
+           const unsigned int *a,
+           const unsigned int *c,
+           const unsigned int *d)
+{
+    /* Let x be the key value.  Note that the numerator ax + c can wrap around
+     * because each operand is an unsigned int.  We expect the wrap around
+     * because the numerator is meant to be reduced modulo 2^b, where b is the
+     * number of bits in the representation of an unsigned int.  The wrapping
+     * behavior of arithmetic with operands that are unsigned ints is
+     * equivalent to arithmetic modulo 2^b.
+     */
+    return (((*a) * (*key)) + (*c)) >> (*d);
+}
+
+/**
+ * @brief Resize a dictionary.
+ *
+ * The dictionary is resized by doubling its current number of buckets.  Each
+ * element in the dictionary is also rehashed.
+ *
+ * @param dict We want to resize this dictionary.
+ * @return Nonzero if the dictionary was successfully resized; zero otherwise.
+ *         If we are unable to allocate memory, then we set @c errno to
+ *         @c ENOMEM and return zero.
+ */
+static int
+gnx_i_resize_dict(GnxDict *dict)
+{
+    GnxBucket *bucket, *new_bucket, *old_bucket;
+    GnxNode *node;
+    gnxptr *new_bucket_array;
+    unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
+    const unsigned int bucket_capacity = 2;
+
+    errno = 0;
+    new_k = dict->k + 1;
+    new_capacity = dict->capacity << 1;
+    g_assert(new_k <= dict->b);
+    g_assert((1u << new_k) == new_capacity);
+    g_assert(new_capacity <= GNX_MAXIMUM_BUCKETS);
+    new_d = dict->b - new_k;
+
+    /* The parameter a is part of the Woelfel universal family of hash
+     * functions.  The parameter is an odd integer that is chosen uniformly at
+     * random from the range [1, 2^b - 1].
+     */
+    do {
+        new_a = (unsigned int)g_random_int();
+    } while (!(new_a & 1));
+
+    /* The parameter c is part of the Woelfel universal family of hash
+     * functions.  The parameter is an integer that is chosen uniformly at
+     * random from the range [0, 2^(b - k) - 1].
+     */
+    new_c = (unsigned int)g_random_int_range(0, 1 << new_d);
+
+    new_bucket_array = (gnxptr *)calloc(new_capacity, sizeof(gnxptr));
+    if (!new_bucket_array)
+        goto cleanup;
+
+    /* Rehash each entry. */
+    for (i = 0; i < dict->capacity; i++) {
+        old_bucket = (GnxBucket *)(dict->bucket[i]);
+        if (!old_bucket)
+            continue;
+
+        /* Rehash each entry j of the old bucket i.  The entry is then moved
+         * to a new bucket.  Finally, we release the memory of the old bucket.
+         */
+        for (j = 0; j < old_bucket->size; j++) {
+            node = (GnxNode *)(old_bucket->node[j]);
+            idx = gnx_i_hash(node->key, &new_a, &new_c, &new_d);
+            if (!(new_bucket_array[idx])) {
+                new_bucket = (GnxBucket *)malloc(sizeof(GnxBucket));
+                if (!new_bucket)
+                    goto cleanup;
+
+                new_bucket->node
+                    = (gnxptr *)malloc(sizeof(gnxptr) * bucket_capacity);
+                if (!new_bucket->node)
+                    goto cleanup;
+
+                new_bucket->size = 0;
+                new_bucket->capacity = bucket_capacity;
+                new_bucket_array[idx] = new_bucket;
+            }
+            new_bucket = (GnxBucket *)(new_bucket_array[idx]);
+            if (!gnx_i_append_node(new_bucket, node->key, node->value))
+                goto cleanup;
+
+            node->key = NULL;
+            node->value = NULL;
+            free(node);
+            old_bucket->node[j] = NULL;
+        }
+        free(old_bucket->node);
+        old_bucket->node = NULL;
+        free(old_bucket);
+        dict->bucket[i] = NULL;
+    }
+    free(dict->bucket);
+
+    /* Set the new parameters of the dictionary. */
+    dict->k = new_k;
+    dict->capacity = new_capacity;
+    dict->bucket = new_bucket_array;
+    dict->d = new_d;
+    dict->a = new_a;
+    dict->c = new_c;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (new_bucket_array) {
+        for (i = 0; i < new_capacity; i++) {
+            bucket = (GnxBucket *)(new_bucket_array[i]);
+            if (bucket) {
+                for (j = 0; j < bucket->size; j++) {
+                    node = (GnxNode *)(bucket->node[j]);
+                    node->key = NULL;
+                    node->value = NULL;
+                    free(node);
+                    bucket->node[j] = NULL;
+                }
+            }
+            new_bucket_array[i] = NULL;
+        }
+        free(new_bucket_array);
+    }
+    return GNX_FAILURE;
+}
+
+/**************************************************************************
+ * public interface
+ *************************************************************************/
 
 /**
  * @brief Destroys a dictionary.
@@ -84,6 +392,121 @@ gnx_destroy_dict(GnxDict *dict)
     }
     free(dict);
     dict = NULL;
+}
+
+/**
+ * @brief Inserts a key/value pair into a dictionary.
+ *
+ * @param dict We want to insert a key/value pair into this dictionary.
+ * @param key Add this key (and its corresponding value) to the dictionary.  It
+ *        is your responsibility to ensure that the key exists for the duration
+ *        of the dictionary.
+ * @param value Add this value (and its corresponding key) to the dictionary.
+ *        It is your responsibility to ensure that the value exists for the
+ *        duration of the dictionary.
+ * @return Nonzero if the key/value pair is successfully inserted into the
+ *         dictionary; zero otherwise.  We also return zero if the key is
+ *         already in the dictionary.  For an insertion to be successful, the
+ *         given key must not already be in the dictionary.
+ */
+int
+gnx_dict_add(GnxDict *dict,
+             unsigned int *key,
+             gnxptr value)
+{
+    GnxBucket *bucket;           /* A bucket of entries. */
+    GnxNode *node;
+    int created_bucket = FALSE;  /* Whether a new bucket has been created. */
+    unsigned int i, tail;
+    const unsigned int capacity = 2;
+
+    errno = 0;
+    gnx_i_check_dict(dict);
+    g_return_val_if_fail(key, GNX_FAILURE);
+    g_return_val_if_fail(value, GNX_FAILURE);
+
+    if (gnx_i_has(dict, key, &i, NULL))
+        return GNX_FAILURE;
+
+    /* Initialize a new empty bucket, which is represented as an array of
+     * nodes.  The destruction and release of memory must be handled by the
+     * function gnx_destroy_dict().
+     */
+    if (!(dict->bucket[i])) {
+        bucket = (GnxBucket *)malloc(sizeof(GnxBucket));
+        if (!bucket)
+            goto cleanup;
+
+        bucket->size = 0;
+        bucket->capacity = capacity;
+        bucket->node = (gnxptr *)calloc(capacity, sizeof(gnxptr));
+        if (!bucket->node) {
+            free(bucket);
+            goto cleanup;
+        }
+        dict->bucket[i] = bucket;
+        created_bucket = TRUE;
+    }
+
+    /* Append the new entry to the bucket with index i. */
+    if (!gnx_i_append_node((GnxBucket *)(dict->bucket[i]), key, value))
+        goto cleanup;
+
+    /* Possibly resize the dictionary by doubling the current number of
+     * buckets.  The threshold on the load factor of the dictionary is 3/4.
+     * A resize will not be triggered provided that
+     *
+     *   n      3
+     * ----- < ---
+     *  2^k     4
+     *
+     * where m = 2^k is the number of buckets and n counts the current total
+     * number of entries.  If b is the number of bits in the representation of
+     * an unsigned int type, then k <= b.  Solving the inequality for n yields
+     *
+     * n < 3 * (2^(k-2))
+     */
+    if ((dict->size + 1) >= (3u << (dict->k - 2))) {
+        if (!gnx_i_resize_dict(dict)) {
+            if (created_bucket)
+                goto cleanup;
+
+            /* Remove the entry that was last added to the bucket.  In other
+             * words, we remove the tail of the bucket.
+             */
+            bucket = (GnxBucket *)(dict->bucket[i]);
+            g_assert(bucket->size > 1);
+            tail = bucket->size - 1;
+            node = (GnxNode *)(bucket->node[tail]);
+            node->key = NULL;
+            node->value = NULL;
+            free(node);
+            bucket->node[tail] = NULL;
+            (bucket->size)--;
+            goto cleanup;
+        }
+    }
+    (dict->size)++;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (created_bucket) {
+        bucket = (GnxBucket *)(dict->bucket[i]);
+        node = (GnxNode *)(bucket->node[0]);
+        if (node) {
+            node->key = NULL;
+            node->value = NULL;
+            free(node);
+            bucket->node[0] = NULL;
+            free(bucket->node);
+            bucket->node = NULL;
+        }
+        free(bucket);
+        dict->bucket[i] = NULL;
+    }
+    return GNX_FAILURE;
 }
 
 /**

@@ -30,4 +30,9 @@ GnxDict* gnx_init_dict(void);
 GnxDict* gnx_init_dict_full(const GnxBool free_key,
                             const GnxBool free_value);
 
+/* add and remove */
+int gnx_dict_add(GnxDict *dict,
+                 unsigned int *key,
+                 gnxptr value);
+
 #endif  /* GNX_DICT_H */
