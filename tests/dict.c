@@ -35,6 +35,7 @@
 static void add_duplicate(void);
 static void add_free(void);
 static void add_no_memory(void);
+static void add_no_memory_resize_dict_delete_tail(void);
 static void add_one(void);
 static void add_resize_bucket(void);
 static void add_resize_dict(void);
@@ -68,6 +69,7 @@ add(void)
     add_duplicate();
     add_free();
     add_no_memory();
+    add_no_memory_resize_dict_delete_tail();
     add_one();
     add_resize_bucket();
     add_resize_dict();
@@ -233,6 +235,81 @@ add_no_memory(void)
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_dict_add(dict, key, value));
     assert(ENOMEM == errno);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Add enough elements to trigger a resize of a dictionary.  When the resizing
+ * fails, we must recover by removing the tail entry of the bucket that was
+ * last modified.
+ */
+static void
+add_no_memory_resize_dict_delete_tail(void)
+{
+#ifdef GNX_ALLOC_TEST
+    double *value;
+    GnxDict *dict;
+    int alloc_size;
+    unsigned int i, *key, n;
+    const unsigned int a = 3007121345;  /* The a parameter. */
+    const unsigned int c = 19788844;    /* The c parameter. */
+    const unsigned int target = 83;
+
+    /* Initialize the dictionary to have a pair of pre-determined values for
+     * its a and c parameters.
+     */
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    dict->a = a;
+    dict->c = c;
+
+    /* Insert just enough elements such that a resize is not triggered.  We
+     * assume that the load factor is 3/4.  If n is the number of entries in
+     * the dictionary and m is the number of buckets, then we will not trigger
+     * a resize provided that
+     *
+     *  n     3
+     * --- < ---
+     *  m     4
+     *
+     * The number of buckets m = 2^k is a power of two.  Solving the inequality
+     * for n yields n < 3 * 2^(k-2).  Thus we will not trigger a resize
+     * provided that we insert at most (3 * 2^(k-2) - 1) elements.
+     *
+     * With the above pre-determined values for the a and c parameters,
+     * inserting elements with keys in the range [0, n - 1] will result in
+     * at least one bucket that has 6 entries.  In particular, each of the
+     * following keys will map to the bucket with index 14:
+     *
+     * 33, 43, 53, 63, 73, 83
+     *
+     * Instead of inserting the key 83, we substitute in another key value.
+     */
+    n = (3 * (1u << (dict->k - 2))) - 1;
+    for (i = 0; i < n; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        *key = i;
+        if (target == i)
+            *key = n;
+        value = (double *)malloc(sizeof(double));
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+    }
+    assert(n == dict->size);
+
+    /* Now add another key/value pair to trigger a resize of the dictionary. */
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    *key = target;
+    value = (double *)malloc(sizeof(double));
+    *value = (double)g_random_double();
+    alloc_size = GNX_ALLOC_BUCKET_NODE_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_dict_add(dict, key, value));
+    assert(ENOMEM == errno);
+    assert(n == dict->size);
 
     free(key);
     free(value);
