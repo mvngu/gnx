@@ -498,23 +498,16 @@ delete_bucket_inbetween(void)
      * the keys 43, 53, 63, 73 uniformly at random and then remove it from the
      * dictionary.
      */
-    i = (unsigned int)g_random_int_range(0, size + 1);
+    i = (unsigned int)g_random_int_range(0, (int)size);
     target = list[i];
-    target = list[0];
     assert(gnx_dict_delete(dict, &target));
     assert(!gnx_dict_has(dict, &target));
     assert((n - 1) == dict->size);
-
-    /* FIXME: finish the implementation. */
-
-    target = list[1];
-    assert(gnx_dict_has(dict, &target));
-    /* for (i = 0; i < size; i++) { */
-    /*     if (list[i] == target) */
-    /*         continue; */
-
-    /*     assert(gnx_dict_has(dict, &(list[i]))); */
-    /* } */
+    for (i = 0; i < size; i++) {
+        if (list[i] == target)
+            continue;
+        assert(gnx_dict_has(dict, &(list[i])));
+    }
 
     gnx_destroy_dict(dict);
 }
