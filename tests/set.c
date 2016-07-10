@@ -535,6 +535,7 @@ has_empty(void)
     set = gnx_init_set();
     assert(0 == set->size);
     assert(!gnx_set_has(set, &a));
+    assert(0 == set->size);
 
     gnx_destroy_set(set);
 }
@@ -560,6 +561,8 @@ has_member(void)
     for (i = 0; i < size; i++)
         assert(gnx_set_has(set, &(list[i])));
 
+    assert(size == set->size);
+
     free(list);
     gnx_destroy_set(set);
 }
@@ -584,6 +587,7 @@ has_non_member(void)
 
     elem = (int)size;
     assert(!gnx_set_has(set, &elem));
+    assert(size == set->size);
 
     free(list);
     gnx_destroy_set(set);
