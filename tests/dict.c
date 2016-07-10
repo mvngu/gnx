@@ -39,6 +39,15 @@ static void add_one(void);
 static void add_resize_bucket(void);
 static void add_resize_dict(void);
 
+/* delete elements */
+static void delete_bucket_inbetween(void);
+static void delete_bucket_tail(void);
+static void delete_empty(void);
+static void delete_non_member(void);
+static void delete_one(void);
+static void delete_random_dont_free_key_value(void);
+static void delete_random_free_key_value(void);
+
 /* has an element */
 static void has_empty(void);
 static void has_member(void);
@@ -340,6 +349,335 @@ add_resize_dict(void)
 }
 
 /**************************************************************************
+ * delete elements
+ *************************************************************************/
+
+static void
+delete(void)
+{
+    delete_bucket_inbetween();
+    delete_bucket_tail();
+    delete_empty();
+    delete_non_member();
+    delete_one();
+    delete_random_dont_free_key_value();
+    delete_random_free_key_value();
+}
+
+/* Within a dictionary, we delete an element that is sandwiched between the
+ * first and last elements of a bucket.
+ */
+static void
+delete_bucket_inbetween(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, *key, n, target;
+    const unsigned int a = 3007121345;  /* the a parameter */
+    const unsigned int c = 19788844;    /* the c parameter */
+    const unsigned int list[4] = {43, 53, 63, 73};
+    const unsigned int size = 4;
+
+    /* Initialize the dictionary to have a pair of pre-determined values for
+     * its a and c parameters.
+     */
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    dict->a = a;
+    dict->c = c;
+
+    /* Insert just enough elements such that a resize is not triggered.  We
+     * assume that the load factor is 3/4.  If n is the number of entries in
+     * the dictionary and m is the number of buckets, then we will not trigger
+     * a resize provided that
+     *
+     *  n     3
+     * --- < ---
+     *  m     4
+     *
+     * The number of buckets m = 2^k is a power of two.  Solving the inequality
+     * for n yields n < 3 * 2^(k-2).  Thus we will not trigger a resize
+     * provided that we insert at most (3 * 2^(k-2) - 1) elements.
+     *
+     * With the above pre-determined values for the a and c parameters,
+     * inserting elements with keys in the range [0, n - 1] will result in
+     * at least one bucket that has 6 entries.  In particular, each of the
+     * following keys will map to the bucket with index 14:
+     *
+     * 33, 43, 53, 63, 73, 83.
+     */
+    n = (3 * (1u << (dict->k - 2))) - 1;
+    for (i = 0; i < n; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        *key = i;
+        value = (double *)malloc(sizeof(double));
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+    }
+    assert(n == dict->size);
+
+    /* As noted above, each of the keys 33, 43, 53, 63, 73, 83 maps to the
+     * bucket with index 14.  The entry with key 33 is the head of the bucket
+     * and the entry with key 83 is the tail of the bucket.  Choose any one of
+     * the keys 43, 53, 63, 73 uniformly at random and then remove it from the
+     * dictionary.
+     */
+    i = (unsigned int)g_random_int_range(0, size + 1);
+    target = list[i];
+    target = list[0];
+    assert(gnx_dict_delete(dict, &target));
+    assert(!gnx_dict_has(dict, &target));
+    assert((n - 1) == dict->size);
+
+    /* FIXME: finish the implementation. */
+
+    target = list[1];
+    assert(gnx_dict_has(dict, &target));
+    /* for (i = 0; i < size; i++) { */
+    /*     if (list[i] == target) */
+    /*         continue; */
+
+    /*     assert(gnx_dict_has(dict, &(list[i]))); */
+    /* } */
+
+    gnx_destroy_dict(dict);
+}
+
+/* Within a dictionary, we delete the tail of a bucket that has multiple
+ * elements.
+ */
+static void
+delete_bucket_tail(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, *key, n, target;
+    const unsigned int a = 279137349;  /* the a parameter */
+    const unsigned int c = 28479211;   /* the c parameter */
+
+    /* Initialize the dictionary to have a pair of pre-determined values for
+     * its a and c parameters.
+     */
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    dict->a = a;
+    dict->c = c;
+
+    /* Insert just enough elements such that a resize is not triggered.  We
+     * assume that the load factor is 3/4.  If n is the number of entries in
+     * the dictionary and m is the number of buckets, then we will not trigger
+     * a resize provided that
+     *
+     *  n     3
+     * --- < ---
+     *  m     4
+     *
+     * The number of buckets m = 2^k is a power of two.  Solving the inequality
+     * for n yields n < 3 * 2^(k-2).  Thus we will not trigger a resize
+     * provided that we insert at most (3 * 2^(k-2) - 1) elements.
+     *
+     * With the above pre-determined values for the a and c parameters,
+     * inserting elements with keys in the range [0, n - 1] will result in
+     * at least one bucket that has multiple entries.  In particular, each of
+     * the keys 1 and 78 will map to the bucket with index 9.
+     */
+    n = (3 * (1u << (dict->k - 2))) - 1;
+    for (i = 0; i < n; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        *key = i;
+        value = (double *)malloc(sizeof(double));
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+    }
+    assert(n == dict->size);
+
+    /* As noted above, each of the keys 1 and 78 maps to the bucket with index
+     * 9.  Since we first inserted the key 1 followed by the key 78, then the
+     * entry with key 1 is the head of the bucket with index 9 and the entry
+     * with key 78 is the tail of the bucket.
+     */
+    target = 78;
+    assert(gnx_dict_delete(dict, &target));
+    assert((n - 1) == dict->size);
+
+    gnx_destroy_dict(dict);
+}
+
+/* Delete elements from an empty dictionary. */
+static void
+delete_empty(void)
+{
+    GnxDict *dict;
+    const unsigned int key = (unsigned int)g_random_int();
+
+    /* The dictionary was configured to not release memory of key and value. */
+    dict = gnx_init_dict();
+    assert(0 == dict->size);
+    assert(!gnx_dict_delete(dict, &key));
+    assert(0 == dict->size);
+    gnx_destroy_dict(dict);
+
+    /* The dictionary was configured to release memory of key and value. */
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    assert(0 == dict->size);
+    assert(!gnx_dict_delete(dict, &key));
+    assert(0 == dict->size);
+    gnx_destroy_dict(dict);
+}
+
+/* Delete an element that is not in a dictionary. */
+static void
+delete_non_member(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, k, *key;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    key = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    value = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    for (i = 0; i < size; i++) {
+        key[i] = i;
+        value[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(key[i]), &(value[i])));
+    }
+    assert(size == dict->size);
+
+    k = size;
+    assert(!gnx_dict_has(dict, &k));
+    assert(!gnx_dict_delete(dict, &k));
+    assert(size == dict->size);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+}
+
+/* Delete from a dictionary that has one element. */
+static void
+delete_one(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int *key;
+
+    /***********************************************************************
+     * The dictionary was configured to not release memory of key and value.
+     **********************************************************************/
+
+    dict = gnx_init_dict();
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    *key = (unsigned int)g_random_int();
+    value = (double *)malloc(sizeof(double));
+    *value = (double)g_random_double();
+    assert(gnx_dict_add(dict, key, value));
+    assert(1 == dict->size);
+
+    assert(gnx_dict_has(dict, key));
+    assert(gnx_dict_delete(dict, key));
+    assert(0 == dict->size);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+
+    /***********************************************************************
+     * The dictionary was configured to release memory of key and value.
+     **********************************************************************/
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    *key = (unsigned int)g_random_int();
+    value = (double *)malloc(sizeof(double));
+    *value = (double)g_random_double();
+    assert(gnx_dict_add(dict, key, value));
+    assert(1 == dict->size);
+
+    assert(gnx_dict_has(dict, key));
+    assert(gnx_dict_delete(dict, key));
+    assert(0 == dict->size);
+
+    gnx_destroy_dict(dict);
+}
+
+/* Choose a key/value pair uniformly at random from a dictionary and delete
+ * that key/value pair from the dictionary.  The dictionary was configured to
+ * not release memory of the keys and values.
+ */
+static void
+delete_random_dont_free_key_value(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, *key;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    key = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    value = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    for (i = 0; i < size; i++) {
+        key[i] = i;
+        value[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(key[i]), &(value[i])));
+    }
+    assert(size == dict->size);
+
+    i = (unsigned int)g_random_int_range(0, (int)size);
+    assert(gnx_dict_has(dict, &(key[i])));
+    assert(gnx_dict_delete(dict, &(key[i])));
+    assert((size - 1) == dict->size);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+}
+
+/* Choose a key/value pair uniformly at random from a dictionary and delete
+ * that key/value pair from the dictionary.  The dictionary was configured to
+ * release memory of keys and values.
+ */
+static void
+delete_random_free_key_value(void)
+{
+    double *value;
+    GnxDict *dict;
+    int has_target;
+    unsigned int i, *key, target;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    has_target = FALSE;  /* Have we chosen an element to delete? */
+
+    for (i = 0; i < size; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        *key = (unsigned int)g_random_int();
+        value = (double *)malloc(sizeof(double));
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+
+        /* Choose only one element for deletion. */
+        if (!has_target && g_random_boolean()) {
+            target = *key;
+            has_target = TRUE;
+        }
+
+        /* By default, we use the first element as the target for deletion.
+         * This is to prevent the case where none of the elements is chosen.
+         */
+        if (!i)
+            target = *key;
+    }
+    assert(size == dict->size);
+
+    assert(gnx_dict_has(dict, &target));
+    assert(gnx_dict_delete(dict, &target));
+    assert((size - 1) == dict->size);
+
+    gnx_destroy_dict(dict);
+}
+
+/**************************************************************************
  * has an element
  *************************************************************************/
 
@@ -548,6 +886,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/dict/add", add);
+    g_test_add_func("/dict/delete", delete);
     g_test_add_func("/dict/has", has);
     g_test_add_func("/dict/new", new);
 

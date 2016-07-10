@@ -34,6 +34,8 @@ GnxDict* gnx_init_dict_full(const GnxBool free_key,
 int gnx_dict_add(GnxDict *dict,
                  unsigned int *key,
                  gnxptr value);
+int gnx_dict_delete(GnxDict *dict,
+                    const unsigned int *key);
 
 /* query */
 gnxptr gnx_dict_has(const GnxDict *dict,

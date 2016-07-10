@@ -17,6 +17,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>  /* memmove */
 
 #include "dict.h"
 #include "sanity.h"
@@ -507,6 +508,88 @@ cleanup:
         dict->bucket[i] = NULL;
     }
     return GNX_FAILURE;
+}
+
+/**
+ * @brief Remove a key and its value from a dictionary.
+ *
+ * @param dict We want to remove from this dictionary.
+ * @param key Remove this key from the given dictionary.
+ * @return Nonzero if the deletion was successful; zero otherwise.  We also
+ *         return zero if the dictionary is empty.
+ */
+int
+gnx_dict_delete(GnxDict *dict,
+                const unsigned int *key)
+{
+    GnxBucket *bucket;
+    GnxNode *node;
+    unsigned int bsize, i, j, ncell;
+
+    gnx_i_check_dict(dict);
+    g_return_val_if_fail(key, GNX_FAILURE);
+
+    if (!dict->size)
+        return GNX_FAILURE;
+    if (!gnx_i_has(dict, key, &i, &j))
+        return GNX_FAILURE;
+
+    /* Delete the entry with index j in bucket i. */
+    bucket = (GnxBucket *)(dict->bucket[i]);
+    node = (GnxNode *)(bucket->node[j]);
+    if (GNX_FREE_KEYS & dict->free_key) {
+        free(node->key);
+        node->key = NULL;
+    }
+    if (GNX_FREE_VALUES & dict->free_value) {
+        free(node->value);
+        node->value = NULL;
+    }
+
+    /* We have deleted the only entry in a bucket of size 1 or we have deleted
+     * the tail of the bucket.  In either of these cases, we do not need to
+     * reorganize bucket i.
+     */
+    bsize = bucket->size;
+    if (1 == bsize) {
+        g_assert(0 == j);
+        free(node);
+        bucket->node[j] = NULL;
+        free(bucket);
+        dict->bucket[i] = NULL;
+        (dict->size)--;
+        return GNX_SUCCESS;
+    }
+    if (j == (bsize - 1)) {
+        g_assert(bsize > 1);
+        free(node);
+        bucket->node[j] = NULL;
+        (bucket->size)--;
+        (dict->size)--;
+        return GNX_SUCCESS;
+    }
+
+    /* We have deleted an entry that is sandwiched between the first and last
+     * entries of the bucket.  Let j be the index of the target entry.  Now
+     * all entries from index j upward must be shifted down by one position.
+     * The number of positions to shift downward can be computed as the number
+     * of entries from index j + 1 to the index of the last entry (which is the
+     * size of the bucket minus one).  Hence the formula:
+     *
+     * #position to shift down
+     * = (index of last entry) - (index of target entry)
+     */
+    g_assert(bsize > 2);
+    g_assert(0 < j);
+    g_assert(j < (bsize - 1));
+    free(node);
+    ncell = bsize - 1 - j;
+    (void)memmove(&(bucket->node[j]), &(bucket->node[j + 1]),
+                  sizeof(gnxptr) * ncell);
+    (bucket->size)--;
+    (dict->size)--;
+
+    return GNX_SUCCESS;
 }
 
 /**
