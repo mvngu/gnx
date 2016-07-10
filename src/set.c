@@ -458,7 +458,7 @@ gnx_set_any_element(GnxSet *set)
     gnxintptr elem;
 
     gnx_i_check_set(set);
-    if (!(set->size))
+    if (!set->size)
         return NULL;
 
     gnx_set_iter_init(&iter, set);
@@ -486,14 +486,14 @@ gnx_set_delete(GnxSet *set,
     gnx_i_check_set(set);
     g_return_val_if_fail(elem, GNX_FAILURE);
 
-    if (!(set->size))
+    if (!set->size)
         return GNX_FAILURE;
     if (!gnx_i_has(set, elem, &i, &j))
         return GNX_FAILURE;
 
     bucket = (GnxArray *)(set->bucket[i]);
     assert(gnx_array_delete(bucket, &j));
-    if (!(bucket->size)) {
+    if (!bucket->size) {
         gnx_destroy_array(bucket);
         set->bucket[i] = NULL;
     }
