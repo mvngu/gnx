@@ -35,4 +35,8 @@ int gnx_dict_add(GnxDict *dict,
                  unsigned int *key,
                  gnxptr value);
 
+/* query */
+gnxptr gnx_dict_has(const GnxDict *dict,
+                    const unsigned int *key);
+
 #endif  /* GNX_DICT_H */

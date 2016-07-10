@@ -39,6 +39,11 @@ static void add_one(void);
 static void add_resize_bucket(void);
 static void add_resize_dict(void);
 
+/* has an element */
+static void has_empty(void);
+static void has_member(void);
+static void has_non_member(void);
+
 /* new: create and destroy */
 static void new_dict(void);
 static void new_dict_full(void);
@@ -335,6 +340,92 @@ add_resize_dict(void)
 }
 
 /**************************************************************************
+ * has an element
+ *************************************************************************/
+
+static void
+has(void)
+{
+    has_empty();
+    has_member();
+    has_non_member();
+}
+
+/* Search an empty dictionary. */
+static void
+has_empty(void)
+{
+    GnxDict *dict;
+    const unsigned int key = (unsigned int)g_random_int();
+
+    dict = gnx_init_dict();
+    assert(0 == dict->size);
+    assert(!gnx_dict_has(dict, &key));
+    assert(0 == dict->size);
+
+    gnx_destroy_dict(dict);
+}
+
+/* Search for elements that exist in a dictionary. */
+static void
+has_member(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, *key;
+    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    key = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    value = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    for (i = 0; i < size; i++) {
+        key[i] = i;
+        value[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(key[i]), &(value[i])));
+    }
+    assert(size == dict->size);
+
+    for (i = 0; i < size; i++)
+        assert(gnx_dict_has(dict, &(key[i])));
+
+    assert(size == dict->size);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+}
+
+/* Search for elements that do not exist in a dictionary. */
+static void
+has_non_member(void)
+{
+    double *value;
+    GnxDict *dict;
+    unsigned int i, k, *key;
+    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    key = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    value = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    for (i = 0; i < size; i++) {
+        key[i] = i;
+        value[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(key[i]), &(value[i])));
+    }
+    assert(size == dict->size);
+
+    k = size;
+    assert(!gnx_dict_has(dict, &k));
+    assert(size == dict->size);
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -457,6 +548,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/dict/add", add);
+    g_test_add_func("/dict/has", has);
     g_test_add_func("/dict/new", new);
 
     return g_test_run();

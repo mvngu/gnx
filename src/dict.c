@@ -510,6 +510,33 @@ cleanup:
 }
 
 /**
+ * @brief Whether a dictionary has a given key.
+ *
+ * @param dict We want to search this dictionary.
+ * @param key Whether this key is in the dictionary.
+ * @return If the given key is in the dictionary, we return a pointer to the
+ *         value that is associated with the key.  Otherwise we return @c NULL.
+ *         We also return @c NULL if the dictionary is empty.
+ */
+gnxptr
+gnx_dict_has(const GnxDict *dict,
+             const unsigned int *key)
+{
+    GnxNode *node;
+
+    gnx_i_check_dict(dict);
+    g_return_val_if_fail(key, NULL);
+    if (!dict->size)
+        return NULL;
+
+    node = gnx_i_has(dict, key, NULL, NULL);
+    if (!node)
+        return NULL;
+
+    return node->value;
+}
+
+/**
  * @brief Initializes a new dictionary.
  *
  * The dictionary is initialized with default settings.  In particular, the
