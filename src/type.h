@@ -240,7 +240,7 @@ typedef struct {
     gboolean bootstrap;  /**< Are we bootstrapping the process? */
     GnxSet *set;         /**< Iterate over this set. */
     unsigned int i;      /**< The bucket index. */
-    unsigned int j;      /**< The entry index within a bucket. */
+    unsigned int j;      /**< The entry index within bucket i. */
 } GnxSetIter;
 
 /**
