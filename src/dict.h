@@ -41,4 +41,11 @@ int gnx_dict_delete(GnxDict *dict,
 gnxptr gnx_dict_has(const GnxDict *dict,
                     const unsigned int *key);
 
+/* iterator */
+void gnx_dict_iter_init(GnxDictIter *iter,
+                        GnxDict *dict);
+int gnx_dict_iter_next(GnxDictIter *iter,
+                       gnxptr *key,
+                       gnxptr *value);
+
 #endif  /* GNX_DICT_H */

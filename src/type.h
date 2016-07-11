@@ -177,6 +177,19 @@ typedef struct {
 } GnxDict;
 
 /**
+ * @brief An iterator over the elements of a dictionary.
+ *
+ * An iterator is usually allocated on the runtime stack and then initialized
+ * via the function gnx_dict_iter_init().
+ */
+typedef struct {
+    gboolean bootstrap;  /**< Are we bootstrapping the process? */
+    GnxDict *dict;       /**< Iterate over this dictionary. */
+    unsigned int i;      /**< The bucket index. */
+    unsigned int j;      /**< The entry index within bucket i. */
+} GnxDictIter;
+
+/**
  * @brief A queue of integers.
  */
 typedef struct {

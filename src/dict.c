@@ -620,6 +620,120 @@ gnx_dict_has(const GnxDict *dict,
 }
 
 /**
+ * @brief Initializes an iterator over the elements of a dictionary.
+ *
+ * @param iter Initialize this iterator.  The iterator is usually allocated on
+ *        the runtime stack.
+ * @param dict We want to iterate over the elements of this dictionary.
+ */
+void
+gnx_dict_iter_init(GnxDictIter *iter,
+                   GnxDict *dict)
+{
+    iter->bootstrap = TRUE;
+    iter->dict = dict;
+    iter->i = 0;
+    iter->j = 0;
+}
+
+/**
+ * @brief Iterate to the next element of a dictionary.
+ *
+ * The order in which we iterate over the elements of a dictionary is not the
+ * same as the order in which the elements were inserted into the dictionary.
+ *
+ * @param iter An iterator that has been initialized via the function
+ *        gnx_dict_iter_init().
+ * @param key This will hold the key of the next element in the dictionary.
+ *        If @c NULL, then we will ignore the key of the next element.
+ * @param value This will hold the value of the next element in the dictionary.
+ *        If @c NULL, then we will ignore the value of the next element.
+ * @return Nonzero if we have not yet reached the end of the dictionary; zero
+ *         otherwise.  If zero, then we have reached the end of the dictionary
+ *         and the iterator is now invalid.  We also return zero if the
+ *         dictionary is empty.
+ */
+int
+gnx_dict_iter_next(GnxDictIter *iter,
+                   gnxptr *key,
+                   gnxptr *value)
+{
+    GnxBucket *bucket;
+    GnxNode *node;
+    int i;
+
+    g_return_val_if_fail(iter, GNX_FAILURE);
+    gnx_i_check_dict(iter->dict);
+
+    /* If we are bootstrapping the process, then we look for the first element
+     * to which we can iterate.
+     */
+    if (iter->bootstrap) {
+        /* The dictionary is empty. */
+        if (!(iter->dict->size))
+            return GNX_FAILURE;
+
+        /* The index of the first bucket that has at least one entry. */
+        i = -1;
+        do {
+            i++;
+            bucket = (GnxBucket *)(iter->dict->bucket[i]);
+        } while (!bucket);
+        iter->i = (unsigned int)i;
+
+        /* The first entry within the first non-empty bucket. */
+        g_assert(bucket->size);
+        iter->j = 0;
+        node = (GnxNode *)(bucket->node[iter->j]);
+        if (key)
+            *key = node->key;
+        if (value)
+            *value = node->value;
+
+        iter->bootstrap = FALSE;
+        return GNX_SUCCESS;
+    }
+
+    /* We have already iterated over the first element of the dictionary.
+     * Start from the current element and iterate to the next element of the
+     * dictionary.
+     */
+    bucket = (GnxBucket *)(iter->dict->bucket[iter->i]);
+    for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
+        node = (GnxNode *)(bucket->node[iter->j]);
+        if (key)
+            *key = node->key;
+        if (value)
+            *value = node->value;
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted the current bucket.  Find the next bucket that has at
+     * least one entry.
+     */
+    (iter->i)++;
+    while (iter->i < (iter->dict->capacity)) {
+        bucket = (GnxBucket *)(iter->dict->bucket[iter->i]);
+        if (!bucket) {
+            (iter->i)++;
+            continue;
+        }
+
+        g_assert(bucket->size);
+        iter->j = 0;
+        node = (GnxNode *)(bucket->node[iter->j]);
+        if (key)
+            *key = node->key;
+        if (value)
+            *value = node->value;
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted all buckets. */
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Initializes a new dictionary.
  *
  * The dictionary is initialized with default settings.  In particular, the

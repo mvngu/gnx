@@ -54,6 +54,12 @@ static void has_empty(void);
 static void has_member(void);
 static void has_non_member(void);
 
+/* iterator */
+static void iter_count(void);
+static void iter_empty(void);
+static void iter_one(void);
+static void iter_random(void);
+
 /* new: create and destroy */
 static void new_dict(void);
 static void new_dict_full(void);
@@ -834,6 +840,147 @@ has_non_member(void)
 }
 
 /**************************************************************************
+ * iterator
+ *************************************************************************/
+
+static void
+iter(void)
+{
+    iter_count();
+    iter_empty();
+    iter_one();
+    iter_random();
+}
+
+/* Count the number of elements in a dictionary. */
+static void
+iter_count(void)
+{
+    double *value;
+    GnxDict *dict;
+    GnxDictIter iter;
+    unsigned int i, *key;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 51);
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+
+    for (i = 0; i < size; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        *key = (unsigned int)g_random_int();
+        value = (double *)malloc(sizeof(double));
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+    }
+
+    gnx_dict_iter_init(&iter, dict);
+    i = 0;
+    while (gnx_dict_iter_next(&iter, NULL, NULL))
+        i++;
+
+    assert(i == dict->size);
+
+    gnx_destroy_dict(dict);
+}
+
+/* Iterate over an empty dictionary. */
+static void
+iter_empty(void)
+{
+    GnxDict *dict;
+    GnxDictIter iter;
+
+    dict = gnx_init_dict();
+    assert(0 == dict->size);
+
+    gnx_dict_iter_init(&iter, dict);
+    assert(!gnx_dict_iter_next(&iter, NULL, NULL));
+
+    gnx_destroy_dict(dict);
+}
+
+/* Iterate over a dictionary that has exactly one element. */
+static void
+iter_one(void)
+{
+    double v = (double)g_random_double();
+    GnxDict *dict;
+    GnxDictIter iter;
+    gnxptr key;
+    unsigned int k = (unsigned int)g_random_int();
+
+    dict = gnx_init_dict();
+    assert(gnx_dict_add(dict, &k, &v));
+    assert(1 == dict->size);
+
+    gnx_dict_iter_init(&iter, dict);
+    assert(gnx_dict_iter_next(&iter, &key, NULL));
+    assert(*((unsigned int *)key) == k);
+    assert(!gnx_dict_iter_next(&iter, NULL, NULL));
+
+    gnx_destroy_dict(dict);
+}
+
+/* Iterate over a dictionary that has a random number of elements. */
+static void
+iter_random(void)
+{
+    double *listv;
+    GnxDict *dict;
+    GnxDictIter iter;
+    gnxptr key, value;
+    int unique;
+    unsigned int i, j, k, *listk;
+    const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
+
+    listk = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    listv = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    /* Generate a bunch of unique random integers.  The size of the list is
+     * chosen such that we do not trigger a resize of the dictionary.  Here we
+     * assume that a resize of the dictionary will not be triggered provided
+     * that the number of elements inserted into the dictionary is kept below
+     * 3 * 2^(k-2), where k is the exponent that is used to compute the number
+     * of buckets.  In other words, a resize will not be triggered provided
+     * that the load factor is kept below the threshold of 3/4.
+     */
+    for (i = 0; i < size; i++) {
+        unique = FALSE;
+        do {
+            k = (unsigned int)g_random_int();
+            for (j = 0; j < i; j++) {
+                if (k == listk[j])
+                    break;
+            }
+            if (j >= i)
+                unique = TRUE;
+        } while (!unique);
+
+        listk[i] = k;
+        listv[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(listk[i]), &(listv[i])));
+    }
+    assert(size == dict->size);
+
+    /* Check that all the elements that were inserted into the dictionary are
+     * the elements of the list.
+     */
+    gnx_dict_iter_init(&iter, dict);
+    while (gnx_dict_iter_next(&iter, &key, &value)) {
+        k = *((unsigned int *)key);
+        for (i = 0; i < size; i++) {
+            if (k == listk[i])
+                break;
+        }
+        assert(i < size);
+    }
+
+    free(listk);
+    free(listv);
+    gnx_destroy_dict(dict);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -958,6 +1105,7 @@ main(int argc,
     g_test_add_func("/dict/add", add);
     g_test_add_func("/dict/delete", delete);
     g_test_add_func("/dict/has", has);
+    g_test_add_func("/dict/iter", iter);
     g_test_add_func("/dict/new", new);
 
     return g_test_run();
