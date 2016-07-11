@@ -568,7 +568,7 @@ gnx_set_iter_next(GnxSetIter *iter,
         if (!(iter->set->size))
             return GNX_FAILURE;
 
-        /* The index of the first bucket with at least one entry. */
+        /* The index of the first bucket that has at least one entry. */
         i = -1;
         do {
             i++;
