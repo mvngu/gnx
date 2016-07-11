@@ -54,7 +54,7 @@
 #define GNX_MAXIMUM_BUCKETS                                                \
     ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
                                   * The maximum number of buckets in a set or
-                                  * hash table.  This maximum value depends on
+                                  * dictionary.  This maximum value depends on
                                   * the maximum value of an @c int type.
                                   */
 
