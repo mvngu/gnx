@@ -28,9 +28,36 @@
  * prototypes for helper functions
  *************************************************************************/
 
+/* has */
+static void has_empty(void);
+
 /* new: create and destroy */
 static void new_heap(void);
 static void new_no_memory(void);
+
+/**************************************************************************
+ * has
+ *************************************************************************/
+
+static void
+has(void)
+{
+    has_empty();
+}
+
+/* Query for a node in an empty heap. */
+static void
+has_empty(void)
+{
+    GnxHeap *heap;
+    const unsigned int v = (unsigned int)g_random_int();
+
+    heap = gnx_init_heap();
+    assert(0 == heap->size);
+    assert(!gnx_heap_has(heap, &v));
+
+    gnx_destroy_heap(heap);
+}
 
 /**************************************************************************
  * new: create and destroy
@@ -80,6 +107,7 @@ main(int argc,
 {
     g_test_init(&argc, &argv, NULL);
 
+    g_test_add_func("/heap/has", has);
     g_test_add_func("/heap/new", new);
 
     return g_test_run();

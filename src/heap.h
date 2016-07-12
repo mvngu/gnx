@@ -28,4 +28,8 @@
 void gnx_destroy_heap(GnxHeap *heap);
 GnxHeap* gnx_init_heap(void);
 
+/* query the heap */
+int gnx_heap_has(const GnxHeap *heap,
+                 const unsigned int *v);
+
 #endif  /* GNX_HEAP_H */

@@ -20,6 +20,7 @@
 
 #include "dict.h"
 #include "heap.h"
+#include "sanity.h"
 
 /**
  * @file heap.h
@@ -78,6 +79,26 @@ gnx_destroy_heap(GnxHeap *heap)
     }
     free(heap);
     heap = NULL;
+}
+
+/**
+ * @brief Whether a heap contains a given node.
+ *
+ * @param heap Query this minimum binary heap.
+ * @param v The node to query.
+ * @return Nonzero if the node @a v is already in the heap; zero otherwise.
+ */
+int
+gnx_heap_has(const GnxHeap *heap,
+             const unsigned int *v)
+{
+    gnx_i_check_heap(heap);
+    g_return_val_if_fail(v, GNX_FAILURE);
+
+    if (gnx_dict_has(heap->map, v))
+        return GNX_SUCCESS;
+
+    return GNX_FAILURE;
 }
 
 /**
