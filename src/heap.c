@@ -110,7 +110,7 @@ gnx_init_heap(void)
         goto cleanup;
 
     /* The heap is represented as an array of nodes. */
-    heap->node = (int *)malloc(reserved_size * sizeof(int));
+    heap->node = (unsigned int *)malloc(reserved_size * sizeof(unsigned int));
     if (!heap->node)
         goto cleanup;
 

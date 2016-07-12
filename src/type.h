@@ -194,7 +194,7 @@ typedef struct {
  */
 typedef struct {
     GnxDict *map;           /**< A mapping from node ID to (index, key). */
-    int *node;              /**< An array of nodes of the binary heap.  The
+    unsigned int *node;     /**< An array of nodes of the binary heap.  The
                              * heap is represented as an array.
                              */
     unsigned int size;      /**< How many elements in the binary heap. */
