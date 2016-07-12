@@ -50,6 +50,19 @@ gnx_i_check_dict(const GnxDict *dict)
 }
 
 /**
+ * @brief Some sanity checks on a binary heap.
+ *
+ * @param heap Check this binary heap.
+ */
+void
+gnx_i_check_heap(const GnxHeap *heap)
+{
+    g_return_if_fail(heap);
+    g_return_if_fail(heap->map);
+    g_return_if_fail(heap->node);
+}
+
+/**
  * @brief Some sanity checks on a queue.
  *
  * @param queue The queue to check.
