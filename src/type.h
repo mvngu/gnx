@@ -190,6 +190,22 @@ typedef struct {
 } GnxDictIter;
 
 /**
+ * @brief A minimum binary heap.
+ */
+typedef struct {
+    GnxDict *map;           /**< A mapping from node ID to (index, key). */
+    int *node;              /**< An array of nodes of the binary heap.  The
+                             * heap is represented as an array.
+                             */
+    unsigned int size;      /**< How many elements in the binary heap. */
+    unsigned int capacity;  /**< Memory is allocated for a given number of
+                             * elements.  The capacity is the maximum possible
+                             * number of nodes in a heap.  We assume that the
+                             * capacity is a power of two.
+                             */
+} GnxHeap;
+
+/**
  * @brief A queue of integers.
  */
 typedef struct {
