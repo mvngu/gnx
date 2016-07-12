@@ -398,6 +398,12 @@ gnx_destroy_dict(GnxDict *dict)
 /**
  * @brief Inserts a key/value pair into a dictionary.
  *
+ * The dictionary or one of its buckets might possibly be resized to
+ * accommodate the key/value pair.  If a bucket is resized, the new capacity
+ * of the bucket must not exceed #GNX_MAXIMUM_ELEMENTS.  If the dictionary is
+ * resized, then the bucket capacity (the number of possible buckets) of the
+ * dictionary must not exceed #GNX_MAXIMUM_BUCKETS.
+ *
  * @param dict We want to insert a key/value pair into this dictionary.
  * @param key Add this key (and its corresponding value) to the dictionary.  It
  *        is your responsibility to ensure that the key exists for the duration
