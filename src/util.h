@@ -24,6 +24,8 @@
 
 #include "type.h"
 
+int gnx_double_cmp_eq(const double *a,
+                      const double *b);
 int gnx_double_cmp_le(const double *a,
                       const double *b);
 

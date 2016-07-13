@@ -29,6 +29,7 @@
  *************************************************************************/
 
 /* compare floating-point numbers */
+static void compare_double_eq(void);
 static void compare_double_le(void);
 
 /**************************************************************************
@@ -38,7 +39,25 @@ static void compare_double_le(void);
 static void
 compare_double(void)
 {
+    compare_double_eq();
     compare_double_le();
+}
+
+/* Compare two floating-point numbers a and b for the relation a == b. */
+static void
+compare_double_eq(void)
+{
+    double a, b;
+    const double low = -100.0;
+    const double high = 100.0;
+    const double mid = 0.0;
+
+    assert(gnx_double_cmp_eq(&high, &high));
+    assert(!gnx_double_cmp_eq(&low, &high));
+
+    a = g_random_double_range(low, mid);
+    b = g_random_double_range(mid, high);
+    assert(!gnx_double_cmp_eq(&a, &b));
 }
 
 /* Compare two floating-point numbers a and b for the relation a <= b. */

@@ -72,6 +72,22 @@ gnx_i_double_cmp(const double *a,
  *************************************************************************/
 
 /**
+ * @brief Determines whether two floating-point numbers are equal.
+ *
+ * @param a A floating-point number.
+ * @param b Another floating-point number.
+ * @return Nonzero if @a a and @a b compare equal; zero otherwise.
+ */
+int
+gnx_double_cmp_eq(const double *a,
+                  const double *b)
+{
+    int retval = gnx_i_double_cmp(a, b);
+
+    return (!retval) ? TRUE : FALSE;
+}
+
+/**
  * @brief Determines whether one floating-point number is less than or
  *        equal to another floating-point number.
  *
