@@ -32,4 +32,9 @@ GnxHeap* gnx_init_heap(void);
 int gnx_heap_has(const GnxHeap *heap,
                  const unsigned int *v);
 
+/* modify a heap */
+int gnx_heap_add(GnxHeap *heap,
+                 const unsigned int *v,
+                 const double *key);
+
 #endif  /* GNX_HEAP_H */
