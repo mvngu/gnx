@@ -575,19 +575,20 @@ gnx_dict_delete(GnxDict *dict,
         return GNX_SUCCESS;
     }
 
-    /* We have deleted an entry that is sandwiched between the first and last
-     * entries of the bucket.  Let j be the index of the target entry.  Now
-     * all entries from index j upward must be shifted down by one position.
-     * The number of positions to shift downward can be computed as the number
-     * of entries from index j + 1 to the index of the last entry (which is the
-     * size of the bucket minus one).  Hence the formula:
+    /* Now j indexes either the head of the bucket or an entry that is
+     * sandwiched between the first and last entries of the bucket.  In any
+     * case, the bucket is known to have at least two entries.  Let j be the
+     * index of the target entry.  Now all entries from index j upward must be
+     * shifted down by one position.  The number of positions to shift downward
+     * can be computed as the number of entries from index j + 1 to the index
+     * of the last entry (which is the size of the bucket minus one). Hence the
+     * formula:
      *
      * #position to shift down
      * = (index of last entry) - (index of target entry)
      */
-    g_assert(bsize > 2);
-    g_assert(0 < j);
-    g_assert(j < (bsize - 1));
+    g_assert(bsize > 1);
+    g_assert((0 == j) || (j < (bsize - 1)));
     free(node);
     ncell = bsize - 1 - j;
     (void)memmove(&(bucket->node[j]), &(bucket->node[j + 1]),
