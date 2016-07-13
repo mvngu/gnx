@@ -66,6 +66,11 @@
                                   * @c int type.
                                   */
 
+#define GNX_MPFR_PRECISION (128)  /**< @hideinitializer
+                                   * How many bits of precision for a number
+                                   * that is represented in MPFR.
+                                   */
+
 #define GNX_SUCCESS (!GNX_FAILURE)  /**< @hideinitializer
                                      * Signifies that an operation was
                                      * successful.

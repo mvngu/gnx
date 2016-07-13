@@ -9,7 +9,8 @@ GNX_HEADERFILES =                                                          \
 	queue.h                                                            \
 	set.h                                                              \
 	stack.h                                                            \
-	type.h
+	type.h                                                             \
+	util.h
 ### GNX_HOOK:ALLOC_H
 
 noinst_HEADERS =                                                           \
@@ -24,7 +25,8 @@ GNX_SRC =                                                                  \
 	queue.c                                                            \
 	sanity.c                                                           \
 	set.c                                                              \
-	stack.c
+	stack.c                                                            \
+	util.c
 ### GNX_HOOK:ALLOC_C
 
 libgnx_la_SOURCES =                                                        \

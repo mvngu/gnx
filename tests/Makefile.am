@@ -26,4 +26,5 @@ test_programs =                                                            \
 	heap                                                               \
 	queue                                                              \
 	set                                                                \
-	stack
+	stack                                                              \
+	util
