@@ -66,6 +66,14 @@
                                   * @c int type.
                                   */
 
+#define GNX_MAXIMUM_NODES                                                  \
+    ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
+                                  * The maximum number of nodes in a graph or
+                                  * heap.  This maximum value depends on the
+                                  * integer type that is used to represent
+                                  * node IDs.
+                                  */
+
 #define GNX_MPFR_PRECISION (128)  /**< @hideinitializer
                                    * How many bits of precision for a number
                                    * that is represented in MPFR.
