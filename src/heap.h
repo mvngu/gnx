@@ -36,5 +36,7 @@ int gnx_heap_has(const GnxHeap *heap,
 int gnx_heap_add(GnxHeap *heap,
                  const unsigned int *v,
                  const double *key);
+int gnx_heap_pop(GnxHeap *heap,
+                 unsigned int *v);
 
 #endif  /* GNX_HEAP_H */

@@ -242,6 +242,82 @@ gnx_heap_has(const GnxHeap *heap,
 }
 
 /**
+ * @brief Removes and returns the node that has minimum key.
+ *
+ * This will decrease by one the number of elements in the minimum binary heap.
+ * The node with minimum key is the node at the top of the heap.  In a binary
+ * tree representation, this node is the root node.  In an array
+ * representation, this node is at index 0 of the array.
+ *
+ * @param heap Pop this minimum binary heap.
+ * @param v This will hold the ID of the node whose key is minimum.  Pass
+ *        @c NULL if you do not want the ID of the popped node.
+ * @return Nonzero if we successfully popped the node whose key is smallest;
+ *         zero otherwise.  We also return zero if the heap is empty.
+ */
+int
+gnx_heap_pop(GnxHeap *heap,
+             unsigned int *v)
+{
+    double key_left, key_right, key_w;
+    int left_node, right_node;
+    unsigned int i, j, left, m, right, root, w;
+
+    gnx_i_check_heap(heap);
+    if (!heap->size)
+        return GNX_FAILURE;
+
+    g_assert(heap->size);
+    m = heap->size - 1;
+
+    /* Get the node with minimum key. */
+    root = heap->node[0];
+    w = heap->node[m];
+    key_w = gnx_i_node_key(heap, &w);
+
+    /* Move the last element of the array to the front of the array.
+     * Then perform a sift-down.
+     */
+    i = 0;
+    j = 0;
+    for (;;) {
+        left = (i << 1) + 1;
+        right = left + 1;
+        left_node = (left < m);
+        right_node = (right < m);
+
+        if (left_node)
+            key_left = gnx_i_node_key(heap, &(heap->node[left]));
+        if (right_node)
+            key_right = gnx_i_node_key(heap, &(heap->node[right]));
+
+        if (left_node && gnx_double_cmp_le(&key_left, &key_w)) {
+            j = left;
+            if (right_node && gnx_double_cmp_le(&key_right, &key_left))
+                j = right;
+        } else if (right_node && gnx_double_cmp_le(&key_right, &key_w)) {
+            j = right;
+        } else {
+            gnx_i_update_node_index(heap, &w, &i);
+            heap->node[i] = w;
+            break;
+        }
+
+        gnx_i_update_node_index(heap, &(heap->node[j]), &i);
+        heap->node[i] = heap->node[j];
+        i = j;
+    }
+
+    if (v)
+        *v = root;
+    assert(gnx_dict_delete(heap->map, &root));
+    (heap->size)--;
+    g_assert(heap->map->size == heap->size);
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Initializes a minimum binary heap.
  *
  * @return An initialized minimum binary heap.  When you no longer need the

@@ -30,6 +30,11 @@
  * prototypes for helper functions
  *************************************************************************/
 
+static void add_nodes(GnxHeap *heap,
+                      const unsigned int id[],
+                      const double key[],
+                      const unsigned int *size);
+
 /* add node */
 static void add_no_memory(void);
 static void add_one(void);
@@ -43,6 +48,35 @@ static void has_empty(void);
 /* new: create and destroy */
 static void new_heap(void);
 static void new_no_memory(void);
+
+/* pop node */
+static void pop_duplicate(void);
+static void pop_empty(void);
+static void pop_more(void);
+static void pop_one(void);
+
+/**************************************************************************
+ * helper functions
+ *************************************************************************/
+
+/* Insert a bunch of nodes into a heap.
+ *
+ * - heap We want to insert nodes into this heap.
+ * - id An array of node IDs.
+ * - key The key corresponding to each node ID in id.
+ * - size How many nodes to insert into the given heap.
+ */
+static void
+add_nodes(GnxHeap *heap,
+          const unsigned int id[],
+          const double key[],
+          const unsigned int *size)
+{
+    unsigned int i;
+
+    for (i = 0; i < *size; i++)
+        assert(gnx_heap_add(heap, &id[i], &key[i]));
+}
 
 /**************************************************************************
  * add node
@@ -282,6 +316,117 @@ new_no_memory(void)
 }
 
 /**************************************************************************
+ * pop node
+ *************************************************************************/
+
+static void
+pop(void)
+{
+    pop_duplicate();
+    pop_empty();
+    pop_more();
+    pop_one();
+}
+
+/* Pop from a heap that has two nodes with the same key.  The popped node IDs
+ * are compared with the known order in which nodes will be popped.
+ */
+static void
+pop_duplicate(void)
+{
+    GnxHeap *heap;
+    unsigned int i, k, v;
+    const unsigned int id[4] = {2,    3,    5,    19};
+    const double key[4]      = {1.20, 3.14, 2.68, 2.68};
+    const unsigned int known[4] = {2, 5, 19, 3};
+    const unsigned int size = 4;
+
+    heap = gnx_init_heap();
+    assert(heap);
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    /* Ensure that we always remove from the heap the node with minimum key.
+     * With the above ID/key pairs, the order in which nodes are popped from
+     * the heap is specified by the array 'known'.
+     */
+    k = size;
+    for (i = 0; i < size; i++) {
+        k--;
+        assert(gnx_heap_pop(heap, &v));
+        assert(v == known[i]);
+        assert(k == heap->size);
+    }
+
+    gnx_destroy_heap(heap);
+}
+
+/* Pop an empty heap. */
+static void
+pop_empty(void)
+{
+    GnxHeap *heap = gnx_init_heap();
+    assert(heap);
+    assert(0 == heap->size);
+    assert(!gnx_heap_pop(heap, NULL));
+    assert(0 == heap->size);
+    gnx_destroy_heap(heap);
+}
+
+/* Pop all the nodes of a heap.  The popped node IDs are compared with the
+ * known order in which nodes will be popped.
+ */
+static void
+pop_more(void)
+{
+    GnxHeap *heap;
+    unsigned int i, k, v;
+    const unsigned int id[9] = {2,    3,    5,    7,    11,   13,   17,   19,   23};
+    const double key[9]      = {2.71, 3.14, 1.41, 0.57, 4.66, 1.20, 1.61, 2.68, 3.3};
+    const unsigned int known[9] = {7, 13, 5, 17, 19, 2, 3, 23, 11};
+    const unsigned int size = 9;
+
+    heap = gnx_init_heap();
+    assert(heap);
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    /* Ensure that we always remove from the heap the node with minimum key.
+     * With the above ID/key pairs, the order in which nodes are popped from
+     * the heap is specified by the array 'known'.
+     */
+    k = size;
+    for (i = 0; i < size; i++) {
+        k--;
+        assert(gnx_heap_pop(heap, &v));
+        assert(v == known[i]);
+        assert(k == heap->size);
+    }
+
+    gnx_destroy_heap(heap);
+}
+
+/* Pop a heap that has exactly one node. */
+static void
+pop_one(void)
+{
+    GnxHeap *heap;
+    unsigned int w;
+    const double key = (double)g_random_double();
+    const unsigned int v = (unsigned int)g_random_int();
+
+    heap = gnx_init_heap();
+    assert(heap);
+    assert(gnx_heap_add(heap, &v, &key));
+    assert(1 == heap->size);
+    assert(gnx_heap_pop(heap, &w));
+    assert(v == w);
+    assert(0 == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -294,6 +439,7 @@ main(int argc,
     g_test_add_func("/heap/add", add);
     g_test_add_func("/heap/has", has);
     g_test_add_func("/heap/new", new);
+    g_test_add_func("/heap/pop", pop);
 
     return g_test_run();
 }
