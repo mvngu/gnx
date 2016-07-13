@@ -31,6 +31,9 @@ GnxHeap* gnx_init_heap(void);
 /* query the heap */
 int gnx_heap_has(const GnxHeap *heap,
                  const unsigned int *v);
+int gnx_heap_key(const GnxHeap *heap,
+                 const unsigned int *v,
+                 double *key);
 
 /* modify a heap */
 int gnx_heap_add(GnxHeap *heap,

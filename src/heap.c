@@ -242,6 +242,37 @@ gnx_heap_has(const GnxHeap *heap,
 }
 
 /**
+ * @brief Queries the key of a node.
+ *
+ * @param heap A minimum binary heap.
+ * @param v A node in the heap.
+ * @param key This will store the key of the node with ID v.
+ * @return Nonzero if we have successfully queried the key of the node; zero
+ *         otherwise.  We also return zero if the node is not in the heap or
+ *         the heap is empty.
+ */
+int
+gnx_heap_key(const GnxHeap *heap,
+             const unsigned int *v,
+             double *key)
+{
+    GnxNode *node;
+
+    gnx_i_check_heap(heap);
+    g_return_val_if_fail(v, GNX_FAILURE);
+    if (!heap->size)
+        return GNX_FAILURE;
+
+    node = (GnxNode *)gnx_dict_has(heap->map, v);
+    if (!node)
+        return GNX_FAILURE;
+
+    *key = node->key;
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Removes and returns the node that has minimum key.
  *
  * This will decrease by one the number of elements in the minimum binary heap.

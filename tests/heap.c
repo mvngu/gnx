@@ -45,6 +45,12 @@ static void add_resize_no_memory(void);
 /* has */
 static void has_empty(void);
 
+/* key of a node */
+static void key_empty(void);
+static void key_non_node(void);
+static void key_one_node(void);
+static void key_random_nodes(void);
+
 /* new: create and destroy */
 static void new_heap(void);
 static void new_no_memory(void);
@@ -278,6 +284,112 @@ has_empty(void)
 }
 
 /**************************************************************************
+ * key of a node
+ *************************************************************************/
+
+static void
+key(void)
+{
+    key_empty();
+    key_non_node();
+    key_one_node();
+    key_random_nodes();
+}
+
+/* Query a node key from an empty heap. */
+static void
+key_empty(void)
+{
+    double key;
+    GnxHeap *heap;
+    const unsigned int v = (unsigned int)g_random_int();
+
+    heap = gnx_init_heap();
+    assert(0 == heap->size);
+    assert(!gnx_heap_key(heap, &v, &key));
+    assert(0 == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Query the key of a node that is not in the heap. */
+static void
+key_non_node(void)
+{
+    double key;
+    GnxHeap *heap;
+    unsigned int i, v;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    heap = gnx_init_heap();
+    for (i = 0; i < size; i++) {
+        /* Ensure that we have a unique node ID. */
+        do {
+            v = (unsigned int)g_random_int();
+        } while (gnx_heap_has(heap, &v));
+
+        key = (double)g_random_double();
+        assert(gnx_heap_add(heap, &v, &key));
+    }
+    assert(size == heap->size);
+
+    /* Generate a node ID that is not in the heap. */
+    do {
+        v = (unsigned int)g_random_int();
+    } while (gnx_heap_has(heap, &v));
+
+    assert(size == heap->size);
+    assert(!gnx_heap_has(heap, &v));
+    assert(!gnx_heap_key(heap, &v, &key));
+    assert(size == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Query a node key from a heap that has exactly one node. */
+static void
+key_one_node(void)
+{
+    double k;
+    GnxHeap *heap;
+    const unsigned int v = 0;
+    const double key = 3.14159;
+
+    heap = gnx_init_heap();
+    assert(gnx_heap_add(heap, &v, &key));
+    assert(1 == heap->size);
+
+    assert(gnx_heap_key(heap, &v, &k));
+    assert(gnx_double_cmp_eq(&key, &k));
+
+    gnx_destroy_heap(heap);
+}
+
+/* Query a node key from a heap that has nodes with random keys. */
+static void
+key_random_nodes(void)
+{
+    double k, key[100];
+    GnxHeap *heap;
+    unsigned int i;
+    const unsigned int size = 100;
+
+    heap = gnx_init_heap();
+
+    for (i = 0; i < size; i++) {
+        key[i] = (double)g_random_double_range(0.0, 200.0);
+        assert(gnx_heap_add(heap, &i, &key[i]));
+    }
+    assert(size == heap->size);
+
+    i = (unsigned int)g_random_int_range(0, (int)size);
+    assert(gnx_heap_key(heap, &i, &k));
+    assert(gnx_double_cmp_eq(&k, &key[i]));
+
+    gnx_destroy_heap(heap);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -438,6 +550,7 @@ main(int argc,
 
     g_test_add_func("/heap/add", add);
     g_test_add_func("/heap/has", has);
+    g_test_add_func("/heap/key", key);
     g_test_add_func("/heap/new", new);
     g_test_add_func("/heap/pop", pop);
 
