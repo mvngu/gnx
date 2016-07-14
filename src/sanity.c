@@ -75,6 +75,23 @@ gnx_i_check_heap(const GnxHeap *heap)
 }
 
 /**
+ * @brief Check the graph properties.
+ *
+ * @param directed The possible values are: #GNX_UNDIRECTED or #GNX_DIRECTED.
+ * @param selfloop The possible values are: #GNX_NO_SELFLOOP or #GNX_SELFLOOP.
+ * @param weighted The possible values are: #GNX_UNWEIGHTED or #GNX_WEIGHTED.
+ */
+void
+gnx_i_check_properties(const GnxBool directed,
+                       const GnxBool selfloop,
+                       const GnxBool weighted)
+{
+    g_return_if_fail((directed & GNX_UNDIRECTED) || (directed & GNX_DIRECTED));
+    g_return_if_fail((selfloop & GNX_NO_SELFLOOP) || (selfloop & GNX_SELFLOOP));
+    g_return_if_fail((weighted & GNX_UNWEIGHTED) || (weighted & GNX_WEIGHTED));
+}
+
+/**
  * @brief Some sanity checks on a queue.
  *
  * @param queue The queue to check.
