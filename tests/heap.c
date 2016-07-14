@@ -42,6 +42,16 @@ static void add_random(void);
 static void add_resize(void);
 static void add_resize_no_memory(void);
 
+/* decrease key */
+static void decrease_constant_size(void);
+static void decrease_empty(void);
+static void decrease_inbetween_node(void);
+static void decrease_last_node(void);
+static void decrease_non_member(void);
+static void decrease_random(void);
+static void decrease_root_node(void);
+static void decrease_same(void);
+
 /* has */
 static void has_empty(void);
 
@@ -257,6 +267,274 @@ add_resize_no_memory(void)
     gnx_destroy_heap(heap);
     gnx_alloc_reset_limit();
 #endif
+}
+
+/**************************************************************************
+ * decrease key
+ *************************************************************************/
+
+static void
+decrease(void)
+{
+    decrease_constant_size();
+    decrease_empty();
+    decrease_inbetween_node();
+    decrease_last_node();
+    decrease_non_member();
+    decrease_random();
+    decrease_root_node();
+    decrease_same();
+}
+
+/* Decreasing the key of a node must not change the number of nodes in a
+ * minimum binary heap.
+ */
+static void
+decrease_constant_size(void)
+{
+    GnxHeap *heap;
+    const double k = 0.6;
+    const unsigned int id[5] = {0,     1,   2,   3,   4};
+    const double key[5]      = {0.5, 1.4, 2.2, 3.1, 4.6};
+    const unsigned int size = 5;
+    const unsigned int v = 3;
+
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_decrease_key(heap, &v, &k));
+    assert(gnx_heap_has(heap, &v));
+    assert(size == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot decrease a key if the heap is empty. */
+static void
+decrease_empty(void)
+{
+    GnxHeap *heap;
+    const double key = (double)g_random_double();
+    const unsigned int v = (unsigned int)g_random_int();
+
+    heap = gnx_init_heap();
+    assert(0 == heap->size);
+    assert(!gnx_heap_decrease_key(heap, &v, &key));
+    assert(0 == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* After the key of a node is decreased, we have changed the order in which
+ * nodes will be popped from the heap.
+ */
+static void
+decrease_inbetween_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 4;
+    const unsigned int id[5] = {2, 3, 5, 6, 7};
+    const double key[5]      = {2, 3, 5, 6, 7};
+    const unsigned int known[5] = {2, 3, 5, 6, 7};
+    const unsigned int known_new[5] = {2, 3, 6, 5, 7};
+    const unsigned int size = 5;
+    const unsigned int v = 6;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we decrease the key of node 6 from the key
+     * value of 6 to the new key of 4.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_decrease_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known_new[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/* After the key of a node is decreased, we have changed the order in which
+ * nodes will be popped from the heap.
+ */
+static void
+decrease_last_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 1;
+    const unsigned int id[4] = {2, 3, 4, 5};
+    const double key[4]      = {2, 3, 4, 5};
+    const unsigned int known[4] = {2, 3, 4, 5};
+    const unsigned int known_new[4] = {5, 2, 3, 4};
+    const unsigned int size = 4;
+    const unsigned int v = 5;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we decrease the key of node 5 (the last node)
+     * from the key value of 5 to the new key of 1.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_decrease_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known_new[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot decrease a key if the corresponding node is not in the heap.
+ */
+static void
+decrease_non_member(void)
+{
+    GnxHeap *heap;
+    const double k = 3.35988;
+    const unsigned int id[3] = {0,       1,       2};
+    const double key[3]      = {0.57721, 1.41421, 2.29558};
+    const unsigned int size = 3;
+    const unsigned int v = 3;
+
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    assert(!gnx_heap_has(heap, &v));
+    assert(!gnx_heap_decrease_key(heap, &v, &k));
+    assert(size == heap->size);
+    assert(!gnx_heap_has(heap, &v));
+
+    gnx_destroy_heap(heap);
+}
+
+/* Randomly decrease the key of each node. */
+static void
+decrease_random(void)
+{
+    double key;
+    GnxHeap *heap;
+    int decrease;
+    unsigned int v;
+    const double high = 10.0;
+    const double low = 2.0;
+    const unsigned int size = 1024;
+
+    /* Add a bunch of nodes to an empty heap. */
+    heap = gnx_init_heap();
+    for (v = 0; v < size; v++) {
+        key = (double)g_random_double_range(low, high);
+        assert(gnx_heap_add(heap, &v, &key));
+    }
+    assert(size == heap->size);
+
+    /* Randomly decrease the key of each node. */
+    for (v = 0; v < size; v++) {
+        decrease = (int)g_random_boolean();
+        if (decrease) {
+            key = (double)g_random_double();
+            assert(gnx_heap_decrease_key(heap, &v, &key));
+        }
+    }
+    assert(size == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Decreasing the key of the root node has no effect on the order in which
+ * nodes will be popped from the heap.
+ */
+static void
+decrease_root_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 1;
+    const unsigned int id[4] = {2, 3, 4, 5};
+    const double key[4]      = {2, 3, 4, 5};
+    const unsigned int known[4] = {2, 3, 4, 5};
+    const unsigned int size = 4;
+    const unsigned int v = 2;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we decrease the key of node 2 (the root node)
+     * from the key value of 2 to the new key of 1.  The change in key value
+     * should not change the order in which nodes are popped from the heap.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_decrease_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot decrease a key if the new key compares equal to the current key. */
+static void
+decrease_same(void)
+{
+    GnxHeap *heap;
+    const double key = 2.13157;
+    const unsigned int v = 11;
+
+    heap = gnx_init_heap();
+    assert(gnx_heap_add(heap, &v, &key));
+    assert(1 == heap->size);
+    assert(!gnx_heap_decrease_key(heap, &v, &key));
+    assert(EINVAL == errno);
+    assert(1 == heap->size);
+
+    gnx_destroy_heap(heap);
 }
 
 /**************************************************************************
@@ -549,6 +827,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/heap/add", add);
+    g_test_add_func("/heap/decrease", decrease);
     g_test_add_func("/heap/has", has);
     g_test_add_func("/heap/key", key);
     g_test_add_func("/heap/new", new);

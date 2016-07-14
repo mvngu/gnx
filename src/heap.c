@@ -61,15 +61,36 @@ typedef struct {
  * prototypes for internal helper functions
  *************************************************************************/
 
+static inline unsigned int gnx_i_node_index(const GnxHeap *heap,
+                                            const unsigned int *v);
 static inline double gnx_i_node_key(const GnxHeap *heap,
                                     const unsigned int *v);
 static inline void gnx_i_update_node_index(GnxHeap *heap,
                                            const unsigned int *v,
                                            const unsigned int *i);
+static inline void gnx_i_update_node_key(GnxHeap *heap,
+                                         const unsigned int *v,
+                                         const double *key);
 
 /**************************************************************************
  * internal helper functions
  *************************************************************************/
+
+/**
+ * @brief Finds the index of the given node.
+ *
+ * @param heap A minimum binary heap.
+ * @param v A node in the heap.
+ * @return The index of the node @a v.
+ */
+static inline unsigned int
+gnx_i_node_index(const GnxHeap *heap,
+                 const unsigned int *v)
+{
+    GnxNode *node = (GnxNode *)gnx_dict_has(heap->map, v);
+    g_assert(node);
+    return node->index;
+}
 
 /**
  * @brief The key of a node of a binary heap.
@@ -105,6 +126,23 @@ gnx_i_update_node_index(GnxHeap *heap,
     GnxNode *node = (GnxNode *)gnx_dict_has(heap->map, v);
     g_assert(node);
     node->index = *i;
+}
+
+/**
+ * @brief Updates the key of a node.
+ *
+ * @param heap A minimum binary heap.
+ * @param v A node in the heap.
+ * @param key Update the current key of the node with this new key.
+ */
+static inline void
+gnx_i_update_node_key(GnxHeap *heap,
+                      const unsigned int *v,
+                      const double *key)
+{
+    GnxNode *node = (GnxNode *)gnx_dict_has(heap->map, v);
+    g_assert(node);
+    node->key = *key;
 }
 
 /**************************************************************************
@@ -219,6 +257,59 @@ cleanup:
     if (w)
         free(w);
     return GNX_FAILURE;
+}
+
+/**
+ * @brief Decreases the key of a given node.
+ *
+ * @param heap Modify this minimum binary heap.
+ * @param v We want to replace the current key of this node with a smaller key.
+ * @param key Replace the current key of @a v with this smaller key.
+ * @return If the node @a v is in the heap, then we replace the key of @a v
+ *         with @a key and return nonzero.  If the node @a v is not in the
+ *         heap, then we return zero.  If the current and new keys compare
+ *         equal, or the new key is greater than the current key, then we set
+ *         @c errno to @c EINVAL and return zero.
+ */
+int
+gnx_heap_decrease_key(GnxHeap *heap,
+                      const unsigned int *v,
+                      const double *key)
+{
+    double keyp, keyv;
+    unsigned int i, p;
+
+    errno = 0;
+    g_return_val_if_fail(key, GNX_FAILURE);
+    if (!gnx_heap_has(heap, v))
+        return GNX_FAILURE;
+
+    keyv = gnx_i_node_key(heap, v);
+    if (gnx_double_cmp_le(&keyv, key)) {
+        errno = EINVAL;
+        return GNX_FAILURE;
+    }
+
+    /* Perform a sift-up. */
+    i = gnx_i_node_index(heap, v);
+    while (i > 0) {
+        p = (i - 1) >> 1;
+        keyp = gnx_i_node_key(heap, &(heap->node[p]));
+
+        if (gnx_double_cmp_le(&keyp, key)) {
+            break;
+        } else {
+            gnx_i_update_node_index(heap, &(heap->node[p]), &i);
+            heap->node[i] = heap->node[p];
+            i = p;
+        }
+    }
+
+    gnx_i_update_node_index(heap, v, &i);
+    heap->node[i] = *v;
+    gnx_i_update_node_key(heap, v, key);
+
+    return GNX_SUCCESS;
 }
 
 /**
