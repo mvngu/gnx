@@ -55,6 +55,16 @@ static void decrease_same(void);
 /* has */
 static void has_empty(void);
 
+/* increase key */
+static void increase_constant_size(void);
+static void increase_empty(void);
+static void increase_inbetween_node(void);
+static void increase_last_node(void);
+static void increase_non_member(void);
+static void increase_random(void);
+static void increase_root_node(void);
+static void increase_same(void);
+
 /* key of a node */
 static void key_empty(void);
 static void key_non_node(void);
@@ -562,6 +572,270 @@ has_empty(void)
 }
 
 /**************************************************************************
+ * increase key
+ *************************************************************************/
+
+static void
+increase(void)
+{
+    increase_constant_size();
+    increase_empty();
+    increase_inbetween_node();
+    increase_last_node();
+    increase_non_member();
+    increase_random();
+    increase_root_node();
+    increase_same();
+}
+
+/* Increasing the key of a node must not change the number of nodes in a
+ * minimum binary heap.
+ */
+static void
+increase_constant_size(void)
+{
+    GnxHeap *heap;
+    const double k = 5.6;
+    const unsigned int id[5] = {0,     1,   2,   3,   4};
+    const double key[5]      = {0.5, 1.4, 2.2, 3.1, 4.6};
+    const unsigned int size = 5;
+    const unsigned int v = 3;
+
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_increase_key(heap, &v, &k));
+    assert(size == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot increase a key if the heap is empty. */
+static void
+increase_empty(void)
+{
+    GnxHeap *heap;
+    const double key = (double)g_random_double();
+    const unsigned int v = (unsigned int)g_random_int();
+
+    heap = gnx_init_heap();
+    assert(0 == heap->size);
+    assert(!gnx_heap_increase_key(heap, &v, &key));
+    assert(0 == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* After the key of a node is increased, we have changed the order in which
+ * nodes will be popped from the heap.
+ */
+static void
+increase_inbetween_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 5.5;
+    const unsigned int id[5] = {2, 3, 5, 6, 7};
+    const double key[5]      = {2, 3, 5, 6, 7};
+    const unsigned int known[5] = {2, 3, 5, 6, 7};
+    const unsigned int known_new[5] = {2, 5, 3, 6, 7};
+    const unsigned int size = 5;
+    const unsigned int v = 3;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we increase the key of node 3 from the key
+     * value of 3 to the new key of 5.5.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_increase_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known_new[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/* Increasing the key of the last node has no effect on the order in which
+ * nodes will be popped from the heap.
+ */
+static void
+increase_last_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 10;
+    const unsigned int id[4] = {2, 3, 4, 5};
+    const double key[4]      = {2, 3, 4, 5};
+    const unsigned int known[4] = {2, 3, 4, 5};
+    const unsigned int size = 4;
+    const unsigned int v = 5;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we increase the key of node 5 (the last node)
+     * from the key value of 5 to the new key of 10.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_increase_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot increase a key if the corresponding node is not in the heap.
+ */
+static void
+increase_non_member(void)
+{
+    GnxHeap *heap;
+    const double k = 3.35988;
+    const unsigned int id[3] = {0,       1,       2};
+    const double key[3]      = {0.57721, 1.41421, 2.29558};
+    const unsigned int size = 3;
+    const unsigned int v = 3;
+
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+
+    assert(!gnx_heap_has(heap, &v));
+    assert(!gnx_heap_increase_key(heap, &v, &k));
+    assert(size == heap->size);
+    assert(!gnx_heap_has(heap, &v));
+
+    gnx_destroy_heap(heap);
+}
+
+/* Randomly increase the key of each node. */
+static void
+increase_random(void)
+{
+    double key;
+    GnxHeap *heap;
+    int increase;
+    unsigned int v;
+    const double high = 10.0;
+    const double low = 1.0;
+    const unsigned int size = 1024;
+
+    /* Add a bunch of nodes to a heap. */
+    heap = gnx_init_heap();
+    for (v = 0; v < size; v++) {
+        key = (double)g_random_double();
+        assert(gnx_heap_add(heap, &v, &key));
+    }
+    assert(size == heap->size);
+
+    /* Randomly increase the key of each node. */
+    for (v = 0; v < size; v++) {
+        increase = (int)g_random_boolean();
+        if (increase) {
+            key = (double)g_random_double_range(low, high);
+            assert(gnx_heap_increase_key(heap, &v, &key));
+        }
+    }
+    assert(size == heap->size);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Cannot increase a key if the new key compares equal to the current key. */
+static void
+increase_same(void)
+{
+    GnxHeap *heap;
+    const double key = 2.13157;
+    const unsigned int v = 11;
+
+    heap = gnx_init_heap();
+    assert(gnx_heap_add(heap, &v, &key));
+    assert(!gnx_heap_increase_key(heap, &v, &key));
+    assert(EINVAL == errno);
+
+    gnx_destroy_heap(heap);
+}
+
+/* Increasing the key of the root node can change the order in which nodes will
+ * be popped from the heap.
+ */
+static void
+increase_root_node(void)
+{
+    GnxHeap *heap;
+    unsigned int i, w;
+    const double k = 6;
+    const unsigned int id[4] = {2, 3, 4, 5};
+    const double key[4]      = {2, 3, 4, 5};
+    const unsigned int known[4] = {3, 4, 5, 2};
+    const unsigned int size = 4;
+    const unsigned int v = 2;
+
+    /* The original heap with no change in key. */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(id[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+
+    /* The same heap.  This time, we increase the key of node 2 (the root node)
+     * from the key value of 2 to the new key of 6.  The change in key value
+     * should change the order in which nodes are popped from the heap.
+     */
+    heap = gnx_init_heap();
+    add_nodes(heap, id, key, &size);
+    assert(size == heap->size);
+    assert(gnx_heap_has(heap, &v));
+    assert(gnx_heap_increase_key(heap, &v, &k));
+    i = 0;
+    while (heap->size) {
+        assert(gnx_heap_pop(heap, &w));
+        assert(known[i] == w);
+        i++;
+    }
+    gnx_destroy_heap(heap);
+}
+
+/**************************************************************************
  * key of a node
  *************************************************************************/
 
@@ -829,6 +1103,7 @@ main(int argc,
     g_test_add_func("/heap/add", add);
     g_test_add_func("/heap/decrease", decrease);
     g_test_add_func("/heap/has", has);
+    g_test_add_func("/heap/increase", increase);
     g_test_add_func("/heap/key", key);
     g_test_add_func("/heap/new", new);
     g_test_add_func("/heap/pop", pop);

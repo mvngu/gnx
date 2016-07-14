@@ -42,6 +42,9 @@ int gnx_heap_add(GnxHeap *heap,
 int gnx_heap_decrease_key(GnxHeap *heap,
                           const unsigned int *v,
                           const double *key);
+int gnx_heap_increase_key(GnxHeap *heap,
+                          const unsigned int *v,
+                          const double *key);
 int gnx_heap_pop(GnxHeap *heap,
                  unsigned int *v);
 

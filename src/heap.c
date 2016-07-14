@@ -333,6 +333,77 @@ gnx_heap_has(const GnxHeap *heap,
 }
 
 /**
+ * @brief Increases the key of a node.
+ *
+ * @param heap A minimum binary heap.
+ * @param v A node in the heap.
+ * @param key A new key for the node.  The new key must be greater than the
+ *        current key of @a v.
+ * @return Nonzero if we successfully increased the key of the node @a v; zero
+ *         otherwise.  If the node @a v is not in the heap, we return zero.  If
+ *         the current key of @a v is greater than or equal to the new key,
+ *         then we set @c errno to @c EINVAL and return zero.
+ */
+int
+gnx_heap_increase_key(GnxHeap *heap,
+                      const unsigned int *v,
+                      const double *key)
+{
+    double key_left, key_right, key_v;
+    int left_node, right_node;
+    unsigned int i, j, left, m, right;
+
+    errno = 0;
+    g_return_val_if_fail(key, GNX_FAILURE);
+    if (!gnx_heap_has(heap, v))
+        return GNX_FAILURE;
+
+    key_v = gnx_i_node_key(heap, v);
+    if (gnx_double_cmp_le(key, &key_v)) {
+        errno = EINVAL;
+        return GNX_FAILURE;
+    }
+
+    /* Perform a sift-down. */
+    m = heap->size;
+    i = gnx_i_node_index(heap, v);
+    j = i;
+    for (;;) {
+        left = (i << 1) + 1;
+        right = left + 1;
+        left_node = (left < m);
+        right_node = (right < m);
+
+        if (left_node)
+            key_left = gnx_i_node_key(heap, &(heap->node[left]));
+        if (right_node)
+            key_right = gnx_i_node_key(heap, &(heap->node[right]));
+
+        if (left_node && gnx_double_cmp_le(&key_left, key)) {
+            j = left;
+            if (right_node && gnx_double_cmp_le(&key_right, &key_left))
+                j = right;
+        } else if (right_node && gnx_double_cmp_le(&key_right, key)) {
+            j = right;
+        } else {
+            gnx_i_update_node_index(heap, v, &i);
+            heap->node[i] = *v;
+            break;
+        }
+
+        gnx_i_update_node_index(heap, &(heap->node[j]), &i);
+        heap->node[i] = heap->node[j];
+        i = j;
+    }
+
+    gnx_i_update_node_key(heap, v, key);
+    g_assert(m == heap->size);
+    g_assert(heap->map->size == heap->size);
+
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Queries the key of a node.
  *
  * @param heap A minimum binary heap.
