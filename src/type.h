@@ -115,10 +115,39 @@ typedef enum {
                                     * hash table, we directly release the
                                     * memory of those values.
                                     */
-    GNX_DONT_FREE_VALUES = 1 << 5  /**< @hideinitializer
+    GNX_DONT_FREE_VALUES = 1 << 5, /**< @hideinitializer
                                     * Do not release the memory of the values
                                     * of a hash table.
                                     */
+    GNX_UNDIRECTED = 1 << 6,   /**< @hideinitializer
+                                * A graph is undirected.  In an undirected
+                                * graph, the edges @f$(u,v)@f$ and @f$(v,u)@f$
+                                * are the same edge.
+                                */
+    GNX_DIRECTED = 1 << 7,     /**< @hideinitializer
+                                * A graph is directed.  In a digraph, the edges
+                                * @f$(u,v)@f$ and @f$(v,u)@f$ are distinct
+                                * edges.
+                                */
+    GNX_NO_SELFLOOP = 1 << 8,  /**< @hideinitializer
+                                * A graph without self-loops.
+                                */
+    GNX_SELFLOOP = 1 << 9,     /**< @hideinitializer
+                                * A graph with self-loops.  A self-loop, or
+                                * loop edge, is an edge both of whose end
+                                * points are the same node.
+                                */
+    GNX_UNWEIGHTED = 1 << 10,  /**< @hideinitializer
+                                * A graph is unweighted.  In an unweighted
+                                * graph each edge is assigned unit weight, but
+                                * for practical purposes we ignore the unit
+                                * weights.
+                                */
+    GNX_WEIGHTED = 1 << 11     /**< @hideinitializer
+                                * A graph is weighted.  In a weighted graph,
+                                * each edge is assigned a numeric value, also
+                                * called an edge weight.
+                                */
 } GnxBool;
 
 /**************************************************************************
@@ -201,6 +230,39 @@ typedef struct {
     unsigned int i;      /**< The bucket index. */
     unsigned int j;      /**< The entry index within bucket i. */
 } GnxDictIter;
+
+/**
+ * @brief The fundamental graph data structure.
+ *
+ * A generic graph has the following structure:
+ *
+ * <pre>
+ * graph: {
+ *     node_1: {
+ *         neighbor_1: {
+ *             property_1: {...},
+ *             ...
+ *         },
+ *         ...
+ *     },
+ *     ...
+ * }
+ * </pre>
+ */
+typedef struct {
+    gnxptr *node;              /**< The graph structure as an array of adjacency
+                                * lists.  If node[i] is NULL, then the node
+                                * with an ID of i is not in the graph.
+                                * Otherwise node i is in the graph and node[i]
+                                * points to the collection of all nodes that
+                                * are adjacent to i.
+                                */
+    GnxBool directed;          /**< Is the graph directed? */
+    GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
+    GnxBool weighted;          /**< Is the graph weighted? */
+    unsigned int total_edges;  /**< How many edges? */
+    unsigned int total_nodes;  /**< How many nodes or vertices? */
+} GnxGraph;
 
 /**
  * @brief A minimum binary heap.

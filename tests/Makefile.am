@@ -22,6 +22,7 @@ AM_CPPFLAGS =                                                              \
 
 test_programs =                                                            \
 	array                                                              \
+	base                                                               \
 	dict                                                               \
 	heap                                                               \
 	queue                                                              \

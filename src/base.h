@@ -15,21 +15,25 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GNX_H
-#define GNX_H
+#ifndef GNX_BASE_H
+#define GNX_BASE_H
 
-#define GNX_H_INSIDE
+#if !defined(GNX_H_INSIDE) && !defined(GNX_COMPILATION)
+#error "Only <gnx.h> can be included directly."
+#endif
 
-#include "array.h"
-#include "base.h"
-#include "dict.h"
-#include "heap.h"
-#include "queue.h"
-#include "set.h"
-#include "stack.h"
-#include "util.h"
-/* GNX_HOOK:ALLOC_H */
+#include "type.h"
 
-#undef GNX_H_INSIDE
+/* create and destroy */
+void gnx_destroy(GnxGraph *graph);
+GnxGraph* gnx_new(void);
+GnxGraph* gnx_new_full(const GnxBool directed,
+                       const GnxBool selfloop,
+                       const GnxBool weighted);
 
-#endif  /* GNX_H */
+/* query the graph properties */
+int gnx_allows_selfloop(const GnxGraph *graph);
+int gnx_is_directed(const GnxGraph *graph);
+int gnx_is_weighted(const GnxGraph *graph);
+
+#endif  /* GNX_BASE_H */
