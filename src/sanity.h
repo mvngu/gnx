@@ -24,6 +24,7 @@
 
 #include "type.h"
 
+void gnx_i_check(const GnxGraph *graph);
 void gnx_i_check_array(const GnxArray *array);
 void gnx_i_check_dict(const GnxDict *dict);
 void gnx_i_check_heap(const GnxHeap *heap);

@@ -25,6 +25,18 @@
  */
 
 /**
+ * @brief Some sanity checks on a graph.
+ *
+ * @param graph The graph to check.
+ */
+void
+gnx_i_check(const GnxGraph *graph)
+{
+    g_return_if_fail(graph);
+    g_return_if_fail(graph->node);
+}
+
+/**
  * @brief Some sanity checks on an array.
  *
  * @param array The array to check.
