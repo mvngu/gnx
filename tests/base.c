@@ -34,6 +34,9 @@ static void test_properties(const GnxGraph *graph,
                             const GnxBool selfloop,
                             const GnxBool weighted);
 
+/* has node */
+static void has_node_empty(void);
+
 /* new: create and destroy */
 static void new_empty(void);
 static void new_no_memory(void);
@@ -86,6 +89,31 @@ test_properties(const GnxGraph *graph,
         assert(gnx_is_weighted(graph));
     else
         assert(!gnx_is_weighted(graph));
+}
+
+/**************************************************************************
+ * has node
+ *************************************************************************/
+
+static void
+has_node(void)
+{
+    has_node_empty();
+}
+
+/* Query for a node in an empty graph. */
+static void
+has_node_empty(void)
+{
+    GnxGraph *graph;
+    const unsigned int v = (unsigned int)g_random_int();
+
+    graph = gnx_new();
+    is_empty_graph(graph);
+    assert(!gnx_has_node(graph, &v));
+    is_empty_graph(graph);
+
+    gnx_destroy(graph);
 }
 
 /**************************************************************************
@@ -238,6 +266,7 @@ main(int argc,
 {
     g_test_init(&argc, &argv, NULL);
 
+    g_test_add_func("/base/has-node", has_node);
     g_test_add_func("/base/new", new);
 
     return g_test_run();

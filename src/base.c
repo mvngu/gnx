@@ -66,6 +66,42 @@ gnx_destroy(GnxGraph *graph)
 }
 
 /**
+ * @brief Whether a graph contains a node.
+ *
+ * @param graph The graph to query.
+ * @param v A node to query.
+ * @return Nonzero if the node is in the graph; zero otherwise.  We also return
+ *         zero if the graph is empty.
+ */
+int
+gnx_has_node(const GnxGraph *graph,
+             const unsigned int *v)
+{
+    GnxDict *adj_weighted;
+    GnxSet *adj_unweighted;
+
+    gnx_i_check(graph);
+    g_return_val_if_fail(v, GNX_FAILURE);
+
+    if (!graph->total_nodes)
+        return GNX_FAILURE;
+
+    if (GNX_WEIGHTED & graph->weighted) {
+        adj_weighted = (GnxDict *)(graph->node[*v]);
+        if (!adj_weighted)
+            return GNX_FAILURE;
+
+        return GNX_SUCCESS;
+    }
+
+    adj_unweighted = (GnxSet *)(graph->node[*v]);
+    if (!adj_unweighted)
+        return GNX_FAILURE;
+
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Whether a graph is directed.
  *
  * @param graph The graph to test for directedness.
