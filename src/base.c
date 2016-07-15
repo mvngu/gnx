@@ -150,7 +150,7 @@ gnx_new_full(const GnxBool directed,
      * number of nodes.  As more nodes are added to the graph, we might need
      * to resize this array.
      */
-    graph->node = (gnxptr *)malloc(sizeof(gnxptr) * reserved_nodes);
+    graph->node = (gnxptr *)calloc(reserved_nodes, sizeof(gnxptr));
     if (!graph->node)
         goto cleanup;
 
