@@ -613,6 +613,7 @@ new_capacity_256(void)
     array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
+    assert(GNX_INT == array->type);
     assert(0 == array->size);
     assert(array->cell);
 
@@ -629,6 +630,7 @@ new_capacity_default(void)
     array = gnx_init_array(GNX_UNSIGNED_INT);
     assert(array);
     assert(GNX_DEFAULT_ALLOC_SIZE == array->capacity);
+    assert(GNX_UNSIGNED_INT == array->type);
     assert(0 == array->size);
     assert(array->cell);
 
@@ -646,6 +648,7 @@ new_capacity_minimum(void)
     array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
+    assert(GNX_INT == array->type);
     assert(0 == array->size);
     assert(array->cell);
 
@@ -663,6 +666,7 @@ new_free_elements(void)
     array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
+    assert(GNX_INT == array->type);
     assert(0 == array->size);
     assert(array->cell);
 
