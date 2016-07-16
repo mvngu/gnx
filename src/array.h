@@ -26,19 +26,20 @@
 
 /* create and destroy */
 void gnx_destroy_array(GnxArray *array);
-GnxArray* gnx_init_array(void);
+GnxArray* gnx_init_array(const GnxBool type);
 GnxArray* gnx_init_array_full(const unsigned int *capacity,
-                              const GnxBool destroy);
+                              const GnxBool destroy,
+                              const GnxBool type);
 
 /* insert and remove */
 int gnx_array_append(GnxArray *array,
-                     int *elem);
+                     gnxptr elem);
 int gnx_array_delete(GnxArray *array,
                      const unsigned int *i);
 int gnx_array_delete_tail(GnxArray *array);
 
 /* query */
 int gnx_array_has(const GnxArray *array,
-                  const int *elem);
+                  const gnxptr elem);
 
 #endif  /* GNX_ARRAY_H */

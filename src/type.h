@@ -143,11 +143,17 @@ typedef enum {
                                 * for practical purposes we ignore the unit
                                 * weights.
                                 */
-    GNX_WEIGHTED = 1 << 11     /**< @hideinitializer
+    GNX_WEIGHTED = 1 << 11,    /**< @hideinitializer
                                 * A graph is weighted.  In a weighted graph,
                                 * each edge is assigned a numeric value, also
                                 * called an edge weight.
                                 */
+    GNX_INT = 1 << 12,         /**< @hideinitializer
+                                * Input is of type @c int.
+                                */
+    GNX_UNSIGNED_INT = 1 << 13  /**< @hideinitializer
+                                 * Input is of type <tt>unsigned int</tt>.
+                                 */
 } GnxBool;
 
 /**************************************************************************
@@ -162,18 +168,19 @@ typedef void* gnxptr;    /**< An untyped pointer. */
  *************************************************************************/
 
 /**
- * @brief Array of integers.
+ * @brief Array of pointers.
  */
 typedef struct {
     GnxBool free_elem;      /**< Whether to release the memory of each element
                              * in the array.
                              */
+    GnxBool type;           /**< The data type of the elements. */
     unsigned int capacity;  /**< The capacity of the array.  This is the
                              * maximum possible number of elements in the
                              * array.
                              */
-    unsigned int size;      /**< How many elements in the array. */
-    gnxintptr *cell;        /**< The actual array of integers. */
+    unsigned int size;      /**< How many elements are in the array. */
+    gnxptr *cell;           /**< The actual array of pointers. */
 } GnxArray;
 
 /**

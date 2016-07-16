@@ -53,9 +53,9 @@
  */
 int
 gnx_array_append(GnxArray *array,
-                 int *elem)
+                 gnxptr elem)
 {
-    gnxintptr *new_cell;
+    gnxptr *new_cell;
     unsigned int new_capacity;
 
     errno = 0;
@@ -67,8 +67,8 @@ gnx_array_append(GnxArray *array,
         new_capacity = array->capacity << 1;
         g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
 
-        new_cell = (gnxintptr *)realloc(array->cell,
-                                        new_capacity * sizeof(gnxintptr));
+        new_cell
+            = (gnxptr *)realloc(array->cell, new_capacity * sizeof(gnxptr));
         if (!new_cell) {
             errno = ENOMEM;
             return GNX_FAILURE;
@@ -133,7 +133,7 @@ gnx_array_delete(GnxArray *array,
         free(array->cell[*i]);
     ncell = size - 1 - (*i);
     (void)memmove(&(array->cell[*i]), &(array->cell[*i + 1]),
-                  sizeof(gnxintptr) * ncell);
+                  sizeof(gnxptr) * ncell);
     (array->size)--;
 
     return GNX_SUCCESS;
@@ -182,7 +182,7 @@ gnx_array_delete_tail(GnxArray *array)
  */
 int
 gnx_array_has(const GnxArray *array,
-              const int *elem)
+              const gnxptr elem)
 {
     unsigned int i;
 
@@ -191,16 +191,24 @@ gnx_array_has(const GnxArray *array,
     if (!array->size)
         return GNX_FAILURE;
 
-    for (i = 0; i < array->size; i++) {
-        if (*elem == *(array->cell[i]))
-            return GNX_SUCCESS;
+    if (GNX_INT & array->type) {
+        for (i = 0; i < array->size; i++) {
+            if (*((int *)elem) == *((int *)(array->cell[i])))
+                return GNX_SUCCESS;
+        }
+    } else {
+        g_assert(GNX_UNSIGNED_INT & array->type);
+        for (i = 0; i < array->size; i++) {
+            if (*((unsigned int *)elem) == *((unsigned int *)(array->cell[i])))
+                return GNX_SUCCESS;
+        }
     }
 
     return GNX_FAILURE;
 }
 
 /**
- * @brief Destroys an array of integers.
+ * @brief Destroys an array of pointers.
  *
  * @param array We want to destroy this array.  The array must have been
  *        initialized via gnx_init_array() or gnx_init_array_full().
@@ -229,7 +237,7 @@ gnx_destroy_array(GnxArray *array)
 }
 
 /**
- * @brief Initializes an array of integers with default settings.
+ * @brief Initializes an array of pointers with default settings.
  *
  * The array is initialized with a default capacity.  Furthermore, the array is
  * set to not release the memory of each of its elements.  Thus, it is your
@@ -239,21 +247,24 @@ gnx_destroy_array(GnxArray *array)
  * @sa gnx_init_array_full() Initializes an array with full control over its
  *     settings.
  *
- * @return An initialized array of integers with zero elements and a default
+ * @param type The data type of the elements.  Supported types are:
+ *        #GNX_INT for integers of type @c int; and #GNX_UNSIGNED_INT for
+ *        integers of type <tt>unsigned int</tt>.
+ * @return An initialized array of pointers with zero elements and a default
  *         capacity of #GNX_DEFAULT_ALLOC_SIZE.  When you no longer need the
  *         array, you must destroy the array via the function
  *         gnx_destroy_array().  See gnx_init_array_full() for further details
  *         on the return value.
  */
 GnxArray*
-gnx_init_array(void)
+gnx_init_array(const GnxBool type)
 {
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
-    return gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+    return gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, type);
 }
 
 /**
- * @brief Initializes an array of integers.
+ * @brief Initializes an array of pointers.
  *
  * @sa gnx_init_array() Initializes an array with default settings.
  *
@@ -273,7 +284,10 @@ gnx_init_array(void)
  *        responsibility to release the memory of each element in the array.
  *        You can also use this option if each element of the array has memory
  *        that is allocated on the stack.
- * @return An initialized array of integers with zero elements and the given
+ * @param type The data type of the elements.  Supported types are:
+ *        #GNX_INT for integers of type @c int; and #GNX_UNSIGNED_INT for
+ *        integers of type <tt>unsigned int</tt>.
+ * @return An initialized array of pointers with zero elements and the given
  *         capacity.  When you no longer need the array, you must destroy the
  *         array via the function gnx_destroy_array(). If we are unable to
  *         allocate memory, then @c errno is set to @c ENOMEM and we return
@@ -281,7 +295,8 @@ gnx_init_array(void)
  */
 GnxArray*
 gnx_init_array_full(const unsigned int *capacity,
-                    const GnxBool destroy)
+                    const GnxBool destroy,
+                    const GnxBool type)
 {
     GnxArray *array;
 
@@ -303,15 +318,17 @@ gnx_init_array_full(const unsigned int *capacity,
     g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
                          || (GNX_DONT_FREE_ELEMENTS & destroy),
                          NULL);
+    g_return_val_if_fail((GNX_INT & type) || (GNX_UNSIGNED_INT & type), NULL);
 
     array = (GnxArray *)malloc(sizeof(GnxArray));
     if (!array)
         goto cleanup;
 
     array->free_elem = destroy;
+    array->type = type;
     array->capacity = *capacity;
     array->size = 0;
-    array->cell = (gnxintptr *)malloc(sizeof(gnxintptr) * array->capacity);
+    array->cell = (gnxptr *)calloc(array->capacity, sizeof(gnxptr));
     if (!array->cell)
         goto cleanup;
 

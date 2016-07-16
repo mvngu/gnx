@@ -88,7 +88,7 @@ append_free_elements(void)
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(1, 33);
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_INT);
     for (i = 0; i < size; i++) {
         elem = (int *)malloc(sizeof(int));
         *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
@@ -112,7 +112,7 @@ append_no_memory(void)
     int c = (int)g_random_int_range(INT_MIN, INT_MAX);
     const unsigned int capacity = 2;
 
-    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(2 == array->size);
@@ -136,16 +136,15 @@ static void
 append_resize(void)
 {
     GnxArray *array;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
     const unsigned int size = capacity + 1;
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UNSIGNED_INT);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_array_append(array, elem));
     }
 
@@ -166,15 +165,15 @@ append_three(void)
     int b = (int)g_random_int_range(INT_MIN, INT_MAX);
     int c = (int)g_random_int_range(INT_MIN, INT_MAX);
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
 
     assert(3 == array->size);
-    assert(a == *(array->cell[0]));
-    assert(b == *(array->cell[1]));
-    assert(c == *(array->cell[2]));
+    assert(a == *((int *)(array->cell[0])));
+    assert(b == *((int *)(array->cell[1])));
+    assert(c == *((int *)(array->cell[2])));
 
     gnx_destroy_array(array);
 }
@@ -201,7 +200,7 @@ delete_empty(void)
     GnxArray *array;
     const unsigned int i = 0;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(0 == array->size);
     assert(!gnx_array_delete(array, &i));
     assert(0 == array->size);
@@ -219,17 +218,18 @@ delete_first(void)
     int b = (int)g_random_int_range(INT_MIN, INT_MAX);
     int c = (int)g_random_int_range(INT_MIN, INT_MAX);
     const unsigned int i = 0;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
 
     assert(gnx_array_delete(array, &i));
-    assert(2 == array->size);
-    assert(b == *(array->cell[0]));
-    assert(c == *(array->cell[1]));
+    assert((size - 1) == array->size);
+    assert(b == *((int *)(array->cell[0])));
+    assert(c == *((int *)(array->cell[1])));
 
     gnx_destroy_array(array);
 }
@@ -240,21 +240,22 @@ static void
 delete_last(void)
 {
     GnxArray *array;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int a = (unsigned int)g_random_int();
+    unsigned int b = (unsigned int)g_random_int();
+    unsigned int c = (unsigned int)g_random_int();
     const unsigned int i = 2;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_UNSIGNED_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
 
     assert(gnx_array_delete(array, &i));
-    assert(2 == array->size);
-    assert(a == *(array->cell[0]));
-    assert(b == *(array->cell[1]));
+    assert((size - 1) == array->size);
+    assert(a == *((unsigned int *)(array->cell[0])));
+    assert(b == *((unsigned int *)(array->cell[1])));
 
     gnx_destroy_array(array);
 }
@@ -269,17 +270,18 @@ delete_middle(void)
     int b = (int)g_random_int_range(INT_MIN, INT_MAX);
     int c = (int)g_random_int_range(INT_MIN, INT_MAX);
     const unsigned int i = 1;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
 
     assert(gnx_array_delete(array, &i));
-    assert(2 == array->size);
-    assert(a == *(array->cell[0]));
-    assert(c == *(array->cell[1]));
+    assert((size - 1) == array->size);
+    assert(a == *((int *)(array->cell[0])));
+    assert(c == *((int *)(array->cell[1])));
 
     gnx_destroy_array(array);
 }
@@ -290,15 +292,14 @@ static void
 delete_random(void)
 {
     GnxArray *array;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(4, 33);
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UNSIGNED_INT);
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_array_append(array, elem));
     }
     assert(size == array->size);
@@ -330,9 +331,10 @@ delete_tail_empty(void)
 {
     GnxArray *array;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(0 == array->size);
     assert(!gnx_array_delete_tail(array));
+    assert(0 == array->size);
 
     gnx_destroy_array(array);
 }
@@ -348,7 +350,7 @@ delete_tail_free(void)
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
     const unsigned int size = 3;
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_INT);
 
     for (i = 0; i < size; i++) {
         elem = (int *)malloc(sizeof(int));
@@ -357,7 +359,7 @@ delete_tail_free(void)
     }
     assert(size == array->size);
 
-    target = *(array->cell[size - 1]);
+    target = *((int *)(array->cell[size - 1]));
     assert(gnx_array_has(array, &target));
     assert(gnx_array_delete_tail(array));
     assert(!gnx_array_has(array, &target));
@@ -374,7 +376,7 @@ delete_tail_one(void)
     GnxArray *array;
     int a = (int)g_random_int_range(INT_MIN, INT_MAX);
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(1 == array->size);
 
@@ -386,30 +388,31 @@ delete_tail_one(void)
     gnx_destroy_array(array);
 }
 
-/* Deletes the tail of an array with a random number of elements.
+/* Deletes the tail of an array that has a random number of elements.
  */
 static void
 delete_tail_random(void)
 {
     GnxArray *array;
-    int *elem, target;
+    unsigned int *elem, target;
     unsigned int i;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UNSIGNED_INT);
 
+    /* Append a bunch of unique elements to the array. */
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
         do {
-            *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+            *elem = (unsigned int)g_random_int();
         } while (gnx_array_has(array, elem));
 
         assert(gnx_array_append(array, elem));
     }
     assert(size == array->size);
 
-    target = *(array->cell[size - 1]);
+    target = *((unsigned int *)(array->cell[size - 1]));
     assert(gnx_array_has(array, &target));
     assert(gnx_array_delete_tail(array));
     assert((size - 1) == array->size);
@@ -439,11 +442,12 @@ static void
 has_empty(void)
 {
     GnxArray *array;
-    const int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(0 == array->size);
     assert(!gnx_array_has(array, &elem));
+    assert(0 == array->size);
 
     gnx_destroy_array(array);
 }
@@ -454,17 +458,20 @@ static void
 has_first(void)
 {
     GnxArray *array;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
-    const int target = a;
+    unsigned int a = (unsigned int)g_random_int();
+    unsigned int b = (unsigned int)g_random_int();
+    unsigned int c = (unsigned int)g_random_int();
+    unsigned int target = a;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_UNSIGNED_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
+
     assert(gnx_array_has(array, &target));
+    assert(size == array->size);
 
     gnx_destroy_array(array);
 }
@@ -478,14 +485,17 @@ has_last(void)
     int a = (int)g_random_int_range(INT_MIN, INT_MAX);
     int b = (int)g_random_int_range(INT_MIN, INT_MAX);
     int c = (int)g_random_int_range(INT_MIN, INT_MAX);
-    const int target = c;
+    int target = c;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
+
     assert(gnx_array_has(array, &target));
+    assert(size == array->size);
 
     gnx_destroy_array(array);
 }
@@ -496,17 +506,20 @@ static void
 has_middle(void)
 {
     GnxArray *array;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int b = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int c = (int)g_random_int_range(INT_MIN, INT_MAX);
-    const int target = b;
+    unsigned int a = (unsigned int)g_random_int();
+    unsigned int b = (unsigned int)g_random_int();
+    unsigned int c = (unsigned int)g_random_int();
+    unsigned int target = b;
+    const unsigned int size = 3;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_UNSIGNED_INT);
     assert(gnx_array_append(array, &a));
     assert(gnx_array_append(array, &b));
     assert(gnx_array_append(array, &c));
-    assert(3 == array->size);
+    assert(size == array->size);
+
     assert(gnx_array_has(array, &target));
+    assert(size == array->size);
 
     gnx_destroy_array(array);
 }
@@ -519,9 +532,9 @@ has_not(void)
     GnxArray *array;
     int *elem, target;
     const unsigned int capacity = 64;
-    const unsigned int size = (unsigned int)g_random_int_range(4, 51);
+    const unsigned int size = (unsigned int)g_random_int_range(4, 34);
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_INT);
 
     /* Append a bunch of random elements to the array. */
     while (array->size < size) {
@@ -537,6 +550,7 @@ has_not(void)
     } while (gnx_array_has(array, &target));
 
     assert(!gnx_array_has(array, &target));
+    assert(size == array->size);
 
     gnx_destroy_array(array);
 }
@@ -547,28 +561,29 @@ static void
 has_random(void)
 {
     GnxArray *array;
-    int *elem, target;
+    unsigned int *elem, target;
     const int high = 100;
     const int low = -100;
     const unsigned int capacity = 64;
-    const unsigned int size = (unsigned int)g_random_int_range(4, 51);
+    const unsigned int size = (unsigned int)g_random_int_range(4, 34);
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UNSIGNED_INT);
 
     /* Append a bunch of random elements to the array. */
     while (array->size < size) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(low, high);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int_range(low, high);
         assert(gnx_array_append(array, elem));
     }
     assert(size == array->size);
 
     /* Generate a random element that is in the array. */
     do {
-        target = (int)g_random_int_range(low, high);
+        target = (unsigned int)g_random_int_range(low, high);
     } while (!gnx_array_has(array, &target));
 
     assert(gnx_array_has(array, &target));
+    assert(size == array->size);
 
     gnx_destroy_array(array);
 }
@@ -595,7 +610,7 @@ new_capacity_256(void)
     GnxArray *array;
     const unsigned int capacity = 256;
 
-    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
     assert(0 == array->size);
@@ -611,7 +626,7 @@ new_capacity_default(void)
 {
     GnxArray *array;
 
-    array = gnx_init_array();
+    array = gnx_init_array(GNX_UNSIGNED_INT);
     assert(array);
     assert(GNX_DEFAULT_ALLOC_SIZE == array->capacity);
     assert(0 == array->size);
@@ -628,7 +643,7 @@ new_capacity_minimum(void)
     GnxArray *array;
     const unsigned int capacity = 2;
 
-    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
     assert(0 == array->size);
@@ -645,7 +660,7 @@ new_free_elements(void)
     GnxArray *array;
     const unsigned int capacity = 32;
 
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_INT);
     assert(array);
     assert(capacity == array->capacity);
     assert(0 == array->size);
@@ -667,7 +682,7 @@ new_no_memory(void)
     /* Cannot allocate memory for the array. */
     alloc_size = 0;
     gnx_alloc_set_limit(alloc_size);
-    assert(!gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS));
+    assert(!gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_INT));
     assert(ENOMEM == errno);
 
     gnx_alloc_reset_limit();
