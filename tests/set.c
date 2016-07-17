@@ -87,14 +87,17 @@ static void
 add_duplicate(void)
 {
     GnxSet *set;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int b = a;
+    unsigned int a = (unsigned int)g_random_int();
+    unsigned int b = a;
+    const unsigned int size = 1;
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &a));
+    assert(size == set->size);
+
     assert(a == b);
     assert(!gnx_set_add(set, &b));
-    assert(1 == set->size);
+    assert(size == set->size);
 
     gnx_destroy_set(set);
 }
@@ -105,16 +108,15 @@ static void
 add_free(void)
 {
     GnxSet *set;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(0 == set->size);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_set_add(set, elem));
     }
     assert(size == set->size);
@@ -129,12 +131,12 @@ add_no_memory(void)
 {
 #ifdef GNX_ALLOC_TEST
     GnxSet *set;
-    int alloc_size, *elem, j;
-    unsigned int i, n;
-    const unsigned int lista[10] = {  /* values for the a parameter */
+    int alloc_size;
+    unsigned int *elem, i, j, n;
+    const unsigned int lista[10] = {  /* Values for the a parameter. */
         3968615651, 1606104101, 2596383589, 968646815, 3849427159,
         818668303, 96063689, 1868525653, 1219000319, 1903981943};
-    const unsigned int listc[10] = {  /* values for the c parameter */
+    const unsigned int listc[10] = {  /* Values for the c parameter. */
         24242974, 29023874, 31052654, 9402626, 25541919,
         15114733, 30711375, 23872027, 24260136, 25511161};
 
@@ -143,7 +145,7 @@ add_no_memory(void)
      * function to pass.
      */
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
-    j = (int)g_random_int_range(0, 10);
+    j = (unsigned int)g_random_int_range(0, 10);
     set->a = lista[j];
     set->c = listc[j];
 
@@ -162,15 +164,15 @@ add_no_memory(void)
      */
     n = (3 * (1u << (set->k - 2))) - 1;
     for (i = 0; i < n; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)i;
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = i;
         assert(gnx_set_add(set, elem));
     }
     assert(n == set->size);
 
     /* A new element that will trigger a resize. */
-    elem = (int *)malloc(sizeof(int));
-    *elem = (int)n;
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = n;
 
     /* Cannot allocate memory for a new element. */
     alloc_size = 0;
@@ -202,7 +204,7 @@ static void
 add_one(void)
 {
     GnxSet *set;
-    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int elem = (unsigned int)g_random_int();
 
     set = gnx_init_set();
     assert(0 == set->size);
@@ -218,8 +220,7 @@ static void
 add_resize(void)
 {
     GnxSet *set;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(0 == set->size);
@@ -227,8 +228,8 @@ add_resize(void)
 
     /* Add a bunch of elements to trigger a resize of the set. */
     for (i = 0; i < GNX_DEFAULT_ALLOC_SIZE; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)i;
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = i;
         assert(gnx_set_add(set, elem));
     }
 
@@ -256,7 +257,8 @@ any(void)
     any_random();
 }
 
-/* Choose an element from an empty set. */
+/* Choose an element from an empty set.
+ */
 static void
 any_empty(void)
 {
@@ -264,41 +266,42 @@ any_empty(void)
 
     set = gnx_init_set();
     assert(0 == set->size);
-    assert(!gnx_set_any_element(set));
+    assert(!gnx_set_any(set));
     assert(0 == set->size);
 
     gnx_destroy_set(set);
 }
 
-/* Choose an element from a set that has exactly one element. */
+/* Choose an element from a set that has exactly one element.
+ */
 static void
 any_one(void)
 {
     GnxSet *set;
-    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int *target;
+    unsigned int elem = (unsigned int)g_random_int();
+    unsigned int *target;
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &elem));
     assert(1 == set->size);
 
-    target = gnx_set_any_element(set);
+    target = gnx_set_any(set);
     assert(*target == elem);
     assert(1 == set->size);
 
     gnx_destroy_set(set);
 }
 
-/* Choose an element from a set that has a random number of elements. */
+/* Choose an element from a set that has a random number of elements.
+ */
 static void
 any_random(void)
 {
     GnxSet *set;
-    int elem, *list, *target, unique;
-    unsigned int i, j;
+    unsigned int elem, i, j, *list, *target, unique;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     /* Generate a bunch of unique random integers.  The size of the list is
@@ -312,7 +315,7 @@ any_random(void)
     for (i = 0; i < size; i++) {
         unique = FALSE;
         do {
-            elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+            elem = (unsigned int)g_random_int();
             for (j = 0; j < i; j++) {
                 if (elem == list[j])
                     break;
@@ -329,7 +332,7 @@ any_random(void)
     /* Check that any element that is chosen from the set is an element of
      * the list.
      */
-    target = gnx_set_any_element(set);
+    target = gnx_set_any(set);
     for (i = 0; i < size; i++) {
         if (*target == list[i])
             break;
@@ -354,12 +357,13 @@ delete(void)
     delete_random_free_elements();
 }
 
-/* Delete elements from an empty set. */
+/* Delete elements from an empty set.
+ */
 static void
 delete_empty(void)
 {
     GnxSet *set;
-    const int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int elem = (unsigned int)g_random_int();
 
     /* The set was configured to not release memory. */
     set = gnx_init_set();
@@ -376,25 +380,25 @@ delete_empty(void)
     gnx_destroy_set(set);
 }
 
-/* Delete an element that is not in a set. */
+/* Delete an element that is not in a set.
+ */
 static void
 delete_non_member(void)
 {
     GnxSet *set;
-    int elem, *list;
-    unsigned int i;
+    unsigned int elem, i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)i;
+        list[i] = i;
         assert(gnx_set_add(set, &(list[i])));
     }
     assert(size == set->size);
 
-    elem = (int)size;
+    elem = size;
     assert(!gnx_set_has(set, &elem));
     assert(!gnx_set_delete(set, &elem));
     assert(size == set->size);
@@ -403,26 +407,28 @@ delete_non_member(void)
     gnx_destroy_set(set);
 }
 
-/* Delete from a set that has one element. */
+/* Delete from a set that has one element.
+ */
 static void
 delete_one(void)
 {
     GnxSet *set;
-    int *elem;
+    unsigned int *elem;
 
     /***********************************************************************
      * The set was configured to not release memory.
      **********************************************************************/
 
     set = gnx_init_set();
-    elem = (int *)malloc(sizeof(int));
-    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = (unsigned int)g_random_int();
     assert(gnx_set_add(set, elem));
     assert(1 == set->size);
 
     assert(gnx_set_has(set, elem));
     assert(gnx_set_delete(set, elem));
     assert(0 == set->size);
+    assert(!gnx_set_has(set, elem));
 
     free(elem);
     gnx_destroy_set(set);
@@ -432,14 +438,15 @@ delete_one(void)
      **********************************************************************/
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
-    elem = (int *)malloc(sizeof(int));
-    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = (unsigned int)g_random_int();
     assert(gnx_set_add(set, elem));
     assert(1 == set->size);
 
     assert(gnx_set_has(set, elem));
     assert(gnx_set_delete(set, elem));
     assert(0 == set->size);
+    assert(!gnx_set_has(set, elem));
 
     gnx_destroy_set(set);
 }
@@ -451,15 +458,14 @@ static void
 delete_random_dont_free_elements(void)
 {
     GnxSet *set;
-    int *list;
-    unsigned int i;
+    unsigned int i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)i;
+        list[i] = i;
         assert(gnx_set_add(set, &(list[i])));
     }
     assert(size == set->size);
@@ -468,6 +474,7 @@ delete_random_dont_free_elements(void)
     assert(gnx_set_has(set, &(list[i])));
     assert(gnx_set_delete(set, &(list[i])));
     assert((size - 1) == set->size);
+    assert(!gnx_set_has(set, &(list[i])));
 
     free(list);
     gnx_destroy_set(set);
@@ -480,16 +487,15 @@ static void
 delete_random_free_elements(void)
 {
     GnxSet *set;
-    int *elem, has_target, target;
-    unsigned int i;
+    unsigned int *elem, has_target, i, target;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     has_target = FALSE;  /* Have we chosen an element to delete? */
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_set_add(set, elem));
 
         /* Choose only one element for deletion. */
@@ -509,6 +515,7 @@ delete_random_free_elements(void)
     assert(gnx_set_has(set, &target));
     assert(gnx_set_delete(set, &target));
     assert((size - 1) == set->size);
+    assert(!gnx_set_has(set, &target));
 
     gnx_destroy_set(set);
 }
@@ -525,12 +532,13 @@ has(void)
     has_non_member();
 }
 
-/* Search an empty set. */
+/* Search an empty set.
+ */
 static void
 has_empty(void)
 {
     GnxSet *set;
-    const int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    const unsigned int a = (unsigned int)g_random_int();
 
     set = gnx_init_set();
     assert(0 == set->size);
@@ -540,20 +548,20 @@ has_empty(void)
     gnx_destroy_set(set);
 }
 
-/* Search for elements that exist in a set. */
+/* Search for elements that exist in a set.
+ */
 static void
 has_member(void)
 {
     GnxSet *set;
-    int *list;
-    unsigned int i;
+    unsigned int i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(1, 21);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)i;
+        list[i] = i;
         assert(gnx_set_add(set, &(list[i])));
     }
     assert(size == set->size);
@@ -567,25 +575,25 @@ has_member(void)
     gnx_destroy_set(set);
 }
 
-/* Search for elements that do not exist in a set. */
+/* Search for elements that do not exist in a set.
+ */
 static void
 has_non_member(void)
 {
     GnxSet *set;
-    int elem, *list;
-    unsigned int i;
+    unsigned int elem, i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(1, 21);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)i;
+        list[i] = i;
         assert(gnx_set_add(set, &(list[i])));
     }
     assert(size == set->size);
 
-    elem = (int)size;
+    elem = size;
     assert(!gnx_set_has(set, &elem));
     assert(size == set->size);
 
@@ -606,21 +614,21 @@ iter(void)
     iter_random();
 }
 
-/* Count the number of elements in a set. */
+/* Count the number of elements in a set.
+ */
 static void
 iter_count(void)
 {
     GnxSet *set;
     GnxSetIter iter;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const unsigned int size = (unsigned int)g_random_int_range(2, 51);
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_set_add(set, elem));
     }
 
@@ -634,7 +642,8 @@ iter_count(void)
     gnx_destroy_set(set);
 }
 
-/* Iterate over an empty set. */
+/* Iterate over an empty set.
+ */
 static void
 iter_empty(void)
 {
@@ -650,14 +659,15 @@ iter_empty(void)
     gnx_destroy_set(set);
 }
 
-/* Iterate over a set that has exactly one element. */
+/* Iterate over a set that has exactly one element.
+ */
 static void
 iter_one(void)
 {
-    gnxintptr elem;
+    gnxptr elem;
     GnxSet *set;
     GnxSetIter iter;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int a = (unsigned int)g_random_int();
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &a));
@@ -665,24 +675,24 @@ iter_one(void)
 
     gnx_set_iter_init(&iter, set);
     assert(gnx_set_iter_next(&iter, &elem));
-    assert(*elem == a);
+    assert(*((unsigned int *)elem) == a);
     assert(!gnx_set_iter_next(&iter, NULL));
 
     gnx_destroy_set(set);
 }
 
-/* Iterate over a set that has a random number of elements. */
+/* Iterate over a set that has a random number of elements.
+ */
 static void
 iter_random(void)
 {
-    gnxintptr e;
+    gnxptr e;
     GnxSet *set;
     GnxSetIter iter;
-    int elem, *list, unique;
-    unsigned int i, j;
+    unsigned int elem, i, j, *list, unique;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
 
     /* Generate a bunch of unique random integers.  The size of the list is
@@ -696,7 +706,7 @@ iter_random(void)
     for (i = 0; i < size; i++) {
         unique = FALSE;
         do {
-            elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+            elem = (unsigned int)g_random_int();
             for (j = 0; j < i; j++) {
                 if (elem == list[j])
                     break;
@@ -715,7 +725,7 @@ iter_random(void)
      */
     gnx_set_iter_init(&iter, set);
     while (gnx_set_iter_next(&iter, &e)) {
-        elem = *e;
+        elem = *((unsigned int *)e);
         for (i = 0; i < size; i++) {
             if (elem == list[i])
                 break;
@@ -745,7 +755,6 @@ static void
 new_dont_free_elements(void)
 {
     GnxSet *set;
-    int a, b, c;
 
     set = gnx_init_set();
     assert(set);
@@ -759,18 +768,6 @@ new_dont_free_elements(void)
     assert(1 == set->a % 2);
     assert(set->c <= (1u << set->d));
 
-    /* Generate some unique integers and add them to the set. */
-    a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    do {
-        b = (int)g_random_int_range(INT_MIN, INT_MAX);
-    } while (a == b);
-    do {
-        c = (int)g_random_int_range(INT_MIN, INT_MAX);
-    } while ((c == a) || (c == b));
-    assert(gnx_set_add(set, &a));
-    assert(gnx_set_add(set, &b));
-    assert(gnx_set_add(set, &c));
-
     gnx_destroy_set(set);
 }
 
@@ -780,13 +777,10 @@ static void
 new_free_elements(void)
 {
     GnxSet *set;
-    int *elem;
-    unsigned int i;
-    const unsigned int size = (unsigned int)g_random_int_range(1, 21);
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(set);
-    assert(GNX_FREE_ELEMENTS & set->free_elem);
+    assert(GNX_FREE_ELEMENTS == set->free_elem);
     assert(GNX_DEFAULT_EXPONENT == set->k);
     assert(GNX_DEFAULT_ALLOC_SIZE == set->capacity);
     assert(1 << GNX_DEFAULT_EXPONENT == set->capacity);
@@ -795,13 +789,6 @@ new_free_elements(void)
     assert(set->a <= UINT_MAX);
     assert(1 == set->a % 2);
     assert(set->c <= (1u << set->d));
-
-    for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
-        assert(gnx_set_add(set, elem));
-    }
-    assert(size == set->size);
 
     gnx_destroy_set(set);
 }

@@ -26,4 +26,5 @@ test_programs =                                                            \
 	dict                                                               \
 	heap                                                               \
 	queue                                                              \
+	set                                                                \
 	util

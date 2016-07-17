@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #include "array.h"
@@ -41,11 +42,11 @@
  * prototypes for internal helper functions
  *************************************************************************/
 
-static int* gnx_i_has(const GnxSet *set,
-                      const int *elem,
-                      unsigned int *i,
-                      unsigned int *j);
-static inline unsigned int gnx_i_hash(const int *key,
+static gnxptr gnx_i_has(const GnxSet *set,
+                        const unsigned int *elem,
+                        unsigned int *i,
+                        unsigned int *j);
+static inline unsigned int gnx_i_hash(const unsigned int *key,
                                       const unsigned int *a,
                                       const unsigned int *c,
                                       const unsigned int *d);
@@ -67,9 +68,9 @@ static int gnx_i_resize(GnxSet *set);
  * @return A pointer to the given element if the element is in the set; @c NULL
  *         otherwise.  We also return @c NULL if the set is empty.
  */
-static int*
+static gnxptr
 gnx_i_has(const GnxSet *set,
-          const int *elem,
+          const unsigned int *elem,
           unsigned int *i,
           unsigned int *j)
 {
@@ -77,6 +78,7 @@ gnx_i_has(const GnxSet *set,
     unsigned int idx, jdx;
 
     idx = gnx_i_hash(elem, &(set->a), &(set->c), &(set->d));
+
     if (i)
         *i = idx;
 
@@ -89,7 +91,7 @@ gnx_i_has(const GnxSet *set,
 
     /* Linear search through the entries of the bucket. */
     for (jdx = 0; jdx < bucket->size; jdx++) {
-        if (*elem == *(bucket->cell[jdx])) {
+        if (*elem == *((unsigned int *)(bucket->cell[jdx]))) {
             if (j)
                 *j = jdx;
             return bucket->cell[jdx];
@@ -113,20 +115,19 @@ gnx_i_has(const GnxSet *set,
  *         a set.
  */
 static inline unsigned int
-gnx_i_hash(const int *key,
+gnx_i_hash(const unsigned int *key,
            const unsigned int *a,
            const unsigned int *c,
            const unsigned int *d)
 {
-    unsigned int x = (unsigned int)(*key);
-    /* Note that the numerator ax + c can wrap around because each operand is
-     * an unsigned int.  We expect the wrap around because the numerator is
-     * meant to be reduced modulo 2^b, where b is the number of bits in the
-     * representation of an unsigned int.  The wrapping behavior of arithmetic
-     * with operands that are unsigned ints is equivalent to arithmetic modulo
-     * 2^b.
+    /* Let x be the key.  Note that the numerator ax + c can wrap around
+     * because each operand is an unsigned int.  We expect the wrap around
+     * because the numerator is meant to be reduced modulo 2^b, where b is the
+     * number of bits in the representation of an unsigned int.  The wrapping
+     * behavior of arithmetic with operands that are unsigned ints is
+     * equivalent to arithmetic modulo 2^b.
      */
-    return (((*a) * x) + (*c)) >> (*d);
+    return (((*a) * (*key)) + (*c)) >> (*d);
 }
 
 /**
@@ -145,8 +146,7 @@ gnx_i_resize(GnxSet *set)
 {
     GnxArray *new_bucket, *old_bucket;
     gnxptr *new_bucket_array;
-    int *key;
-    unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
+    unsigned int i, idx, j, *key, new_a, new_c, new_d, new_k, new_capacity;
     const unsigned int bucket_capacity = 2;
 
     errno = 0;
@@ -202,7 +202,7 @@ gnx_i_resize(GnxSet *set)
     }
     free(set->bucket);
 
-    /* Set the new parameters of the set. */
+    /* The new parameters of the set. */
     set->k = new_k;
     set->capacity = new_capacity;
     set->bucket = new_bucket_array;
@@ -238,15 +238,17 @@ void
 gnx_destroy_set(GnxSet *set)
 {
     GnxArray *bucket;
+    int free_elem;
     unsigned int i, j;
 
     if (!set)
         return;
     if (set->bucket) {
+        free_elem = GNX_FREE_ELEMENTS & set->free_elem;
         for (i = 0; i < set->capacity; i++) {
             bucket = (GnxArray *)(set->bucket[i]);
             if (bucket && bucket->cell) {
-                if (GNX_FREE_ELEMENTS & set->free_elem) {
+                if (free_elem) {
                     for (j = 0; j < bucket->size; j++) {
                         if (bucket->cell[j]) {
                             free(bucket->cell[j]);
@@ -266,7 +268,7 @@ gnx_destroy_set(GnxSet *set)
 }
 
 /**
- * @brief Initializes a set of integers.
+ * @brief Initializes a set.
  *
  * This function initializes a set with default settings.  In particular, the
  * set will not release the memory of each of its elements when you destroy the
@@ -287,7 +289,7 @@ gnx_init_set(void)
 }
 
 /**
- * @brief Initializes a set of integers.
+ * @brief Initializes a set.
  *
  * This function gives you full control over how a set will be initialized.
  *
@@ -317,8 +319,8 @@ gnx_init_set_full(const GnxBool destroy)
     const unsigned int bits_per_byte = 8;
 
     errno = 0;
-    g_assert((GNX_FREE_ELEMENTS & destroy)
-             || (GNX_DONT_FREE_ELEMENTS & destroy));
+    g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
+                         || (GNX_DONT_FREE_ELEMENTS & destroy), NULL);
 
     set = (GnxSet *)malloc(sizeof(GnxSet));
     if (!set)
@@ -376,7 +378,7 @@ cleanup:
  */
 int
 gnx_set_add(GnxSet *set,
-            int *elem)
+            unsigned int *elem)
 {
     GnxArray *bucket;
     int created_bucket = FALSE;  /* Whether a new bucket has been created. */
@@ -451,11 +453,11 @@ cleanup:
  * @return An element from the given set.  If the set is empty, then we return
  *         @c NULL.
  */
-int*
-gnx_set_any_element(GnxSet *set)
+unsigned int*
+gnx_set_any(GnxSet *set)
 {
+    gnxptr elem;
     GnxSetIter iter;
-    gnxintptr elem;
 
     gnx_i_check_set(set);
     if (!set->size)
@@ -464,7 +466,7 @@ gnx_set_any_element(GnxSet *set)
     gnx_set_iter_init(&iter, set);
     assert(gnx_set_iter_next(&iter, &elem));
 
-    return elem;
+    return (unsigned int *)elem;
 }
 
 /**
@@ -478,7 +480,7 @@ gnx_set_any_element(GnxSet *set)
  */
 int
 gnx_set_delete(GnxSet *set,
-               const int *elem)
+               const unsigned int *elem)
 {
     GnxArray *bucket;
     unsigned int i, j;
@@ -510,13 +512,13 @@ gnx_set_delete(GnxSet *set,
  * @return A pointer to the given element if the element is in the set; @c NULL
  *         otherwise.  We also return @c NULL if the set is empty.
  */
-int*
+unsigned int*
 gnx_set_has(const GnxSet *set,
-            const int *elem)
+            const unsigned int *elem)
 {
     gnx_i_check_set(set);
     g_return_val_if_fail(elem, NULL);
-    return gnx_i_has(set, elem, NULL, NULL);
+    return (unsigned int *)gnx_i_has(set, elem, NULL, NULL);
 }
 
 /**
@@ -552,10 +554,10 @@ gnx_set_iter_init(GnxSetIter *iter,
  */
 int
 gnx_set_iter_next(GnxSetIter *iter,
-                  gnxintptr *elem)
+                  gnxptr *elem)
 {
     GnxArray *bucket;
-    int i;
+    unsigned int i;
 
     g_return_val_if_fail(iter, GNX_FAILURE);
     gnx_i_check_set(iter->set);
@@ -569,12 +571,12 @@ gnx_set_iter_next(GnxSetIter *iter,
             return GNX_FAILURE;
 
         /* The index of the first bucket that has at least one entry. */
-        i = -1;
+        i = UINT_MAX;
         do {
             i++;
             bucket = (GnxArray *)(iter->set->bucket[i]);
         } while (!bucket);
-        iter->i = (unsigned int)i;
+        iter->i = i;
 
         /* The first entry within the first non-empty bucket. */
         g_assert(bucket->size);

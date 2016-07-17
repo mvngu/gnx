@@ -31,19 +31,19 @@ GnxSet* gnx_init_set_full(const GnxBool destroy);
 
 /* insert and remove */
 int gnx_set_add(GnxSet *set,
-                int *elem);
+                unsigned int *elem);
 int gnx_set_delete(GnxSet *set,
-                   const int *elem);
+                   const unsigned int *elem);
 
 /* query */
-int* gnx_set_any_element(GnxSet *set);
-int* gnx_set_has(const GnxSet *set,
-                 const int *elem);
+unsigned int* gnx_set_any(GnxSet *set);
+unsigned int* gnx_set_has(const GnxSet *set,
+                          const unsigned int *elem);
 
 /* iterator */
 void gnx_set_iter_init(GnxSetIter *iter,
                        GnxSet *set);
 int gnx_set_iter_next(GnxSetIter *iter,
-                      gnxintptr *elem);
+                      gnxptr *elem);
 
 #endif  /* GNX_SET_H */
