@@ -106,7 +106,7 @@ static void
 has_node_empty(void)
 {
     GnxGraph *graph;
-    const unsigned int v = (unsigned int)g_random_int();
+    const unsigned int v = gnx_random_node_id();
 
     graph = gnx_new();
     is_empty_graph(graph);
