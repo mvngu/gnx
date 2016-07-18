@@ -158,7 +158,7 @@ typedef int* gnxintptr;  /**< An @c int pointer. */
 typedef void* gnxptr;    /**< An untyped pointer. */
 
 /**************************************************************************
- * data structures
+ * fundamental data structures
  *************************************************************************/
 
 /**
@@ -230,39 +230,6 @@ typedef struct {
     unsigned int i;      /**< The bucket index. */
     unsigned int j;      /**< The entry index within bucket i. */
 } GnxDictIter;
-
-/**
- * @brief The fundamental graph data structure.
- *
- * A generic graph has the following structure:
- *
- * <pre>
- * graph: {
- *     node_1: {
- *         neighbor_1: {
- *             property_1: {...},
- *             ...
- *         },
- *         ...
- *     },
- *     ...
- * }
- * </pre>
- */
-typedef struct {
-    gnxptr *node;              /**< The graph structure as an array of adjacency
-                                * lists.  If node[i] is NULL, then the node
-                                * with an ID of i is not in the graph.
-                                * Otherwise node i is in the graph and node[i]
-                                * points to the collection of all nodes that
-                                * are adjacent to i.
-                                */
-    GnxBool directed;          /**< Is the graph directed? */
-    GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
-    GnxBool weighted;          /**< Is the graph weighted? */
-    unsigned int total_edges;  /**< How many edges? */
-    unsigned int total_nodes;  /**< How many nodes or vertices? */
-} GnxGraph;
 
 /**
  * @brief A minimum binary heap.
@@ -354,5 +321,48 @@ typedef struct {
     GnxArray *array;    /**< The array of elements of the stack. */
     unsigned int size;  /**< How many elements are in the stack. */
 } GnxStack;
+
+/**************************************************************************
+ * graph data structure
+ *************************************************************************/
+
+/**
+ * @brief The fundamental graph data structure.
+ *
+ * A generic graph has the following structure:
+ *
+ * <pre>
+ * graph: {
+ *     node_1: {
+ *         neighbor_1: {
+ *             property_1: {...},
+ *             ...
+ *         },
+ *         ...
+ *     },
+ *     ...
+ * }
+ * </pre>
+ */
+typedef struct {
+    GnxSet *node;              /**< A collection of nodes of the graph.  This
+                                * set does not necessarily contain all the
+                                * nodes of the graph.  The set is used to
+                                * determine whether to allocate memory for a
+                                * node.
+                                */
+    gnxptr *graph;             /**< The graph structure as an array of adjacency
+                                * lists.  If node[i] is NULL, then the node
+                                * with an ID of i is not in the graph.
+                                * Otherwise node i is in the graph and node[i]
+                                * points to the collection of all nodes that
+                                * are adjacent to i.
+                                */
+    GnxBool directed;          /**< Is the graph directed? */
+    GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
+    GnxBool weighted;          /**< Is the graph weighted? */
+    unsigned int total_edges;  /**< How many edges? */
+    unsigned int total_nodes;  /**< How many nodes or vertices? */
+} GnxGraph;
 
 #endif  /* GNX_TYPE_H */

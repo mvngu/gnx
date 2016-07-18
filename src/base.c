@@ -20,6 +20,7 @@
 
 #include "base.h"
 #include "sanity.h"
+#include "set.h"
 
 /**
  * @file base.h
@@ -57,9 +58,10 @@ gnx_destroy(GnxGraph *graph)
 {
     if (!graph)
         return;
-    if (graph->node) {
-        free(graph->node);
-        graph->node = NULL;
+    gnx_destroy_set(graph->node);
+    if (graph->graph) {
+        free(graph->graph);
+        graph->graph = NULL;
     }
     free(graph);
     graph = NULL;
@@ -87,14 +89,14 @@ gnx_has_node(const GnxGraph *graph,
         return GNX_FAILURE;
 
     if (GNX_WEIGHTED & graph->weighted) {
-        adj_weighted = (GnxDict *)(graph->node[*v]);
+        adj_weighted = (GnxDict *)(graph->graph[*v]);
         if (!adj_weighted)
             return GNX_FAILURE;
 
         return GNX_SUCCESS;
     }
 
-    adj_unweighted = (GnxSet *)(graph->node[*v]);
+    adj_unweighted = (GnxSet *)(graph->graph[*v]);
     if (!adj_unweighted)
         return GNX_FAILURE;
 
@@ -182,12 +184,23 @@ gnx_new_full(const GnxBool directed,
     if (!graph)
         goto cleanup;
 
+    graph->node = NULL;
+    graph->graph = NULL;
+
+    /* A collection of nodes of the graph.  This collection does not
+     * necessarily contain all the nodes of the graph.  Its purpose is to help
+     * us determine whether to allocate memory for a node.
+     */
+    graph->node = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    if (!graph->node)
+        goto cleanup;
+
     /* By default, we allocate enough memory for a graph with a specified
      * number of nodes.  As more nodes are added to the graph, we might need
      * to resize this array.
      */
-    graph->node = (gnxptr *)calloc(reserved_nodes, sizeof(gnxptr));
-    if (!graph->node)
+    graph->graph = (gnxptr *)calloc(reserved_nodes, sizeof(gnxptr));
+    if (!graph->graph)
         goto cleanup;
 
     graph->directed = directed;
