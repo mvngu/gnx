@@ -75,6 +75,18 @@ gnx_i_check_heap(const GnxHeap *heap)
 }
 
 /**
+ * @brief Some sanity checks on a graph node.
+ *
+ * @param v Check this node.
+ */
+void
+gnx_i_check_node(const unsigned int *v)
+{
+    g_return_if_fail(v);
+    g_return_if_fail(*v < GNX_MAXIMUM_NODES);
+}
+
+/**
  * @brief Check the graph properties.
  *
  * @param directed The possible values are: #GNX_UNDIRECTED or #GNX_DIRECTED.
