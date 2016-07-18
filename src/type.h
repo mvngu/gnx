@@ -361,6 +361,11 @@ typedef struct {
     GnxBool directed;          /**< Is the graph directed? */
     GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
     GnxBool weighted;          /**< Is the graph weighted? */
+    unsigned int capacity;     /**< The maximum number of nodes that the graph
+                                * can hold.  If adding another node would
+                                * exceed the capacity, then we need to resize
+                                * the array of adjacency lists.
+                                */
     unsigned int total_edges;  /**< How many edges? */
     unsigned int total_nodes;  /**< How many nodes or vertices? */
 } GnxGraph;

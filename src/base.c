@@ -206,6 +206,7 @@ gnx_new_full(const GnxBool directed,
     graph->directed = directed;
     graph->selfloop = selfloop;
     graph->weighted = weighted;
+    graph->capacity = reserved_nodes;
     graph->total_edges = 0;
     graph->total_nodes = 0;
 
