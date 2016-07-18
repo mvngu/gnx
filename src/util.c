@@ -103,3 +103,14 @@ gnx_double_cmp_le(const double *a,
 
     return (retval <= 0) ? TRUE : FALSE;
 }
+
+/**
+ * @brief Generates a random node ID.
+ *
+ * @return A random node ID.
+ */
+unsigned int
+gnx_random_node_id(void)
+{
+    return (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+}

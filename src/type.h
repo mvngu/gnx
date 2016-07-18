@@ -74,6 +74,11 @@
                                   * node IDs.
                                   */
 
+#define GNX_MAXIMUM_NODE_ID                                                \
+    ((unsigned int)INT_MAX)      /**< @hideinitializer
+                                  * The maximum ID of any node.
+                                  */
+
 #define GNX_MPFR_PRECISION (128)  /**< @hideinitializer
                                    * How many bits of precision for a number
                                    * that is represented in MPFR.
