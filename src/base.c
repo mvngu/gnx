@@ -83,7 +83,7 @@ gnx_has_node(const GnxGraph *graph,
     GnxSet *adj_unweighted;
 
     gnx_i_check(graph);
-    g_return_val_if_fail(v, GNX_FAILURE);
+    gnx_i_check_node(v);
 
     if (!graph->total_nodes)
         return GNX_FAILURE;
