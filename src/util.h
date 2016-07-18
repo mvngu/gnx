@@ -24,6 +24,7 @@
 
 #include "type.h"
 
+/* comparing floating-point numbers */
 int gnx_double_cmp_eq(const double *a,
                       const double *b);
 int gnx_double_cmp_le(const double *a,
