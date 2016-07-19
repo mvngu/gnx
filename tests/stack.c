@@ -187,8 +187,8 @@ static void
 peek_one(void)
 {
     GnxStack *stack;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
-    int *elem;
+    unsigned int a = (unsigned int)g_random_int();
+    unsigned int *elem;
 
     stack = gnx_init_stack();
     assert(gnx_stack_push(stack, &a));
@@ -207,15 +207,14 @@ static void
 peek_random(void)
 {
     GnxStack *stack;
-    int *elem, *list;
-    unsigned int i;
+    unsigned int *elem, i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     stack = gnx_init_stack();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_stack_push(stack, &(list[i])));
     }
     assert(size == stack->size);
@@ -241,6 +240,8 @@ pop(void)
     pop_random();
 }
 
+/* Pop an element off an empty stack.
+ */
 static void
 pop_empty(void)
 {
@@ -254,13 +255,15 @@ pop_empty(void)
     gnx_destroy_stack(stack);
 }
 
+/* Pop an element off a stack that has exactly one element.
+ */
 static void
 pop_one(void)
 {
     GnxStack *stack;
-    int a, *b;
+    unsigned int a, *b;
 
-    a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    a = (unsigned int)g_random_int();
     stack = gnx_init_stack();
     assert(gnx_stack_push(stack, &a));
     assert(1 == stack->size);
@@ -272,20 +275,21 @@ pop_one(void)
     gnx_destroy_stack(stack);
 }
 
+/* Pop an element off a stack that has a random number of elements.
+ */
 static void
 pop_random(void)
 {
     GnxStack *stack;
-    int *elem, *list;
-    unsigned int i;
+    unsigned int *elem, i, *list;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(32, 51);
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     stack = gnx_init_stack_full(&capacity, GNX_DONT_FREE_ELEMENTS);
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_stack_push(stack, &(list[i])));
     }
     assert(size == stack->size);
@@ -320,7 +324,7 @@ static void
 push_empty(void)
 {
     GnxStack *stack;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int a = (unsigned int)g_random_int();
 
     stack = gnx_init_stack();
     assert(0 == stack->size);
@@ -337,23 +341,23 @@ push_no_memory(void)
 {
 #ifdef GNX_ALLOC_TEST
     GnxStack *stack;
-    int alloc_size, *elem;
-    unsigned int i;
+    int alloc_size;
+    unsigned int *elem, i;
     const unsigned int capacity = 16;
     const unsigned int size = capacity;
 
     stack = gnx_init_stack_full(&capacity, GNX_FREE_ELEMENTS);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_stack_push(stack, elem));
     }
     assert(size == stack->size);
 
     /* Cannot allocate memory for a stack element. */
-    elem = (int *)malloc(sizeof(int));
-    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = (unsigned int)g_random_int();
     alloc_size = 0;
     gnx_alloc_set_limit(alloc_size);
     assert(size == stack->size);
@@ -373,8 +377,7 @@ static void
 push_random(void)
 {
     GnxStack *stack;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(2, 33);
 
@@ -382,8 +385,8 @@ push_random(void)
     stack = gnx_init_stack_full(&capacity, GNX_FREE_ELEMENTS);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_stack_push(stack, elem));
     }
     assert(size == stack->size);

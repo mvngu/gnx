@@ -9,6 +9,7 @@ GNX_HEADERFILES =                                                          \
 	heap.h                                                             \
 	queue.h                                                            \
 	set.h                                                              \
+	stack.h                                                            \
 	type.h                                                             \
 	util.h
 ### GNX_HOOK:ALLOC_H
@@ -26,6 +27,7 @@ GNX_SRC =                                                                  \
 	queue.c                                                            \
 	sanity.c                                                           \
 	set.c                                                              \
+	stack.c                                                            \
 	util.c
 ### GNX_HOOK:ALLOC_C
 

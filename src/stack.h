@@ -31,11 +31,11 @@ GnxStack* gnx_init_stack_full(const unsigned int *capacity,
                               const GnxBool destroy);
 
 /* insert and delete */
-int* gnx_stack_pop(GnxStack *stack);
+unsigned int* gnx_stack_pop(GnxStack *stack);
 int gnx_stack_push(GnxStack *stack,
-                   int *elem);
+                   unsigned int *elem);
 
 /* query */
-int* gnx_stack_peek(const GnxStack *stack);
+unsigned int* gnx_stack_peek(const GnxStack *stack);
 
 #endif  /* GNX_STACK_H */

@@ -24,7 +24,7 @@
 
 /**
  * @file stack.h
- * @brief Stack of integers.
+ * @brief A stack of integers.
  *
  * A stack does not make its own copy of any element that is pushed onto it.
  * Rather, the stack copies the pointer that is passed in and stores that
@@ -34,7 +34,7 @@
  * <a href="https://en.wikipedia.org/wiki/Stack_(abstract_data_type)">Wikipedia article</a>.
  *
  * Use either of the functions gnx_init_stack() or gnx_init_stack_full() to
- * initialize a new stack of integers.  Destroy a stack via the function
+ * initialize a new stack.  Destroy a stack via the function
  * gnx_destroy_stack().
  */
 
@@ -65,11 +65,10 @@ gnx_destroy_stack(GnxStack *stack)
  * @sa gnx_init_stack_full() Initializes a stack with full control over its
  *     settings.
  *
- * @return An initialized stack of integers with zero elements and a default
- *         capacity of #GNX_DEFAULT_ALLOC_SIZE.  When you no longer need the
- *         stack, you must destroy the stack via the function
- *         gnx_destroy_stack().  See gnx_init_stack_full() for further details
- *         on the return value.
+ * @return An initialized stack with zero elements and a default capacity of
+ *         #GNX_DEFAULT_ALLOC_SIZE.  When you no longer need the stack, you
+ *         must destroy the stack via the function gnx_destroy_stack().  See
+ *         gnx_init_stack_full() for further details on the return value.
  */
 GnxStack*
 gnx_init_stack(void)
@@ -136,14 +135,14 @@ cleanup:
  * @return The element at the top of the given stack.  If the stack is empty,
  *         then we return @c NULL.
  */
-int*
+unsigned int*
 gnx_stack_peek(const GnxStack *stack)
 {
     gnx_i_check_stack(stack);
     if (!stack->size)
         return NULL;
 
-    return stack->array->cell[stack->size - 1];
+    return (unsigned int *)(stack->array->cell[stack->size - 1]);
 }
 
 /**
@@ -156,17 +155,17 @@ gnx_stack_peek(const GnxStack *stack)
  *         memory of the element as appropriate.  If the stack is empty, then
  *         we return @c NULL.
  */
-int*
+unsigned int*
 gnx_stack_pop(GnxStack *stack)
 {
-    int *elem;
+    unsigned int *elem;
 
     gnx_i_check_stack(stack);
     if (!stack->size)
         return NULL;
 
     (stack->size)--;
-    elem = stack->array->cell[stack->size];
+    elem = (unsigned int *)(stack->array->cell[stack->size]);
     stack->array->cell[stack->size] = NULL;
     (stack->array->size)--;
     g_assert(stack->size == stack->array->size);
@@ -189,7 +188,7 @@ gnx_stack_pop(GnxStack *stack)
  */
 int
 gnx_stack_push(GnxStack *stack,
-               int *elem)
+               unsigned int *elem)
 {
     errno = 0;
     gnx_i_check_stack(stack);
