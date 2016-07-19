@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "base.h"
+#include "dict.h"
 #include "sanity.h"
 #include "set.h"
 
@@ -31,8 +32,153 @@
  */
 
 /**************************************************************************
+ * internal data
+ *************************************************************************/
+
+#define GNX_MAX_EXPONENT (32)
+
+/* All powers of two 2^i for i = 0,...,31. */
+static unsigned int gnx_power2[GNX_MAX_EXPONENT] = {
+    1,            /* 2^0 */
+    2,            /* 2^1 */
+    4,            /* 2^2 */
+    8,            /* 2^3 */
+    16,           /* 2^4 */
+    32,           /* 2^5 */
+    64,           /* 2^6 */
+    128,          /* 2^7 */
+    256,          /* 2^8 */
+    512,          /* 2^9 */
+    1024,         /* 2^10 */
+    2048,         /* 2^11 */
+    4096,         /* 2^12 */
+    8192,         /* 2^13 */
+    16384,        /* 2^14 */
+    32768,        /* 2^15 */
+    65536,        /* 2^16 */
+    131072,       /* 2^17 */
+    262144,       /* 2^18 */
+    524288,       /* 2^19 */
+    1048576,      /* 2^20 */
+    2097152,      /* 2^21 */
+    4194304,      /* 2^22 */
+    8388608,      /* 2^23 */
+    16777216,     /* 2^24 */
+    33554432,     /* 2^25 */
+    67108864,     /* 2^26 */
+    134217728,    /* 2^27 */
+    268435456,    /* 2^28 */
+    536870912,    /* 2^29 */
+    1073741824,   /* 2^30 */
+    2147483648};  /* 2^31 */
+
+/**************************************************************************
  * public interface
  *************************************************************************/
+
+/**
+ * @brief Inserts a new node into a graph.
+ *
+ * @param graph The graph to update.
+ * @param v A node to insert.  We assume that the number of nodes in the graph
+ *        is less than #GNX_MAXIMUM_NODES.
+ * @return Nonzero if the node did not yet exist and we have successfully
+ *         inserted the node into the graph; zero otherwise.  We also return
+ *         zero if the given node is already in the graph.  If we are unable
+ *         to allocate memory for the new node, then @c errno is set to
+ *         @c ENOMEM and we return zero.
+ */
+int
+gnx_add_node(GnxGraph *graph,
+             const unsigned int *v)
+{
+    GnxDict *adj_weighted;   /* The adjacency of a node for weighted graph. */
+    GnxSet *adj_unweighted;  /* A node's adjacency for unweighted graph. */
+    gnxptr *new_graph;
+    unsigned int i, new_capacity;
+
+    errno = 0;
+    if (gnx_has_node(graph, v))
+        return GNX_FAILURE;
+    g_return_val_if_fail(graph->total_nodes < GNX_MAXIMUM_NODES, GNX_FAILURE);
+
+    /* Possibly resize the array of adjacency lists.  There are two conditions
+     * that each could trigger a resize.
+     *
+     * (1) The current number of nodes in the graph is at least the capacity of
+     *     the graph.  This is the case if each value of graph->graph[i] is not
+     *     NULL.
+     * (2) The given node ID is greater than the maximum index of the array of
+     *     adjacency lists.
+     *
+     * Assume that the node v to insert is not in the graph.  Let k be the
+     * maximum index of the array of adjacency lists.  If case (1), then we
+     * have v > k.  If case (2), then we clearly have v > k as well.  In either
+     * case, we only need to consider the smallest power of two such that
+     * v < 2^i for some non-negative integer i.
+     */
+    if ((graph->total_nodes >= graph->capacity) || (*v >= graph->capacity)) {
+        g_assert(*v >= graph->capacity);
+
+        /* Compute the new capacity of the graph.  This is done by finding the
+         * smallest power of 2 such that v < 2^i for some non-negative integer
+         * i.
+         */
+        i = GNX_DEFAULT_EXPONENT;
+        while (*v >= gnx_power2[i])
+            i++;
+
+        g_assert(i < GNX_MAX_EXPONENT);
+        new_capacity = gnx_power2[i];
+        g_assert(new_capacity <= GNX_MAXIMUM_NODES);
+
+        new_graph
+            = (gnxptr *)realloc(graph->graph, new_capacity * sizeof(gnxptr));
+        if (!new_graph)
+            goto cleanup;
+
+        graph->capacity = new_capacity;
+        graph->graph = new_graph;
+    }
+
+    if (GNX_WEIGHTED & graph->weighted) {
+        /* For a weighted graph, the neighbors of a node v is represented as a
+         * dictionary that has the following structure:
+         *
+         * v : {
+         *     neighbor_1 : weight_1,
+         *     ...
+         *     neighbor_k : weight_k,
+         * }
+         *
+         * Here, weight_i refers to the numeric weight of the edge
+         * (v, neighbor_i).  The keys are the neighbor IDs and the values are
+         * the corresponding edge weight.
+         */
+        adj_weighted = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
+        if (!adj_weighted)
+            goto cleanup;
+        graph->graph[*v] = adj_weighted;
+    } else {
+        /* For an unweighted graph, the neighbors of a node v is represented
+         * as a set.
+         */
+        g_assert(GNX_UNWEIGHTED & graph->weighted);
+        adj_unweighted = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
+        if (!adj_unweighted)
+            goto cleanup;
+        graph->graph[*v] = adj_unweighted;
+    }
+
+    (graph->total_nodes)++;
+    g_assert(graph->total_nodes <= GNX_MAXIMUM_NODES);
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    return GNX_FAILURE;
+}
 
 /**
  * @brief Whether self-loops are allowed in a graph.
