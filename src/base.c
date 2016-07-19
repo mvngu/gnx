@@ -100,7 +100,7 @@ gnx_has_node(const GnxGraph *graph,
     if (!adj_unweighted)
         return GNX_FAILURE;
 
-    return GNX_FAILURE;
+    return GNX_SUCCESS;
 }
 
 /**
