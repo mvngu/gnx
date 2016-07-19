@@ -87,6 +87,8 @@ gnx_has_node(const GnxGraph *graph,
 
     if (!graph->total_nodes)
         return GNX_FAILURE;
+    if (*v >= graph->capacity)
+        return GNX_FAILURE;
 
     if (GNX_WEIGHTED & graph->weighted) {
         adj_weighted = (GnxDict *)(graph->graph[*v]);
