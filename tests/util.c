@@ -43,7 +43,8 @@ compare_double(void)
     compare_double_le();
 }
 
-/* Compare two floating-point numbers a and b for the relation a == b. */
+/* Compare two floating-point numbers a and b for the relation a == b.
+ */
 static void
 compare_double_eq(void)
 {
@@ -60,7 +61,8 @@ compare_double_eq(void)
     assert(!gnx_double_cmp_eq(&a, &b));
 }
 
-/* Compare two floating-point numbers a and b for the relation a <= b. */
+/* Compare two floating-point numbers a and b for the relation a <= b.
+ */
 static void
 compare_double_le(void)
 {
