@@ -556,7 +556,8 @@ has_node(void)
     has_node_empty();
 }
 
-/* Query for a node in an empty graph. */
+/* Query for a node in an empty graph.
+ */
 static void
 has_node_empty(void)
 {
@@ -590,7 +591,8 @@ new(void)
     new_directed_selfloop_weighted();
 }
 
-/* An empty graph.  A graph is empty if it has zero nodes and zero edges. */
+/* An empty graph.  A graph is empty if it has zero nodes and zero edges.
+ */
 static void
 new_empty(void)
 {
@@ -599,7 +601,8 @@ new_empty(void)
     gnx_destroy(graph);
 }
 
-/* Test the function gnx_new_full() under low-memory scenarios. */
+/* Test the function gnx_new_full() under low-memory scenarios.
+ */
 static void
 new_no_memory(void)
 {
@@ -615,7 +618,8 @@ new_no_memory(void)
 #endif
 }
 
-/* A graph that is undirected, does not allow self-loops, and is unweighted. */
+/* A graph that is undirected, does not allow self-loops, and is unweighted.
+ */
 static void
 new_undirected_no_selfloop_unweighted(void)
 {
@@ -627,7 +631,8 @@ new_undirected_no_selfloop_unweighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is undirected, does not allow self-loops, and is weighted. */
+/* A graph that is undirected, does not allow self-loops, and is weighted.
+ */
 static void
 new_undirected_no_selfloop_weighted(void)
 {
@@ -639,7 +644,8 @@ new_undirected_no_selfloop_weighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is undirected, allows for self-loops, and is unweighted. */
+/* A graph that is undirected, allows for self-loops, and is unweighted.
+ */
 static void
 new_undirected_selfloop_unweighted(void)
 {
@@ -651,7 +657,8 @@ new_undirected_selfloop_unweighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is undirected, allows for self-loops, and is weighted. */
+/* A graph that is undirected, allows for self-loops, and is weighted.
+ */
 static void
 new_undirected_selfloop_weighted(void)
 {
@@ -663,7 +670,8 @@ new_undirected_selfloop_weighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is directed, does not allow self-loops, and is unweighted. */
+/* A graph that is directed, does not allow self-loops, and is unweighted.
+ */
 static void
 new_directed_no_selfloop_unweighted(void)
 {
@@ -675,7 +683,8 @@ new_directed_no_selfloop_unweighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is directed, does not allow self-loops, and is weighted. */
+/* A graph that is directed, does not allow self-loops, and is weighted.
+ */
 static void
 new_directed_no_selfloop_weighted(void)
 {
@@ -687,7 +696,8 @@ new_directed_no_selfloop_weighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is directed, allows for self-loops, and is unweighted. */
+/* A graph that is directed, allows for self-loops, and is unweighted.
+ */
 static void
 new_directed_selfloop_unweighted(void)
 {
@@ -699,7 +709,8 @@ new_directed_selfloop_unweighted(void)
     gnx_destroy(graph);
 }
 
-/* A graph that is directed, allows for self-loops, and is weighted. */
+/* A graph that is directed, allows for self-loops, and is weighted.
+ */
 static void
 new_directed_selfloop_weighted(void)
 {
