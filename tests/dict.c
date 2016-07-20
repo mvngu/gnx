@@ -577,7 +577,8 @@ delete_bucket_tail(void)
     gnx_destroy_dict(dict);
 }
 
-/* Delete elements from an empty dictionary. */
+/* Delete elements from an empty dictionary.
+ */
 static void
 delete_empty(void)
 {
@@ -599,7 +600,8 @@ delete_empty(void)
     gnx_destroy_dict(dict);
 }
 
-/* Delete an element that is not in a dictionary. */
+/* Delete an element that is not in a dictionary.
+ */
 static void
 delete_non_member(void)
 {
@@ -629,7 +631,8 @@ delete_non_member(void)
     gnx_destroy_dict(dict);
 }
 
-/* Delete from a dictionary that has one element. */
+/* Delete from a dictionary that has one element.
+ */
 static void
 delete_one(void)
 {
@@ -765,7 +768,8 @@ has(void)
     has_non_member();
 }
 
-/* Search an empty dictionary. */
+/* Search an empty dictionary.
+ */
 static void
 has_empty(void)
 {
@@ -780,7 +784,8 @@ has_empty(void)
     gnx_destroy_dict(dict);
 }
 
-/* Search for elements that exist in a dictionary. */
+/* Search for elements that exist in a dictionary.
+ */
 static void
 has_member(void)
 {
@@ -810,7 +815,8 @@ has_member(void)
     gnx_destroy_dict(dict);
 }
 
-/* Search for elements that do not exist in a dictionary. */
+/* Search for elements that do not exist in a dictionary.
+ */
 static void
 has_non_member(void)
 {
@@ -852,7 +858,8 @@ iter(void)
     iter_random();
 }
 
-/* Count the number of elements in a dictionary. */
+/* Count the number of elements in a dictionary.
+ */
 static void
 iter_count(void)
 {
@@ -882,7 +889,8 @@ iter_count(void)
     gnx_destroy_dict(dict);
 }
 
-/* Iterate over an empty dictionary. */
+/* Iterate over an empty dictionary.
+ */
 static void
 iter_empty(void)
 {
@@ -898,7 +906,8 @@ iter_empty(void)
     gnx_destroy_dict(dict);
 }
 
-/* Iterate over a dictionary that has exactly one element. */
+/* Iterate over a dictionary that has exactly one element.
+ */
 static void
 iter_one(void)
 {
@@ -920,7 +929,8 @@ iter_one(void)
     gnx_destroy_dict(dict);
 }
 
-/* Iterate over a dictionary that has a random number of elements. */
+/* Iterate over a dictionary that has a random number of elements.
+ */
 static void
 iter_random(void)
 {
@@ -992,7 +1002,8 @@ new(void)
     new_no_memory();
 }
 
-/* A dictionary with default settings. */
+/* A dictionary with default settings.
+ */
 static void
 new_dict(void)
 {
@@ -1014,7 +1025,8 @@ new_dict(void)
     gnx_destroy_dict(dict);
 }
 
-/* A dictionary with custom settings. */
+/* A dictionary with custom settings.
+ */
 static void
 new_dict_full(void)
 {
@@ -1075,7 +1087,8 @@ new_dict_full(void)
     gnx_destroy_dict(dict);
 }
 
-/* Test under low-memory scenarios. */
+/* Test under low-memory scenarios.
+ */
 static void
 new_no_memory(void)
 {
