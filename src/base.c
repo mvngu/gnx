@@ -32,11 +32,12 @@
  */
 
 /**************************************************************************
- * internal data
+ * internal data structures
  *************************************************************************/
 
 #define GNX_MAX_EXPONENT (32)
 
+/* @cond */
 /* All powers of two 2^i for i = 0,...,31. */
 static unsigned int gnx_power2[GNX_MAX_EXPONENT] = {
     1,            /* 2^0 */
@@ -71,6 +72,48 @@ static unsigned int gnx_power2[GNX_MAX_EXPONENT] = {
     536870912,    /* 2^29 */
     1073741824,   /* 2^30 */
     2147483648};  /* 2^31 */
+/* @endcond */
+
+/* @cond */
+/* A node in a digraph.  In a digraph, we only keep track of all nodes that are
+ * out-neighbors of a given node.
+ */
+typedef struct {
+    unsigned int indegree;   /* The in-degree of the node.  For digraphs, the
+                              * in-degree of a node v counts all nodes that are
+                              * in-neighbors of v.
+                              */
+    unsigned int outdegree;  /* The out-degree of the node.  For digraphs, the
+                              * out-degree of a node v counts all nodes that
+                              * are out-neighbors of v.
+                              */
+    gnxptr neighbor;         /* The collection of all nodes that are adjacent
+                              * to a node v.  For digraphs, this is all the
+                              * nodes that are out-neighbors of v.
+                              */
+} GnxNodeDirected;
+/* @endcond */
+
+/* @cond */
+/* A node in an undirected graph.  We use a compact representation for
+ * undirected graphs.  If (u,v) is an edge of an undirected graph that is also
+ * simple, then we assume that u < v.  We take u to be the head node and v to
+ * be the tail node.  The node v is inserted into the set of neighbors of u,
+ * but u is not inserted into the set of neighbors of v.  Due to this compact
+ * representation of undirected graphs, we require a separate variable to keep
+ * track of the degree of each node.
+ */
+typedef struct {
+    unsigned int degree;  /* The degree of the node.  For undirected graphs,
+                           * the degree of a node v counts the nodes that are
+                           * adjacent to v.
+                           */
+    gnxptr neighbor;      /* The collection of all nodes that are adjacent to
+                           * a node v.  For undirected graphs, this is all the
+                           * nodes that are neighbors of v.
+                           */
+} GnxNodeUndirected;
+/* @endcond */
 
 /**************************************************************************
  * public interface
@@ -94,7 +137,10 @@ gnx_add_node(GnxGraph *graph,
 {
     GnxDict *adj_weighted;   /* The adjacency of a node for weighted graph. */
     GnxSet *adj_unweighted;  /* A node's adjacency for unweighted graph. */
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
     gnxptr *new_graph;
+    int directed;
     unsigned int i, new_capacity;
 
     errno = 0;
@@ -141,6 +187,7 @@ gnx_add_node(GnxGraph *graph,
         graph->graph = new_graph;
     }
 
+    directed = GNX_DIRECTED & graph->directed;
     if (GNX_WEIGHTED & graph->weighted) {
         /* For a weighted graph, the neighbors of a node v is represented as a
          * dictionary that has the following structure:
@@ -158,7 +205,27 @@ gnx_add_node(GnxGraph *graph,
         adj_weighted = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
         if (!adj_weighted)
             goto cleanup;
-        graph->graph[*v] = adj_weighted;
+
+        if (directed) {
+            noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
+            if (!noded) {
+                gnx_destroy_dict(adj_weighted);
+                goto cleanup;
+            }
+            noded->indegree = 0;
+            noded->outdegree = 0;
+            noded->neighbor = adj_weighted;
+            graph->graph[*v] = noded;
+        } else {
+            nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
+            if (!nodeu) {
+                gnx_destroy_dict(adj_weighted);
+                goto cleanup;
+            }
+            nodeu->degree = 0;
+            nodeu->neighbor = adj_weighted;
+            graph->graph[*v] = nodeu;
+        }
     } else {
         /* For an unweighted graph, the neighbors of a node v is represented
          * as a set.
@@ -167,7 +234,27 @@ gnx_add_node(GnxGraph *graph,
         adj_unweighted = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
         if (!adj_unweighted)
             goto cleanup;
-        graph->graph[*v] = adj_unweighted;
+
+        if (directed) {
+            noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
+            if (!noded) {
+                gnx_destroy_set(adj_unweighted);
+                goto cleanup;
+            }
+            noded->indegree = 0;
+            noded->outdegree = 0;
+            noded->neighbor = adj_unweighted;
+            graph->graph[*v] = noded;
+        } else {
+            nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
+            if (!nodeu) {
+                gnx_destroy_set(adj_unweighted);
+                goto cleanup;
+            }
+            nodeu->degree = 0;
+            nodeu->neighbor = adj_unweighted;
+            graph->graph[*v] = nodeu;
+        }
     }
 
     (graph->total_nodes)++;
@@ -225,8 +312,8 @@ int
 gnx_has_node(const GnxGraph *graph,
              const unsigned int *v)
 {
-    GnxDict *adj_weighted;
-    GnxSet *adj_unweighted;
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
 
     gnx_i_check(graph);
     gnx_i_check_node(v);
@@ -236,16 +323,17 @@ gnx_has_node(const GnxGraph *graph,
     if (*v >= graph->capacity)
         return GNX_FAILURE;
 
-    if (GNX_WEIGHTED & graph->weighted) {
-        adj_weighted = (GnxDict *)(graph->graph[*v]);
-        if (!adj_weighted)
+    if (GNX_DIRECTED & graph->directed) {
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        if (!noded)
             return GNX_FAILURE;
 
         return GNX_SUCCESS;
     }
 
-    adj_unweighted = (GnxSet *)(graph->graph[*v]);
-    if (!adj_unweighted)
+    g_assert(GNX_UNDIRECTED & graph->directed);
+    nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+    if (!nodeu)
         return GNX_FAILURE;
 
     return GNX_SUCCESS;
