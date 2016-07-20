@@ -30,7 +30,4 @@ int gnx_double_cmp_eq(const double *a,
 int gnx_double_cmp_le(const double *a,
                       const double *b);
 
-/* graph functions */
-unsigned int gnx_random_node_id(void);
-
 #endif  /* GNX_UTIL_H */

@@ -87,19 +87,6 @@ compare_double_le(void)
 }
 
 /**************************************************************************
- * random node ID
- *************************************************************************/
-
-/* Generate a random node ID.
- */
-static void
-random_node_id(void)
-{
-    const unsigned int v = gnx_random_node_id();
-    assert(v < GNX_MAXIMUM_NODE_ID);
-}
-
-/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -110,7 +97,6 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/util/compare-double", compare_double);
-    g_test_add_func("/util/random-node-id", random_node_id);
 
     return g_test_run();
 }
