@@ -118,7 +118,8 @@ add(void)
     add_resize_no_memory();
 }
 
-/* Add a node under low-memory scenarios. */
+/* Add a node under low-memory scenarios.
+ */
 static void
 add_no_memory(void)
 {
@@ -149,7 +150,8 @@ add_no_memory(void)
 #endif
 }
 
-/* Add one node to an empty heap. */
+/* Add one node to an empty heap.
+ */
 static void
 add_one(void)
 {
@@ -165,7 +167,8 @@ add_one(void)
     gnx_destroy_heap(heap);
 }
 
-/* Add a random number of nodes to a heap. */
+/* Add a random number of nodes to a heap.
+ */
 static void
 add_random(void)
 {
@@ -191,7 +194,8 @@ add_random(void)
     gnx_destroy_heap(heap);
 }
 
-/* Add enough nodes to trigger a resize of a heap. */
+/* Add enough nodes to trigger a resize of a heap.
+ */
 static void
 add_resize(void)
 {
@@ -231,7 +235,8 @@ add_resize(void)
     gnx_destroy_heap(heap);
 }
 
-/* Test the resize of a heap under low-memory scenarios. */
+/* Test the resize of a heap under low-memory scenarios.
+ */
 static void
 add_resize_no_memory(void)
 {
@@ -321,7 +326,8 @@ decrease_constant_size(void)
     gnx_destroy_heap(heap);
 }
 
-/* Cannot decrease a key if the heap is empty. */
+/* Cannot decrease a key if the heap is empty.
+ */
 static void
 decrease_empty(void)
 {
@@ -451,7 +457,8 @@ decrease_non_member(void)
     gnx_destroy_heap(heap);
 }
 
-/* Randomly decrease the key of each node. */
+/* Randomly decrease the key of each node.
+ */
 static void
 decrease_random(void)
 {
@@ -529,7 +536,8 @@ decrease_root_node(void)
     gnx_destroy_heap(heap);
 }
 
-/* Cannot decrease a key if the new key compares equal to the current key. */
+/* Cannot decrease a key if the new key compares equal to the current key.
+ */
 static void
 decrease_same(void)
 {
@@ -557,7 +565,8 @@ has(void)
     has_empty();
 }
 
-/* Query for a node in an empty heap. */
+/* Query for a node in an empty heap.
+ */
 static void
 has_empty(void)
 {
@@ -612,7 +621,8 @@ increase_constant_size(void)
     gnx_destroy_heap(heap);
 }
 
-/* Cannot increase a key if the heap is empty. */
+/* Cannot increase a key if the heap is empty.
+ */
 static void
 increase_empty(void)
 {
@@ -741,7 +751,8 @@ increase_non_member(void)
     gnx_destroy_heap(heap);
 }
 
-/* Randomly increase the key of each node. */
+/* Randomly increase the key of each node.
+ */
 static void
 increase_random(void)
 {
@@ -774,7 +785,8 @@ increase_random(void)
     gnx_destroy_heap(heap);
 }
 
-/* Cannot increase a key if the new key compares equal to the current key. */
+/* Cannot increase a key if the new key compares equal to the current key.
+ */
 static void
 increase_same(void)
 {
@@ -848,7 +860,8 @@ key(void)
     key_random_nodes();
 }
 
-/* Query a node key from an empty heap. */
+/* Query a node key from an empty heap.
+ */
 static void
 key_empty(void)
 {
@@ -864,7 +877,8 @@ key_empty(void)
     gnx_destroy_heap(heap);
 }
 
-/* Query the key of a node that is not in the heap. */
+/* Query the key of a node that is not in the heap.
+ */
 static void
 key_non_node(void)
 {
@@ -898,7 +912,8 @@ key_non_node(void)
     gnx_destroy_heap(heap);
 }
 
-/* Query a node key from a heap that has exactly one node. */
+/* Query a node key from a heap that has exactly one node.
+ */
 static void
 key_one_node(void)
 {
@@ -917,7 +932,8 @@ key_one_node(void)
     gnx_destroy_heap(heap);
 }
 
-/* Query a node key from a heap that has nodes with random keys. */
+/* Query a node key from a heap that has nodes with random keys.
+ */
 static void
 key_random_nodes(void)
 {
@@ -952,7 +968,8 @@ new(void)
     new_no_memory();
 }
 
-/* Initialize a heap. */
+/* Initialize a heap.
+ */
 static void
 new_heap(void)
 {
@@ -965,7 +982,8 @@ new_heap(void)
     gnx_destroy_heap(NULL);
 }
 
-/* Test the function gnx_init_heap() under low-memory scenarios. */
+/* Test the function gnx_init_heap() under low-memory scenarios.
+ */
 static void
 new_no_memory(void)
 {
@@ -1025,7 +1043,8 @@ pop_duplicate(void)
     gnx_destroy_heap(heap);
 }
 
-/* Pop an empty heap. */
+/* Pop an empty heap.
+ */
 static void
 pop_empty(void)
 {
@@ -1070,7 +1089,8 @@ pop_more(void)
     gnx_destroy_heap(heap);
 }
 
-/* Pop a heap that has exactly one node. */
+/* Pop a heap that has exactly one node.
+ */
 static void
 pop_one(void)
 {
