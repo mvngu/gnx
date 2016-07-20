@@ -33,6 +33,9 @@ GnxGraph* gnx_new_full(const GnxBool directed,
 
 /* query the graph properties */
 int gnx_allows_selfloop(const GnxGraph *graph);
+int gnx_has_edge(const GnxGraph *graph,
+                 const unsigned int *u,
+                 const unsigned int *v);
 int gnx_has_node(const GnxGraph *graph,
                  const unsigned int *v);
 int gnx_is_directed(const GnxGraph *graph);

@@ -25,6 +25,8 @@
 
 #include <gnx.h>
 
+#include "routine.h"
+
 /**************************************************************************
  * prototypes of helper functions
  *************************************************************************/
@@ -42,6 +44,15 @@ static void add_node_one_weighted(void);
 static void add_node_random_unweighted(void);
 static void add_node_random_weighted(void);
 static void add_node_resize(void);
+
+/* has edge */
+static void has_edge_empty(void);
+static void has_edge_one_node(void);
+static void has_edge_two_nodes_directed_weighted(void);
+static void has_edge_two_nodes_directed_unweighted(void);
+static void has_edge_two_nodes_no_selfloop(void);
+static void has_edge_two_nodes_undirected_weighted(void);
+static void has_edge_two_nodes_undirected_unweighted(void);
 
 /* has node */
 static void has_node_empty(void);
@@ -276,6 +287,266 @@ add_node_resize(void)
 }
 
 /**************************************************************************
+ * has edge
+ *************************************************************************/
+
+static void
+has_edge(void)
+{
+    has_edge_empty();
+    has_edge_one_node();
+    has_edge_two_nodes_directed_weighted();
+    has_edge_two_nodes_directed_unweighted();
+    has_edge_two_nodes_no_selfloop();
+    has_edge_two_nodes_undirected_weighted();
+    has_edge_two_nodes_undirected_unweighted();
+}
+
+/* Query for an edge in an empty graph.
+ */
+static void
+has_edge_empty(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+
+    /* An edge that is not a self-loop. */
+    random_edge(&u, &v);
+
+    graph = gnx_new();
+    is_empty_graph(graph);
+    assert(!gnx_has_node(graph, &u));
+    assert(!gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    is_empty_graph(graph);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly one node.
+ */
+static void
+has_edge_one_node(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    /**********************************************************************
+     * None of the nodes u,v is in the graph.
+     *********************************************************************/
+
+    graph = gnx_new();
+    u = (unsigned int)g_random_int_range(low, high);
+    assert(gnx_add_node(graph, &u));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    v = u;
+    while (gnx_has_node(graph, &u) || gnx_has_node(graph, &v))
+        random_edge(&u, &v);
+    assert(u != v);
+
+    assert(!gnx_has_node(graph, &u));
+    assert(!gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+
+
+    /**********************************************************************
+     * Exactly one of the nodes u,v is in the graph.
+     *********************************************************************/
+
+    graph = gnx_new();
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    if (g_random_boolean())
+        assert(gnx_add_node(graph, &u));
+    else
+        assert(gnx_add_node(graph, &v));
+
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert((gnx_has_node(graph, &u) && !gnx_has_node(graph, &v))
+           || (!gnx_has_node(graph, &u) && gnx_has_node(graph, &v)));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly two nodes.  Here both of the
+ * edge nodes are in the graph.  The graph is simple, directed, and weighted.
+ */
+static void
+has_edge_two_nodes_directed_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly two nodes.  Here both of the
+ * edge nodes are in the graph.  The graph is simple, directed, and unweighted.
+ */
+static void
+has_edge_two_nodes_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly two nodes.  Here both of the
+ * edge nodes are in the graph.  The graph does not allow self-loops.
+ */
+static void
+has_edge_two_nodes_no_selfloop(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    graph = gnx_new();
+    assert(!gnx_allows_selfloop(graph));
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(gnx_has_node(graph, &u));
+    assert(!gnx_has_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly two nodes.  Here both of the
+ * edge nodes are in the graph.  The graph is simple, undirected, and weighted.
+ */
+static void
+has_edge_two_nodes_undirected_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Query for an edge in a graph that has exactly two nodes.  Here both of the
+ * edge nodes are in the graph.  The graph is simple, undirected, and
+ * unweighted.
+ */
+static void
+has_edge_two_nodes_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 33;
+    const int low = 0;
+
+    u = (unsigned int)g_random_int_range(low, high);
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (u == v);
+    assert(u != v);
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
  * has node
  *************************************************************************/
 
@@ -451,6 +722,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/base/add-node", add_node);
+    g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);
     g_test_add_func("/base/new", new);
 

@@ -301,6 +301,68 @@ gnx_destroy(GnxGraph *graph)
 }
 
 /**
+ * @brief Whether a graph contains a given edge.
+ *
+ * @param graph The graph to query.
+ * @param u An end point of an edge.
+ * @param v The other end point of an edge.
+ * @return Nonzero if the graph contains the edge @f$(u, v)@f$; zero otherwise.
+ *         We also return zero if the graph is empty.
+ */
+int
+gnx_has_edge(const GnxGraph *graph,
+             const unsigned int *u,
+             const unsigned int *v)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    int directed;
+    unsigned int a, b;
+
+    if (!gnx_has_node(graph, u) || !gnx_has_node(graph, v))
+        return GNX_FAILURE;
+    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+        return GNX_FAILURE;
+
+    directed = GNX_DIRECTED & graph->directed;
+
+    /* Weighted graphs. */
+    if (GNX_WEIGHTED & graph->weighted) {
+        if (directed) {
+            noded = (GnxNodeDirected *)(graph->graph[*u]);
+            if (gnx_dict_has((GnxDict *)(noded->neighbor), v))
+                return GNX_SUCCESS;
+
+            return GNX_FAILURE;
+        }
+
+        gnx_undirected_edge_order(u, v, &a, &b);
+        nodeu = (GnxNodeUndirected *)(graph->graph[a]);
+        if (gnx_dict_has((GnxDict *)(nodeu->neighbor), &b))
+            return GNX_SUCCESS;
+
+        return GNX_FAILURE;
+    }
+
+    /* Unweighted graphs. */
+    g_assert(GNX_UNWEIGHTED & graph->weighted);
+    if (directed) {
+        noded = (GnxNodeDirected *)(graph->graph[*u]);
+        if (gnx_set_has((GnxSet *)(noded->neighbor), v))
+            return GNX_SUCCESS;
+
+        return GNX_FAILURE;
+    }
+
+    gnx_undirected_edge_order(u, v, &a, &b);
+    nodeu = (GnxNodeUndirected *)(graph->graph[a]);
+    if (gnx_set_has((GnxSet *)(nodeu->neighbor), &b))
+        return GNX_SUCCESS;
+
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Whether a graph contains a node.
  *
  * @param graph The graph to query.
