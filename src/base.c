@@ -376,10 +376,63 @@ gnx_allows_selfloop(const GnxGraph *graph)
 void
 gnx_destroy(GnxGraph *graph)
 {
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    int directed;
+    unsigned int i;
+
     if (!graph)
         return;
     gnx_destroy_set(graph->node);
     if (graph->graph) {
+        directed = GNX_DIRECTED & graph->directed;
+
+        if (GNX_WEIGHTED & graph->weighted) {
+            /* A weighted graph. */
+            if (directed) {
+                for (i = 0; i < graph->capacity; i++) {
+                    noded = (GnxNodeDirected *)(graph->graph[i]);
+                    if (noded) {
+                        gnx_destroy_dict((GnxDict *)(noded->inneighbor));
+                        gnx_destroy_dict((GnxDict *)(noded->outneighbor));
+                        free(noded);
+                        graph->graph[i] = NULL;
+                    }
+                }
+            } else {
+                for (i = 0; i < graph->capacity; i++) {
+                    nodeu = (GnxNodeUndirected *)(graph->graph[i]);
+                    if (nodeu) {
+                        gnx_destroy_dict((GnxDict *)(nodeu->neighbor));
+                        free(nodeu);
+                        graph->graph[i] = NULL;
+                    }
+                }
+            }
+        } else {
+            /* An unweighted graph. */
+            if (directed) {
+                for (i = 0; i < graph->capacity; i++) {
+                    noded = (GnxNodeDirected *)(graph->graph[i]);
+                    if (noded) {
+                        gnx_destroy_set((GnxSet *)(noded->inneighbor));
+                        gnx_destroy_set((GnxSet *)(noded->outneighbor));
+                        free(noded);
+                        graph->graph[i] = NULL;
+                    }
+                }
+            } else {
+                for (i = 0; i < graph->capacity; i++) {
+                    nodeu = (GnxNodeUndirected *)(graph->graph[i]);
+                    if (nodeu) {
+                        gnx_destroy_set((GnxSet *)(nodeu->neighbor));
+                        free(nodeu);
+                        graph->graph[i] = NULL;
+                    }
+                }
+            }
+        }
+
         free(graph->graph);
         graph->graph = NULL;
     }
