@@ -22,6 +22,7 @@
 #include "dict.h"
 #include "sanity.h"
 #include "set.h"
+#include "util.h"
 
 /**
  * @file base.h
