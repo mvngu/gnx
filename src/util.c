@@ -103,3 +103,38 @@ gnx_double_cmp_le(const double *a,
 
     return (retval <= 0) ? TRUE : FALSE;
 }
+
+/**
+ * @brief An ordering of an undirected edge.
+ *
+ * Given an undirected edge @f$(x,y)@f$, we assume that @f$x \leq y@f$.  We
+ * call this an ordering of an undirected edge.  For any two nodes, this
+ * function computes the undirected edge ordering of the nodes.
+ *
+ * @param u An end point of an undirected edge.
+ * @param v The other end point of the undirected edge.
+ * @param a An end point of the undirected edge after performing the above
+ *        ordering.  Here we have the undirected edge @f$(a,b)@f$ such that
+ *        @f$a \leq b@f$.
+ * @param b The other end point of the undirected edge after performing the
+ *        above ordering.  Here we have the undirected edge @f$(a,b)@f$ such
+ *        that @f$a \leq b@f$.
+ */
+void
+gnx_undirected_edge_order(const unsigned int *u,
+                          const unsigned int *v,
+                          unsigned int *a,
+                          unsigned int *b)
+{
+    g_return_if_fail(u);
+    g_return_if_fail(v);
+    g_return_if_fail(a);
+    g_return_if_fail(b);
+
+    *a = *u;
+    *b = *v;
+    if (*u > *v) {
+        *a = *v;
+        *b = *u;
+    }
+}
