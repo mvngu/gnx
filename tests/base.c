@@ -83,7 +83,8 @@ is_empty_graph(const GnxGraph *graph)
     assert(0 == graph->total_edges);
 }
 
-/* Test a graph for a specified list of properties. */
+/* Test a graph for a specified list of properties.
+ */
 static void
 test_properties(const GnxGraph *graph,
                 const GnxBool directed,
