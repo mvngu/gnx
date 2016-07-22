@@ -42,6 +42,9 @@ int gnx_is_directed(const GnxGraph *graph);
 int gnx_is_weighted(const GnxGraph *graph);
 
 /* modify the graph structure */
+int gnx_add_edge(GnxGraph *graph,
+                 const unsigned int *u,
+                 const unsigned int *v);
 int gnx_add_node(GnxGraph *graph,
                  const unsigned int *v);
 

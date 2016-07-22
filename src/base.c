@@ -122,6 +122,8 @@ static int gnx_i_add_node_unweighted(GnxGraph *graph,
                                      const unsigned int *v);
 static int gnx_i_add_node_weighted(GnxGraph *graph,
                                    const unsigned int *v);
+static int gnx_i_maybe_allocate_node(GnxGraph *graph,
+                                     const unsigned int *v);
 
 /**************************************************************************
  * internal helper functions
@@ -265,9 +267,173 @@ cleanup:
     return GNX_FAILURE;
 }
 
+/**
+ * @brief Maybe allocate memory for an edge node.
+ *
+ * @param graph The graph to update.
+ * @param v Whether we want to allocate memory for this edge node.
+ * @return Nonzero if the memory allocation (if necessary) was successful;
+ *         zero otherwise.
+ */
+static int
+gnx_i_maybe_allocate_node(GnxGraph *graph,
+                          const unsigned int *v)
+{
+    unsigned int *x;
+
+    if (gnx_set_has(graph->node, v))
+        return GNX_SUCCESS;
+
+    x = (unsigned int *)malloc(sizeof(unsigned int));
+    if (!x)
+        return GNX_FAILURE;
+
+    *x = *v;
+    if (!gnx_set_add(graph->node, x)) {
+        free(x);
+        return GNX_FAILURE;
+    }
+
+    return GNX_SUCCESS;
+}
+
 /**************************************************************************
  * public interface
  *************************************************************************/
+
+/**
+ * @brief Inserts an unweighted edge into a graph.
+ *
+ * Note that we do not support multiple edges.  For the edge @f$(u, v)@f$ to be
+ * successfully inserted into the graph, the edge must not already be in the
+ * graph.
+ *
+ * @param graph The graph to update.  The graph must be unweighted.
+ * @param u An end point of the edge.
+ * @param v The other end point of the edge.
+ * @return Nonzero if the edge @f$(u, v)@f$ did not yet exist in the graph and
+ *         is successfully inserted into the graph; zero otherwise.  We also
+ *         return zero if the given edge is already in the graph.  If we are
+ *         unable to allocate memory for the edge, then we set @c errno to
+ *         @c ENOMEM and return zero.
+ */
+int
+gnx_add_edge(GnxGraph *graph,
+             const unsigned int *u,
+             const unsigned int *v)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    int add_u = FALSE;  /* Assume that we have not added node u. */
+    int add_v = FALSE;  /* Assume that we have not added node v. */
+    int directed;
+    unsigned int a, b, *x;
+
+    errno = 0;
+    g_return_val_if_fail(!gnx_is_weighted(graph), GNX_FAILURE);
+    if (gnx_has_edge(graph, u, v))
+        return GNX_FAILURE;
+    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+        return GNX_FAILURE;
+
+    directed = GNX_DIRECTED & graph->directed;
+
+    /* Add the nodes to the graph as appropriate. */
+    if (!gnx_has_node(graph, u)) {
+        if (!gnx_add_node(graph, u))
+            goto cleanup;
+
+        add_u = TRUE;
+    }
+    if (!gnx_has_node(graph, v)) {
+        if (!gnx_add_node(graph, v))
+            goto cleanup;
+
+        add_v = TRUE;
+    }
+
+    /* A digraph. */
+    if (directed) {
+        /* Add v to the set of out-neighbors of u. */
+        noded = (GnxNodeDirected *)(graph->graph[*u]);
+        g_assert(noded);
+        if (!gnx_i_maybe_allocate_node(graph, v))
+            goto cleanup;
+        x = gnx_set_has(graph->node, v);
+        if (!gnx_set_add((GnxSet *)(noded->outneighbor), x))
+            goto cleanup;
+        (noded->outdegree)++;
+
+        /* Add u to the set of in-neighbors of v. */
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        g_assert(noded);
+        if (!gnx_i_maybe_allocate_node(graph, u))
+            goto cleanup;
+        x = gnx_set_has(graph->node, u);
+        if (!gnx_set_add((GnxSet *)(noded->inneighbor), x))
+            goto cleanup;
+        (noded->indegree)++;
+
+        (graph->total_edges)++;
+
+        return GNX_SUCCESS;
+    }
+
+    /* An undirected graph.  For an undirected graph, we assume that any edge
+     * (u,v) satisfies u <= v.
+     */
+    g_assert(!directed);
+    gnx_undirected_edge_order(u, v, &a, &b);
+    nodeu = (GnxNodeUndirected *)(graph->graph[a]);
+    g_assert(nodeu);
+    if (!gnx_i_maybe_allocate_node(graph, &b))
+        goto cleanup;
+
+    x = gnx_set_has(graph->node, &b);
+    if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
+        goto cleanup;
+    (nodeu->degree)++;
+
+    nodeu = (GnxNodeUndirected *)(graph->graph[b]);
+    g_assert(nodeu);
+    (nodeu->degree)++;
+
+    (graph->total_edges)++;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (add_u) {
+        if (directed) {
+            noded = (GnxNodeDirected *)(graph->graph[*u]);
+            gnx_destroy_set((GnxSet *)(noded->inneighbor));
+            gnx_destroy_set((GnxSet *)(noded->outneighbor));
+            free(noded);
+        } else {
+            nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+            gnx_destroy_set((GnxSet *)(nodeu->neighbor));
+            free(nodeu);
+        }
+        graph->graph[*u] = NULL;
+        (graph->total_nodes)--;
+    }
+    if (add_v) {
+        if (directed) {
+            noded = (GnxNodeDirected *)(graph->graph[*v]);
+            gnx_destroy_set((GnxSet *)(noded->inneighbor));
+            gnx_destroy_set((GnxSet *)(noded->outneighbor));
+            free(noded);
+        } else {
+            nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+            gnx_destroy_set((GnxSet *)(nodeu->neighbor));
+            free(nodeu);
+        }
+        graph->graph[*v] = NULL;
+        (graph->total_nodes)--;
+    }
+    return GNX_FAILURE;
+}
 
 /**
  * @brief Inserts a new node into a graph.
