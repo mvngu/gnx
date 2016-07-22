@@ -443,6 +443,10 @@ gnx_destroy(GnxGraph *graph)
 /**
  * @brief Whether a graph contains a given edge.
  *
+ * For a digraph, the directed edge @f$(u,v)@f$ means that the edge goes from
+ * @f$u@f$ to @f$v@f$.  The tail of the edge is @f$u@f$ and the head of the
+ * edge is @f$v@f$.
+ *
  * @param graph The graph to query.
  * @param u An end point of an edge.
  * @param v The other end point of an edge.
