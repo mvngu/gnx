@@ -115,6 +115,157 @@ typedef struct {
 /* @endcond */
 
 /**************************************************************************
+ * prototypes for internal helper functions
+ *************************************************************************/
+
+static int gnx_i_add_node_unweighted(GnxGraph *graph,
+                                     const unsigned int *v);
+static int gnx_i_add_node_weighted(GnxGraph *graph,
+                                   const unsigned int *v);
+
+/**************************************************************************
+ * internal helper functions
+ *************************************************************************/
+
+/**
+ * @brief Inserts a new node into an unweighted graph.
+ *
+ * @param graph The unweighted graph to update.
+ * @param v A node to insert.  We assume that the number of nodes in the graph
+ *        is less than #GNX_MAXIMUM_NODES.
+ * @return Nonzero if we successfully inserted the node into the graph; zero
+ *         otherwise.  If we are unable to allocate memory for the new node,
+ *         then @c errno is set to @c ENOMEM and we return zero.
+ */
+static int
+gnx_i_add_node_unweighted(GnxGraph *graph,
+                          const unsigned int *v)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    GnxSet *adjacency, *adjacency_in;
+
+    errno = 0;
+
+    /* For an unweighted graph, the neighbors of a node are represented as a
+     * set.
+     */
+    adjacency = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
+    if (!adjacency)
+        goto cleanup;
+
+    if (GNX_DIRECTED & graph->directed) {
+        noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
+        if (!noded)
+            goto cleanup;
+
+        adjacency_in = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
+        if (!adjacency_in) {
+            free(noded);
+            goto cleanup;
+        }
+
+        noded->indegree = 0;
+        noded->outdegree = 0;
+        noded->inneighbor = adjacency_in;
+        noded->outneighbor = adjacency;
+        graph->graph[*v] = noded;
+
+        return GNX_SUCCESS;
+    }
+
+    nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
+    if (!nodeu)
+        goto cleanup;
+
+    nodeu->degree = 0;
+    nodeu->neighbor = adjacency;
+    graph->graph[*v] = nodeu;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (adjacency)
+        gnx_destroy_set(adjacency);
+    return GNX_FAILURE;
+}
+
+/**
+ * @brief Inserts a new node into a weighted graph.
+ *
+ * @param graph The weighted graph to update.
+ * @param v A node to insert.  We assume that the number of nodes in the graph
+ *        is less than #GNX_MAXIMUM_NODES.
+ * @return Nonzero if we successfully inserted the node into the graph; zero
+ *         otherwise.  If we are unable to allocate memory for the new node,
+ *         then @c errno is set to @c ENOMEM and we return zero.
+ */
+static int
+gnx_i_add_node_weighted(GnxGraph *graph,
+                        const unsigned int *v)
+{
+    GnxDict *adjacency, *adjacency_in;
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+
+    errno = 0;
+
+    /* For a weighted graph, the neighbors of a node v is represented as a
+     * dictionary that has the following structure:
+     *
+     * v : {
+     *     neighbor_1 : weight_1,
+     *     ...
+     *     neighbor_k : weight_k,
+     * }
+     *
+     * Here, weight_i refers to the numeric weight of the edge
+     * (v, neighbor_i).  The keys are the neighbor IDs and the values are
+     * the corresponding edge weights.
+     */
+    adjacency = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
+    if (!adjacency)
+        goto cleanup;
+
+    if (GNX_DIRECTED & graph->directed) {
+        noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
+        if (!noded)
+            goto cleanup;
+
+        adjacency_in = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
+        if (!adjacency_in) {
+            free(noded);
+            goto cleanup;
+        }
+
+        noded->indegree = 0;
+        noded->outdegree = 0;
+        noded->inneighbor = adjacency_in;
+        noded->outneighbor = adjacency;
+        graph->graph[*v] = noded;
+
+        return GNX_SUCCESS;
+    }
+
+    nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
+    if (!nodeu)
+        goto cleanup;
+
+    nodeu->degree = 0;
+    nodeu->neighbor = adjacency;
+    graph->graph[*v] = nodeu;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (adjacency)
+        gnx_destroy_dict(adjacency);
+    return GNX_FAILURE;
+}
+
+/**************************************************************************
  * public interface
  *************************************************************************/
 
@@ -134,12 +285,7 @@ int
 gnx_add_node(GnxGraph *graph,
              const unsigned int *v)
 {
-    GnxDict *adj_weighted;   /* The adjacency of a node for weighted graph. */
-    GnxSet *adj_unweighted;  /* A node's adjacency for unweighted graph. */
-    GnxNodeDirected *noded;
-    GnxNodeUndirected *nodeu;
     gnxptr *new_graph;
-    int directed;
     unsigned int i, new_capacity;
 
     errno = 0;
@@ -181,79 +327,21 @@ gnx_add_node(GnxGraph *graph,
             = (gnxptr *)realloc(graph->graph, new_capacity * sizeof(gnxptr));
         if (!new_graph)
             goto cleanup;
+        /* Zero out the new memory. */
+        for (i = graph->capacity; i < new_capacity; i++)
+            new_graph[i] = NULL;
 
         graph->capacity = new_capacity;
         graph->graph = new_graph;
     }
 
-    directed = GNX_DIRECTED & graph->directed;
+    /* Add the node to the graph. */
     if (GNX_WEIGHTED & graph->weighted) {
-        /* For a weighted graph, the neighbors of a node v is represented as a
-         * dictionary that has the following structure:
-         *
-         * v : {
-         *     neighbor_1 : weight_1,
-         *     ...
-         *     neighbor_k : weight_k,
-         * }
-         *
-         * Here, weight_i refers to the numeric weight of the edge
-         * (v, neighbor_i).  The keys are the neighbor IDs and the values are
-         * the corresponding edge weight.
-         */
-        adj_weighted = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
-        if (!adj_weighted)
+        if (!gnx_i_add_node_weighted(graph, v))
             goto cleanup;
-
-        if (directed) {
-            noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
-            if (!noded) {
-                gnx_destroy_dict(adj_weighted);
-                goto cleanup;
-            }
-            noded->indegree = 0;
-            noded->outdegree = 0;
-            noded->neighbor = adj_weighted;
-            graph->graph[*v] = noded;
-        } else {
-            nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
-            if (!nodeu) {
-                gnx_destroy_dict(adj_weighted);
-                goto cleanup;
-            }
-            nodeu->degree = 0;
-            nodeu->neighbor = adj_weighted;
-            graph->graph[*v] = nodeu;
-        }
     } else {
-        /* For an unweighted graph, the neighbors of a node v is represented
-         * as a set.
-         */
-        g_assert(GNX_UNWEIGHTED & graph->weighted);
-        adj_unweighted = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
-        if (!adj_unweighted)
+        if (!gnx_i_add_node_unweighted(graph, v))
             goto cleanup;
-
-        if (directed) {
-            noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
-            if (!noded) {
-                gnx_destroy_set(adj_unweighted);
-                goto cleanup;
-            }
-            noded->indegree = 0;
-            noded->outdegree = 0;
-            noded->neighbor = adj_unweighted;
-            graph->graph[*v] = noded;
-        } else {
-            nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
-            if (!nodeu) {
-                gnx_destroy_set(adj_unweighted);
-                goto cleanup;
-            }
-            nodeu->degree = 0;
-            nodeu->neighbor = adj_unweighted;
-            graph->graph[*v] = nodeu;
-        }
     }
 
     (graph->total_nodes)++;
