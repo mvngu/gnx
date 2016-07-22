@@ -27,7 +27,9 @@
  * prototypes for helper functions
  *************************************************************************/
 
-void random_edge(unsigned int *u,
+void random_edge(const int *low,
+                 const int *high,
+                 unsigned int *u,
                  unsigned int *v);
 unsigned int random_node_id(void);
 
@@ -40,19 +42,28 @@ unsigned int random_node_id(void);
  *
  * This function generates a random node ID for each end point of the edge.
  *
+ * @param low The minimum node ID.
+ * @param high Bound on the maximum node ID.  Note that the maximum node ID
+ *        that can be generated is high - 1.
  * @param u This will hold one end point of an edge.
  * @param v This will hold the other end point of the edge.
  */
 void
-random_edge(unsigned int *u,
+random_edge(const int *low,
+            const int *high,
+            unsigned int *u,
             unsigned int *v)
 {
+    assert(low);
+    assert(*low >= 0);
+    assert(high);
+    assert(*high > *low);
     assert(u);
     assert(v);
 
-    *u = (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+    *u = (unsigned int)g_random_int_range(*low, *high);
     do {
-        *v = (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+        *v = (unsigned int)g_random_int_range(*low, *high);
     } while (*u == *v);
 }
 

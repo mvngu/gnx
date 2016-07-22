@@ -309,9 +309,11 @@ has_edge_empty(void)
 {
     GnxGraph *graph;
     unsigned int u, v;
+    const int high = 65;
+    const int low = 0;
 
     /* An edge that is not a self-loop. */
-    random_edge(&u, &v);
+    random_edge(&low, &high, &u, &v);
 
     graph = gnx_new();
     is_empty_graph(graph);
@@ -345,7 +347,7 @@ has_edge_one_node(void)
 
     v = u;
     while (gnx_has_node(graph, &u) || gnx_has_node(graph, &v))
-        random_edge(&u, &v);
+        random_edge(&low, &high, &u, &v);
     assert(u != v);
 
     assert(!gnx_has_node(graph, &u));
