@@ -76,8 +76,8 @@ static unsigned int gnx_power2[GNX_MAX_EXPONENT] = {
 /* @endcond */
 
 /* @cond */
-/* A node in a digraph.  In a digraph, we only keep track of all nodes that are
- * out-neighbors of a given node.
+/* A node in a digraph.  In a digraph, we keep track of all nodes that are
+ * in-neighbors or out-neighbors of a given node.
  */
 typedef struct {
     unsigned int indegree;   /* The in-degree of the node.  For digraphs, the
@@ -88,10 +88,8 @@ typedef struct {
                               * out-degree of a node v counts all nodes that
                               * are out-neighbors of v.
                               */
-    gnxptr neighbor;         /* The collection of all nodes that are adjacent
-                              * to a node v.  For digraphs, this is all the
-                              * nodes that are out-neighbors of v.
-                              */
+    gnxptr inneighbor;       /* The collection of all in-neighbors. */
+    gnxptr outneighbor;      /* The collection of all out-neighbors. */
 } GnxNodeDirected;
 /* @endcond */
 
@@ -331,7 +329,7 @@ gnx_has_edge(const GnxGraph *graph,
     if (GNX_WEIGHTED & graph->weighted) {
         if (directed) {
             noded = (GnxNodeDirected *)(graph->graph[*u]);
-            if (gnx_dict_has((GnxDict *)(noded->neighbor), v))
+            if (gnx_dict_has((GnxDict *)(noded->outneighbor), v))
                 return GNX_SUCCESS;
 
             return GNX_FAILURE;
@@ -349,7 +347,7 @@ gnx_has_edge(const GnxGraph *graph,
     g_assert(GNX_UNWEIGHTED & graph->weighted);
     if (directed) {
         noded = (GnxNodeDirected *)(graph->graph[*u]);
-        if (gnx_set_has((GnxSet *)(noded->neighbor), v))
+        if (gnx_set_has((GnxSet *)(noded->outneighbor), v))
             return GNX_SUCCESS;
 
         return GNX_FAILURE;
