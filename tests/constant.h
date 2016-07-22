@@ -48,4 +48,21 @@
  */
 #define GNX_ALLOC_HEAP_NODE_SIZE (2)
 
+/* The number of allocations that is required to initialize a set.  Any
+ * non-negative integer below this number would result in an out-of-memory
+ * error.
+ */
+#define GNX_ALLOC_SET_SIZE (2)
+
+/**************************************************************************
+ * compound #define
+ *************************************************************************/
+
+/* The number of allocations that is required to add a node to an unweighted
+ * graph.  This does not take into account the allocations to possibly resize
+ * the graph.  Any non-negative integer below this number would result in an
+ * out-of-memory error.
+ */
+#define GNX_ALLOC_NODE_DIRECTED_UNWEIGHTED_SIZE ((2 * GNX_ALLOC_SET_SIZE) + 1)
+
 #endif  /* GNX_CONSTANT_H */
