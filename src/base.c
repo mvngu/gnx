@@ -379,23 +379,27 @@ gnx_add_edge(GnxGraph *graph,
         return GNX_SUCCESS;
     }
 
-    /* An undirected graph.  For an undirected graph, we assume that any edge
-     * (u,v) satisfies u <= v.
-     */
+    /* An undirected graph. */
     g_assert(!directed);
-    gnx_undirected_edge_order(u, v, &a, &b);
-    nodeu = (GnxNodeUndirected *)(graph->graph[a]);
-    g_assert(nodeu);
-    if (!gnx_i_maybe_allocate_node(graph, &b))
-        goto cleanup;
 
-    x = gnx_set_has(graph->node, &b);
+    /* Add u to the collection of neighbors of v. */
+    nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+    g_assert(nodeu);
+    if (!gnx_i_maybe_allocate_node(graph, u))
+        goto cleanup;
+    x = gnx_set_has(graph->node, u);
     if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
         goto cleanup;
     (nodeu->degree)++;
 
-    nodeu = (GnxNodeUndirected *)(graph->graph[b]);
+    /* Add v to the collection of neighbors of u. */
+    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
     g_assert(nodeu);
+    if (!gnx_i_maybe_allocate_node(graph, v))
+        goto cleanup;
+    x = gnx_set_has(graph->node, v);
+    if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
+        goto cleanup;
     (nodeu->degree)++;
 
     (graph->total_edges)++;
