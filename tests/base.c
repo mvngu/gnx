@@ -699,7 +699,7 @@ add_edge_weighted_random_undirected(void)
     gnx_destroy(graph);
 }
 
-/* Insert a self-loop into a weighted graph that allows for self-loops.
+/* Insert a self-loop into a weighted digraph that allows for self-loops.
  */
 static void
 add_edge_weighted_selfloop_directed(void)
