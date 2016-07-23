@@ -59,7 +59,7 @@
  *************************************************************************/
 
 /* The number of allocations that is required to add a node to an unweighted
- * graph.  This does not take into account the allocations to possibly resize
+ * digraph.  This does not take into account the allocations to possibly resize
  * the graph.  Any non-negative integer below this number would result in an
  * out-of-memory error.
  */
