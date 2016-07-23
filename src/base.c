@@ -100,13 +100,7 @@ typedef struct {
 /* @endcond */
 
 /* @cond */
-/* A node in an undirected graph.  We use a compact representation for
- * undirected graphs.  If (u,v) is an edge of an undirected graph that is also
- * simple, then we assume that u < v.  We take u to be the head node and v to
- * be the tail node.  The node v is inserted into the set of neighbors of u,
- * but u is not inserted into the set of neighbors of v.  Due to this compact
- * representation of undirected graphs, we require a separate variable to keep
- * track of the degree of each node.
+/* A node in an undirected graph.
  */
 typedef struct {
     unsigned int degree;  /* The degree of the node.  For undirected graphs,
@@ -115,7 +109,9 @@ typedef struct {
                            */
     gnxptr neighbor;      /* The collection of all nodes that are adjacent to
                            * a node v.  For undirected graphs, this is all the
-                           * nodes that are neighbors of v.
+                           * nodes that are neighbors of v.  If the graph is
+                           * weighted, then this is a dictionary.  For an
+                           * unweighted graph, this is a set.
                            */
 } GnxNodeUndirected;
 /* @endcond */
