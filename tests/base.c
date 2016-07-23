@@ -342,7 +342,8 @@ add_edge_random_undirected(void)
     gnx_destroy(graph);
 }
 
-/* Insert a self-loop into a graph that allows for self-loops.
+/* Insert a self-loop into a graph that allows for self-loops.  The graph is
+ * directed and unweighted.
  */
 static void
 add_edge_selfloop_directed_unweighted(void)
