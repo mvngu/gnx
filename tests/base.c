@@ -45,7 +45,7 @@ static void add_edge_one_directed(void);
 static void add_edge_one_undirected(void);
 static void add_edge_random_directed(void);
 static void add_edge_random_undirected(void);
-static void add_edge_selfloop(void);
+static void add_edge_selfloop_directed_unweighted(void);
 
 /* add edge: weighted edge */
 static void add_edge_weighted_no_memory(void);
@@ -144,7 +144,7 @@ add_edge(void)
     add_edge_one_undirected();
     add_edge_random_directed();
     add_edge_random_undirected();
-    add_edge_selfloop();
+    add_edge_selfloop_directed_unweighted();
 }
 
 /* Test the function gnx_add_edge() under low-memory scenarios.
@@ -343,7 +343,7 @@ add_edge_random_undirected(void)
 /* Insert a self-loop into a graph that allows for self-loops.
  */
 static void
-add_edge_selfloop(void)
+add_edge_selfloop_directed_unweighted(void)
 {
     GnxGraph *graph;
     unsigned int i, *node, size, u, v;
