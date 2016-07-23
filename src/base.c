@@ -327,7 +327,7 @@ gnx_add_edge(GnxGraph *graph,
     int add_u = FALSE;  /* Assume that we have not added node u. */
     int add_v = FALSE;  /* Assume that we have not added node v. */
     int directed;
-    unsigned int a, b, *x;
+    unsigned int *x;
 
     errno = 0;
     g_return_val_if_fail(!gnx_is_weighted(graph), GNX_FAILURE);
