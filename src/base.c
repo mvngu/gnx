@@ -192,7 +192,9 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
     /* An undirected graph. */
     g_assert(!directed);
 
-    /* Add u to the collection of neighbors of v. */
+    /* Add u to the collection of neighbors of v.  If (u,v) is a self-loop,
+     * then we would add u to its collection of neighbors.
+     */
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
     x = gnx_set_has(graph->node, u);
@@ -200,13 +202,17 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
         return GNX_FAILURE;
     (nodeu->degree)++;
 
-    /* Add v to the collection of neighbors of u. */
-    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
-    g_assert(nodeu);
-    x = gnx_set_has(graph->node, v);
-    if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
-        return GNX_FAILURE;
-    (nodeu->degree)++;
+    /* Add v to the collection of neighbors of u.  If (u,v) is a self-loop,
+     * then we would skip this block.
+     */
+    if (*u != *v) {
+        nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+        g_assert(nodeu);
+        x = gnx_set_has(graph->node, v);
+        if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
+            return GNX_FAILURE;
+        (nodeu->degree)++;
+    }
 
     (graph->total_edges)++;
 
