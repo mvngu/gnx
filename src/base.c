@@ -88,8 +88,14 @@ typedef struct {
                               * out-degree of a node v counts all nodes that
                               * are out-neighbors of v.
                               */
-    gnxptr inneighbor;       /* The collection of all in-neighbors. */
-    gnxptr outneighbor;      /* The collection of all out-neighbors. */
+    gnxptr inneighbor;       /* The set of all in-neighbors of a node.  This
+                              * is a set regardless of whether the graph is
+                              * weighted or unweighted.
+                              */
+    gnxptr outneighbor;      /* The collection of all out-neighbors of a node.
+                              * If the graph is unweighted, then this is a set.
+                              * For a weighted graph, this is a dictionary.
+                              */
 } GnxNodeDirected;
 /* @endcond */
 
