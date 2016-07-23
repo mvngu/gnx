@@ -55,7 +55,7 @@ static void add_edge_weighted_one_directed(void);
 static void add_edge_weighted_one_undirected(void);
 static void add_edge_weighted_random_directed(void);
 static void add_edge_weighted_random_undirected(void);
-static void add_edge_weighted_selfloop(void);
+static void add_edge_weighted_selfloop_directed(void);
 
 /* add node */
 static void add_node_no_memory(void);
@@ -487,7 +487,7 @@ add_edge_weighted(void)
     add_edge_weighted_one_undirected();
     add_edge_weighted_random_directed();
     add_edge_weighted_random_undirected();
-    add_edge_weighted_selfloop();
+    add_edge_weighted_selfloop_directed();
 }
 
 /* Test the function gnx_add_edgew() under low-memory scenarios.
@@ -700,7 +700,7 @@ add_edge_weighted_random_undirected(void)
 /* Insert a self-loop into a weighted graph that allows for self-loops.
  */
 static void
-add_edge_weighted_selfloop(void)
+add_edge_weighted_selfloop_directed(void)
 {
     double weight;
     GnxGraph *graph;
