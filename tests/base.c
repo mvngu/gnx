@@ -47,6 +47,15 @@ static void add_edge_random_directed(void);
 static void add_edge_random_undirected(void);
 static void add_edge_selfloop(void);
 
+/* add edge: weighted edge */
+static void add_edge_weighted_no_memory(void);
+static void add_edge_weighted_no_selfloop(void);
+static void add_edge_weighted_one_directed(void);
+static void add_edge_weighted_one_undirected(void);
+static void add_edge_weighted_random_directed(void);
+static void add_edge_weighted_random_undirected(void);
+static void add_edge_weighted_selfloop(void);
+
 /* add node */
 static void add_node_no_memory(void);
 static void add_node_one_unweighted(void);
@@ -390,6 +399,299 @@ add_edge_selfloop(void)
     } while (gnx_has_node(graph, &v));
     assert(!gnx_has_node(graph, &v));
     assert(gnx_add_edge(graph, &v, &v));
+    assert(4 == graph->total_edges);
+
+    free(node);
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
+ * add edge: weighted edge
+ *************************************************************************/
+
+static void
+add_edge_weighted(void)
+{
+    add_edge_weighted_no_memory();
+    add_edge_weighted_no_selfloop();
+    add_edge_weighted_one_directed();
+    add_edge_weighted_one_undirected();
+    add_edge_weighted_random_directed();
+    add_edge_weighted_random_undirected();
+    add_edge_weighted_selfloop();
+}
+
+/* Test the function gnx_add_edgew() under low-memory scenarios.
+ */
+static void
+add_edge_weighted_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxGraph *graph;
+    int alloc_size;
+    unsigned int u, v;
+    const double weight = (double)g_random_double();
+    const int high = 35;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    is_empty_graph(graph);
+
+    /* Cannot allocate memory for the tail node. */
+    alloc_size = 0;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_add_edgew(graph, &u, &v, &weight));
+    assert(ENOMEM == errno);
+    is_empty_graph(graph);
+
+    /* Cannot add a node to the set graph->node. */
+    alloc_size = (2 * GNX_ALLOC_NODE_DIRECTED_WEIGHTED_SIZE) + 1;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_add_edgew(graph, &u, &v, &weight));
+    assert(ENOMEM == errno);
+    is_empty_graph(graph);
+
+    gnx_destroy(graph);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Insert a self-loop into a weighted graph that does not allow self-loops.
+ */
+static void
+add_edge_weighted_no_selfloop(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 65;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(!gnx_allows_selfloop(graph));
+    is_empty_graph(graph);
+
+    /* Insert a self-loop into an empty graph. */
+    u = (unsigned int)g_random_int_range(low, high);
+    weight = (double)g_random_double();
+    assert(!gnx_has_node(graph, &u));
+    assert(!gnx_add_edgew(graph, &u, &u, &weight));
+    is_empty_graph(graph);
+
+    random_edge(&low, &high, &u, &v);
+    assert(u != v);
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* A node that is in the graph.  Use this node as a self-loop and try to
+     * insert the self-loop into the graph.
+     */
+    assert(gnx_has_node(graph, &u));
+    weight = (double)g_random_double();
+    assert(!gnx_add_edgew(graph, &u, &u, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* A node that is not in the graph.  Use this node as a self-loop and try
+     * to insert the self-loop into the graph.
+     */
+    do {
+        u = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_node(graph, &u));
+    assert(!gnx_has_node(graph, &u));
+    weight = (double)g_random_double();
+    assert(!gnx_add_edgew(graph, &u, &u, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Insert one edge into a weighted digraph.
+ */
+static void
+add_edge_weighted_one_directed(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const double weight = (double)g_random_double();
+    const int high = 65;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(u != v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Insert one edge into a weighted graph that is undirected.
+ */
+static void
+add_edge_weighted_one_undirected(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const double weight = (double)g_random_double();
+    const int high = 65;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(u != v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_has_node(graph, &u));
+    assert(gnx_has_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Insert a random number of edges into a weighted digraph.
+ */
+static void
+add_edge_weighted_random_directed(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int i, nnode, u, v;
+    const int high = 124;
+    const int low = 0;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 43);
+
+    nnode = 0;
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+
+    /* Add a bunch of unique edges to the graph. */
+    for (i = 0; i < size; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        weight = (double)g_random_double();
+
+        if (!gnx_has_node(graph, &u))
+            nnode++;
+        if (!gnx_has_node(graph, &v))
+            nnode++;
+
+        assert(gnx_add_edgew(graph, &u, &v, &weight));
+    }
+    assert(size == graph->total_edges);
+    assert(nnode == graph->total_nodes);
+
+    gnx_destroy(graph);
+}
+
+/* Insert a random number of edges into an undirected graph that is weighted.
+ */
+static void
+add_edge_weighted_random_undirected(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int i, nnode, u, v;
+    const int high = 124;
+    const int low = 0;
+    const unsigned int size = (unsigned int)g_random_int_range(2, 43);
+
+    nnode = 0;
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+
+    /* Add a bunch of unique edges to the graph. */
+    for (i = 0; i < size; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        weight = (double)g_random_double();
+
+        if (!gnx_has_node(graph, &u))
+            nnode++;
+        if (!gnx_has_node(graph, &v))
+            nnode++;
+
+        assert(gnx_add_edgew(graph, &u, &v, &weight));
+    }
+    assert(size == graph->total_edges);
+    assert(nnode == graph->total_nodes);
+
+    gnx_destroy(graph);
+}
+
+/* Insert a self-loop into a weighted graph that allows for self-loops.
+ */
+static void
+add_edge_weighted_selfloop(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int i, *node, size, u, v;
+    const int high = 43;
+    const int low = 0;
+
+    node = (unsigned int *)malloc(sizeof(unsigned int) * 10);
+    size = 0;
+
+    /* Insert a self-loop into an empty graph. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    u = (unsigned int)g_random_int_range(low, high);
+    weight = (double)g_random_double();
+    assert(!gnx_has_node(graph, &u));
+    assert(gnx_add_edgew(graph, &u, &u, &weight));
+    assert(1 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    node[size] = u;
+    size++;
+
+    /* Insert a random edge. */
+    do {
+        random_edge(&low, &high, &u, &v);
+    } while (gnx_has_edge(graph, &u, &v));
+    assert(u != v);
+    if (!gnx_has_node(graph, &u)) {
+        node[size] = u;
+        size++;
+    }
+    if (!gnx_has_node(graph, &v)) {
+        node[size] = v;
+        size++;
+    }
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_edges);
+
+    /* Choose a node v that is in the graph.  If (v,v) is not a self-loop of
+     * the graph, then add the self-loop to the graph.
+     */
+    do {
+        i = (unsigned int)g_random_int_range(low, (int)size);
+        v = node[i];
+    } while (gnx_has_edge(graph, &v, &v));
+    assert(gnx_has_node(graph, &v));
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &v, &v, &weight));
+    assert(3 == graph->total_edges);
+
+    /* Choose a node v that is not in the graph.  Add the self-loop (v,v) to
+     * the graph.
+     */
+    do {
+        v = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_node(graph, &v));
+    assert(!gnx_has_node(graph, &v));
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &v, &v, &weight));
     assert(4 == graph->total_edges);
 
     free(node);
@@ -1020,6 +1322,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/base/add-edge", add_edge);
+    g_test_add_func("/base/add-edge-weighted", add_edge_weighted);
     g_test_add_func("/base/add-node", add_node);
     g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);

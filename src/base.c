@@ -123,6 +123,10 @@ typedef struct {
 static int gnx_i_add_edge_unweighted(GnxGraph *graph,
                                      const unsigned int *u,
                                      const unsigned int *v);
+static int gnx_i_add_edge_weighted(GnxGraph *graph,
+                                   const unsigned int *u,
+                                   const unsigned int *v,
+                                   const double *w);
 static int gnx_i_add_node_unweighted(GnxGraph *graph,
                                      const unsigned int *v);
 static int gnx_i_add_node_weighted(GnxGraph *graph,
@@ -202,6 +206,99 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
     x = gnx_set_has(graph->node, v);
     if (!gnx_set_add((GnxSet *)(nodeu->neighbor), x))
         return GNX_FAILURE;
+    (nodeu->degree)++;
+
+    (graph->total_edges)++;
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Inserts a weighted edge into a graph.
+ *
+ * Note that we do not support multiple edges.  For the edge @f$(u, v)@f$ to be
+ * successfully inserted into the graph, the edge must not already be in the
+ * graph.
+ *
+ * @param graph The weighted graph to update.
+ * @param u An end point of the edge.
+ * @param v The other end point of the edge.
+ * @param w The weight of the edge @f$(u, v)@f$.
+ * @return Nonzero if the edge @f$(u, v)@f$ did not yet exist in the graph and
+ *         is successfully inserted into the graph; zero otherwise.
+ */
+static int
+gnx_i_add_edge_weighted(GnxGraph *graph,
+                        const unsigned int *u,
+                        const unsigned int *v,
+                        const double *w)
+{
+    double *weight;
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    unsigned int *x;
+    const int directed = GNX_DIRECTED & graph->directed;
+
+    if (!gnx_i_maybe_allocate_node(graph, u))
+        return GNX_FAILURE;
+    if (!gnx_i_maybe_allocate_node(graph, v))
+        return GNX_FAILURE;
+
+    weight = (double *)malloc(sizeof(double));
+    if (!weight)
+        return GNX_FAILURE;
+    *weight = *w;
+
+    /* A digraph. */
+    if (directed) {
+        /* Add v to the dictionary of out-neighbors of u. */
+        noded = (GnxNodeDirected *)(graph->graph[*u]);
+        g_assert(noded);
+        x = gnx_set_has(graph->node, v);
+        if (!gnx_dict_add((GnxDict *)(noded->outneighbor), x, weight)) {
+            free(weight);
+            return GNX_FAILURE;
+        }
+        (noded->outdegree)++;
+
+        /* Add u to the set of in-neighbors of v. */
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        g_assert(noded);
+        x = gnx_set_has(graph->node, u);
+        if (!gnx_set_add((GnxSet *)(noded->inneighbor), x))
+            return GNX_FAILURE;
+        (noded->indegree)++;
+
+        (graph->total_edges)++;
+
+        return GNX_SUCCESS;
+    }
+
+    /* An undirected graph. */
+    g_assert(!directed);
+
+    /* Add u to the dictionary of neighbors of v. */
+    nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+    g_assert(nodeu);
+    x = gnx_set_has(graph->node, u);
+    if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
+        free(weight);
+        return GNX_FAILURE;
+    }
+    (nodeu->degree)++;
+
+    /* Add v to the dictionary of neighbors of u. */
+    weight = (double *)malloc(sizeof(double));
+    if (!weight)
+        return GNX_FAILURE;
+    *weight = *w;
+    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+    g_assert(nodeu);
+    x = gnx_set_has(graph->node, v);
+    if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
+        free(weight);
+        return GNX_FAILURE;
+    }
     (nodeu->degree)++;
 
     (graph->total_edges)++;
@@ -462,6 +559,97 @@ cleanup:
         } else {
             nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
             gnx_destroy_set((GnxSet *)(nodeu->neighbor));
+            free(nodeu);
+        }
+        graph->graph[*v] = NULL;
+        (graph->total_nodes)--;
+    }
+    return GNX_FAILURE;
+}
+
+/**
+ * @brief Inserts a weighted edge into a graph.
+ *
+ * Note that we do not support multiple edges.  For the edge @f$(u, v)@f$ to be
+ * successfully inserted into the graph, the edge must not already be in the
+ * graph.
+ *
+ * @param graph The weighted graph to update.
+ * @param u An end point of the edge.
+ * @param v The other end point of the edge.
+ * @param w The weight of the edge @f$(u, v)@f$.
+ * @return Nonzero if the edge @f$(u, v)@f$ did not yet exist in the graph and
+ *         is successfully inserted into the graph; zero otherwise.  We also
+ *         return zero if the given edge is already in the graph.  If we are
+ *         unable to allocate memory for the edge, then we set @c errno to
+ *         @c ENOMEM and return zero.
+ */
+int
+gnx_add_edgew(GnxGraph *graph,
+              const unsigned int *u,
+              const unsigned int *v,
+              const double *w)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    int add_u = FALSE;  /* Assume that we have not added node u. */
+    int add_v = FALSE;  /* Assume that we have not added node v. */
+    int directed;
+
+    errno = 0;
+    g_return_val_if_fail(gnx_is_weighted(graph), GNX_FAILURE);
+    g_return_val_if_fail(w, GNX_FAILURE);
+    if (gnx_has_edge(graph, u, v))
+        return GNX_FAILURE;
+    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+        return GNX_FAILURE;
+
+    directed = GNX_DIRECTED & graph->directed;
+
+    /* Add the nodes to the graph as appropriate. */
+    if (!gnx_has_node(graph, u)) {
+        if (!gnx_add_node(graph, u))
+            goto cleanup;
+
+        add_u = TRUE;
+    }
+    if (!gnx_has_node(graph, v)) {
+        if (!gnx_add_node(graph, v))
+            goto cleanup;
+
+        add_v = TRUE;
+    }
+
+    if (!gnx_i_add_edge_weighted(graph, u, v, w))
+        goto cleanup;
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    if (add_u) {
+        if (directed) {
+            noded = (GnxNodeDirected *)(graph->graph[*u]);
+            gnx_destroy_set((GnxSet *)(noded->inneighbor));
+            gnx_destroy_dict((GnxDict *)(noded->outneighbor));
+            free(noded);
+        } else {
+            nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+            gnx_destroy_dict((GnxDict *)(nodeu->neighbor));
+            free(nodeu);
+        }
+        graph->graph[*u] = NULL;
+        (graph->total_nodes)--;
+    }
+    if (add_v) {
+        if (directed) {
+            noded = (GnxNodeDirected *)(graph->graph[*v]);
+            gnx_destroy_set((GnxSet *)(noded->inneighbor));
+            gnx_destroy_dict((GnxDict *)(noded->outneighbor));
+            free(noded);
+        } else {
+            nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+            gnx_destroy_dict((GnxDict *)(nodeu->neighbor));
             free(nodeu);
         }
         graph->graph[*v] = NULL;
