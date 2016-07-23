@@ -287,7 +287,8 @@ static int
 gnx_i_add_node_weighted(GnxGraph *graph,
                         const unsigned int *v)
 {
-    GnxDict *adjacency, *adjacency_in;
+    GnxDict *adjacency;
+    GnxSet *adjacency_in;
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
 
@@ -315,7 +316,7 @@ gnx_i_add_node_weighted(GnxGraph *graph,
         if (!noded)
             goto cleanup;
 
-        adjacency_in = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
+        adjacency_in = gnx_init_set_full(GNX_DONT_FREE_ELEMENTS);
         if (!adjacency_in) {
             free(noded);
             goto cleanup;
@@ -593,7 +594,7 @@ gnx_destroy(GnxGraph *graph)
                 for (i = 0; i < graph->capacity; i++) {
                     noded = (GnxNodeDirected *)(graph->graph[i]);
                     if (noded) {
-                        gnx_destroy_dict((GnxDict *)(noded->inneighbor));
+                        gnx_destroy_set((GnxSet *)(noded->inneighbor));
                         gnx_destroy_dict((GnxDict *)(noded->outneighbor));
                         free(noded);
                         graph->graph[i] = NULL;
