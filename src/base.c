@@ -283,7 +283,9 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     /* An undirected graph. */
     g_assert(!directed);
 
-    /* Add u to the dictionary of neighbors of v. */
+    /* Add u to the dictionary of neighbors of v.  If (u,v) is a self-loop,
+     * then we would add u to its collection of neighbors.
+     */
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
     x = gnx_set_has(graph->node, u);
@@ -293,19 +295,23 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     }
     (nodeu->degree)++;
 
-    /* Add v to the dictionary of neighbors of u. */
-    weight = (double *)malloc(sizeof(double));
-    if (!weight)
-        return GNX_FAILURE;
-    *weight = *w;
-    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
-    g_assert(nodeu);
-    x = gnx_set_has(graph->node, v);
-    if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
-        free(weight);
-        return GNX_FAILURE;
+    /* Add v to the dictionary of neighbors of u.  If (u,v) is a self-loop,
+     * then we would skip over this block.
+     */
+    if (*u != *v) {
+        weight = (double *)malloc(sizeof(double));
+        if (!weight)
+            return GNX_FAILURE;
+        *weight = *w;
+        nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+        g_assert(nodeu);
+        x = gnx_set_has(graph->node, v);
+        if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
+            free(weight);
+            return GNX_FAILURE;
+        }
+        (nodeu->degree)++;
     }
-    (nodeu->degree)++;
 
     (graph->total_edges)++;
 
