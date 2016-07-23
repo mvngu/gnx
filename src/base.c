@@ -15,6 +15,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 
@@ -131,6 +132,10 @@ static int gnx_i_add_node_unweighted(GnxGraph *graph,
                                      const unsigned int *v);
 static int gnx_i_add_node_weighted(GnxGraph *graph,
                                    const unsigned int *v);
+static void gnx_i_delete_node_unweighted(GnxGraph *graph,
+                                         const unsigned int *v);
+static void gnx_i_delete_node_weighted(GnxGraph *graph,
+                                       const unsigned int *v);
 static int gnx_i_maybe_allocate_node(GnxGraph *graph,
                                      const unsigned int *v);
 
@@ -458,6 +463,208 @@ cleanup:
 }
 
 /**
+ * @brief Removes a node from an unweighted graph.
+ *
+ * @param graph Update this unweighted graph.
+ * @param v Remove this node from the graph.
+ */
+static void
+gnx_i_delete_node_unweighted(GnxGraph *graph,
+                             const unsigned int *v)
+{
+    GnxSet *neighbor, *neighbor_in;
+    GnxSetIter iter;
+    GnxNodeDirected *noded, *noded_w;
+    GnxNodeUndirected *nodeu, *nodeu_w;
+    gnxptr elem;
+    unsigned int degree, *w;
+    const int directed = GNX_DIRECTED & graph->directed;
+
+    /* Removing a node from a graph requires that we also delete every edge
+     * that is incident on the node.  First, we delete the incident edges.
+     * Finally, we delete the node itself.
+     */
+    degree = 0;
+
+    if (directed) {
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        g_assert(noded);
+
+        /* Let w be an out-neighbor of v.  Then v is an in-neighbor of w.
+         * Remove v from the collection of in-neighbors of w and then
+         * decrement the in-degree of w.
+         */
+        neighbor = (GnxSet *)(noded->outneighbor);
+        degree = neighbor->size;
+        gnx_set_iter_init(&iter, neighbor);
+        while (gnx_set_iter_next(&iter, &elem)) {
+            w = (unsigned int *)elem;
+            noded_w = (GnxNodeDirected *)(graph->graph[*w]);
+            g_assert(noded_w);
+            assert(gnx_set_delete((GnxSet *)(noded_w->inneighbor), v));
+            (noded_w->indegree)--;
+        }
+
+        /* Let w be an in-neighbor of v.  Then v is an out-neighbor of w.
+         * Remove v from the collection of out-neighbors of w and then
+         * decrement the out-degree of w.
+         */
+        neighbor_in = (GnxSet *)(noded->inneighbor);
+        degree += neighbor_in->size;
+        gnx_set_iter_init(&iter, neighbor_in);
+        while (gnx_set_iter_next(&iter, &elem)) {
+            w = (unsigned int *)elem;
+            noded_w = (GnxNodeDirected *)(graph->graph[*w]);
+            g_assert(noded_w);
+            assert(gnx_set_delete((GnxSet *)(noded_w->outneighbor), v));
+            (noded_w->outdegree)--;
+        }
+
+        /* Delete all neighbors of v and then remove v itself. */
+        gnx_destroy_set((GnxSet *)(noded->inneighbor));
+        gnx_destroy_set((GnxSet *)(noded->outneighbor));
+        free(noded);
+        graph->graph[*v] = NULL;
+        (graph->total_nodes)--;
+        graph->total_edges -= degree;
+
+        return;
+    }
+
+    g_assert(!directed);
+    nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+    g_assert(nodeu);
+
+    /* Let w be a neighbor of v.  Remove v from the collection of neighbors
+     * of w and then decrement the degree of w.
+     */
+    neighbor = (GnxSet *)(nodeu->neighbor);
+    degree = neighbor->size;
+    gnx_set_iter_init(&iter, neighbor);
+    while (gnx_set_iter_next(&iter, &elem)) {
+        w = (unsigned int *)elem;
+
+        /* Skip over any self-loop. */
+        if (*v == *w)
+            continue;
+
+        nodeu_w = (GnxNodeUndirected *)(graph->graph[*w]);
+        g_assert(nodeu_w);
+        assert(gnx_set_delete((GnxSet *)(nodeu_w->neighbor), v));
+        (nodeu_w->degree)--;
+    }
+
+    /* Delete all neighbors of v and then remove v itself. */
+    gnx_destroy_set((GnxSet *)(nodeu->neighbor));
+    free(nodeu);
+    graph->graph[*v] = NULL;
+    (graph->total_nodes)--;
+    graph->total_edges -= degree;
+}
+
+/**
+ * @brief Removes a node from a weighted graph.
+ *
+ * @param graph Update this weighted graph.
+ * @param v Remove this node from the graph.
+ */
+static void
+gnx_i_delete_node_weighted(GnxGraph *graph,
+                           const unsigned int *v)
+{
+    GnxDict *neighbor;
+    GnxDictIter iter;
+    GnxNodeDirected *noded, *noded_w;
+    GnxNodeUndirected *nodeu, *nodeu_w;
+    GnxSet *neighbor_in;
+    GnxSetIter iters;
+    gnxptr key;
+    unsigned int degree, *w;
+    const int directed = GNX_DIRECTED & graph->directed;
+
+    /* Removing a node from a graph requires that we also delete every edge
+     * that is incident on the node.  First, we delete the incident edges.
+     * Finally, we delete the node itself.
+     */
+    degree = 0;
+
+    if (directed) {
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        g_assert(noded);
+
+        /* Let w be an out-neighbor of v.  Then v is an in-neighbor of w.
+         * Remove v from the collection of in-neighbors of w and then
+         * decrement the in-degree of w.
+         */
+        neighbor = (GnxDict *)(noded->outneighbor);
+        degree = neighbor->size;
+        gnx_dict_iter_init(&iter, neighbor);
+        while (gnx_dict_iter_next(&iter, &key, NULL)) {
+            w = (unsigned int *)key;
+            noded_w = (GnxNodeDirected *)(graph->graph[*w]);
+            g_assert(noded_w);
+            assert(gnx_set_delete((GnxSet *)(noded_w->inneighbor), v));
+            (noded_w->indegree)--;
+        }
+
+        /* Let w be an in-neighbor of v.  Then v is an out-neighbor of w.
+         * Remove v from the collection of out-neighbors of w and then
+         * decrement the out-degree of w.
+         */
+        neighbor_in = (GnxSet *)(noded->inneighbor);
+        degree += neighbor_in->size;
+        gnx_set_iter_init(&iters, neighbor_in);
+        while (gnx_set_iter_next(&iters, &key)) {
+            w = (unsigned int *)key;
+            noded_w = (GnxNodeDirected *)(graph->graph[*w]);
+            g_assert(noded_w);
+            assert(gnx_dict_delete((GnxDict *)(noded_w->outneighbor), v));
+            (noded_w->outdegree)--;
+        }
+
+        /* Delete all neighbors of v and then remove v itself. */
+        gnx_destroy_set((GnxSet *)(noded->inneighbor));
+        gnx_destroy_dict((GnxDict *)(noded->outneighbor));
+        free(noded);
+        graph->graph[*v] = NULL;
+        (graph->total_nodes)--;
+        graph->total_edges -= degree;
+
+        return;
+    }
+
+    g_assert(!directed);
+    nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+    g_assert(nodeu);
+
+    /* Let w be a neighbor of v.  Remove v from the collection of neighbors
+     * of w and then decrement the degree of w.
+     */
+    neighbor = (GnxDict *)(nodeu->neighbor);
+    degree = neighbor->size;
+    gnx_dict_iter_init(&iter, neighbor);
+    while (gnx_dict_iter_next(&iter, &key, NULL)) {
+        w = (unsigned int *)key;
+
+        /* Skip over any self-loop. */
+        if (*v == *w)
+            continue;
+
+        nodeu_w = (GnxNodeUndirected *)(graph->graph[*w]);
+        g_assert(nodeu_w);
+        assert(gnx_dict_delete((GnxDict *)(nodeu_w->neighbor), v));
+        (nodeu_w->degree)--;
+    }
+
+    /* Delete all neighbors of v and then remove v itself. */
+    gnx_destroy_dict((GnxDict *)(nodeu->neighbor));
+    free(nodeu);
+    graph->graph[*v] = NULL;
+    (graph->total_nodes)--;
+    graph->total_edges -= degree;
+}
+
+/**
  * @brief Maybe allocate memory for an edge node.
  *
  * @param graph The graph to update.
@@ -767,6 +974,31 @@ gnx_allows_selfloop(const GnxGraph *graph)
     gnx_i_check(graph);
 
     return graph->selfloop & GNX_SELFLOOP;
+}
+
+/**
+ * @brief Removes a node from a graph.
+ *
+ * @param graph We want to update this graph.
+ * @param v Remove this node from the graph.
+ * @return Nonzero if the node was in the graph and is now successfully
+ *         removed from the graph; zero otherwise.  We also return zero if the
+ *         graph is empty (the graph has zero nodes) or the node is not in the
+ *         graph.
+ */
+int
+gnx_delete_node(GnxGraph *graph,
+                const unsigned int *v)
+{
+    if (!gnx_has_node(graph, v))
+        return GNX_FAILURE;
+
+    if (GNX_WEIGHTED & graph->weighted)
+        gnx_i_delete_node_weighted(graph, v);
+    else
+        gnx_i_delete_node_unweighted(graph, v);
+
+    return GNX_SUCCESS;
 }
 
 /**
