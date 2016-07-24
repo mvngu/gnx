@@ -520,6 +520,10 @@ add_edge_weighted_no_memory(void)
     const int high = 35;
     const int low = 0;
 
+    /**********************************************************************
+     * directed and weighted
+     *********************************************************************/
+
     graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
     random_edge(&low, &high, &u, &v);
     is_empty_graph(graph);
