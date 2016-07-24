@@ -877,12 +877,17 @@ add_node_no_memory(void)
 {
 #ifdef GNX_ALLOC_TEST
     GnxGraph *graph;
-    const int alloc_size = 0;
+    int alloc_size;
     const int high = 65;
     const int low = 0;
     const unsigned int v = (unsigned int)g_random_int_range(low, high);
 
-    graph = gnx_new();
+    /**********************************************************************
+     * undirected and unweighted
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    alloc_size = 0;
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_add_node(graph, &v));
     assert(ENOMEM == errno);
