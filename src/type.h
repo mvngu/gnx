@@ -159,7 +159,6 @@ typedef enum {
  * data types
  *************************************************************************/
 
-typedef int* gnxintptr;  /**< An @c int pointer. */
 typedef void* gnxptr;    /**< An untyped pointer. */
 
 /**************************************************************************
