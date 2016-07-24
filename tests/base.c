@@ -897,6 +897,20 @@ add_node_no_memory(void)
     gnx_alloc_reset_limit();
 
     /**********************************************************************
+     * Directed and unweighted: cannot allocate memory for the set of
+     * in-neighbors.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    alloc_size = GNX_ALLOC_SET_SIZE + 1;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_add_node(graph, &v));
+    assert(ENOMEM == errno);
+
+    gnx_destroy(graph);
+    gnx_alloc_reset_limit();
+
+    /**********************************************************************
      * undirected and unweighted
      *********************************************************************/
 
