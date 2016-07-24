@@ -66,6 +66,21 @@ static void add_node_random_unweighted(void);
 static void add_node_random_weighted(void);
 static void add_node_resize(void);
 
+/* delete edge */
+static void delete_edge_empty(void);
+static void delete_edge_one_directed_unweighted(void);
+static void delete_edge_one_directed_weighted(void);
+static void delete_edge_one_undirected_unweighted(void);
+static void delete_edge_one_undirected_weighted(void);
+static void delete_edge_random_directed_unweighted(void);
+static void delete_edge_random_directed_weighted(void);
+static void delete_edge_random_undirected_unweighted(void);
+static void delete_edge_random_undirected_weighted(void);
+static void delete_edge_selfloop_directed_unweighted(void);
+static void delete_edge_selfloop_directed_weighted(void);
+static void delete_edge_selfloop_undirected_unweighted(void);
+static void delete_edge_selfloop_undirected_weighted(void);
+
 /* delete node */
 static void delete_node_empty(void);
 static void delete_node_one_directed_unweighted(void);
@@ -1076,6 +1091,635 @@ add_node_resize(void)
 }
 
 /**************************************************************************
+ * delete edge
+ *************************************************************************/
+
+static void
+delete_edge(void)
+{
+    delete_edge_empty();
+    delete_edge_one_directed_unweighted();
+    delete_edge_one_directed_weighted();
+    delete_edge_one_undirected_unweighted();
+    delete_edge_one_undirected_weighted();
+    delete_edge_random_directed_unweighted();
+    delete_edge_random_directed_weighted();
+    delete_edge_random_undirected_unweighted();
+    delete_edge_random_undirected_weighted();
+    delete_edge_selfloop_directed_unweighted();
+    delete_edge_selfloop_directed_weighted();
+    delete_edge_selfloop_undirected_unweighted();
+    delete_edge_selfloop_undirected_weighted();
+}
+
+/* Remove an edge from an empty graph.
+ */
+static void
+delete_edge_empty(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const int high = 65;
+    const int low = 0;
+
+    /* Directed and unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    random_edge(&low, &high, &u, &v);
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Directed and weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    random_edge(&low, &high, &u, &v);
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected and unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    random_edge(&low, &high, &u, &v);
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected and weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    random_edge(&low, &high, &u, &v);
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+}
+
+/* Remove an edge from a graph that has exactly one edge.  The graph is
+ * directed and unweighted.
+ */
+static void
+delete_edge_one_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high, &x, &y);
+    } while (gnx_has_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(!gnx_delete_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &v));
+    assert(gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove an edge from a graph that has exactly one edge.  The graph is
+ * directed and weighted.
+ */
+static void
+delete_edge_one_directed_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const double weight = (double)g_random_double();
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high, &x, &y);
+    } while (gnx_has_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(!gnx_delete_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &v));
+    assert(gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove an edge from a graph that has exactly one edge.  The graph is
+ * undirected and unweighted.
+ */
+static void
+delete_edge_one_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high, &x, &y);
+    } while (gnx_has_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(!gnx_delete_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &v));
+    assert(gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove an edge from a graph that has exactly one edge.  The graph is
+ * undirected and weighted.
+ */
+static void
+delete_edge_one_undirected_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const double weight = (double)g_random_double();
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high, &x, &y);
+    } while (gnx_has_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(!gnx_delete_edge(graph, &x, &y));
+    assert(!gnx_has_edge(graph, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    /* Remove an edge that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &v));
+    assert(gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove a bunch of edges from a graph that has a random number of edges.
+ * The graph is directed and unweighted.
+ */
+static void
+delete_edge_random_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int *head, i, j, *tail, u, v;
+    const int high = 20;
+    const int high2 = 2 * high;
+    const int low = 0;
+    const unsigned int nedge = (unsigned int)g_random_int_range(16, 64);
+    const unsigned int ntarget
+        = (unsigned int)g_random_int_range(2, (int)nedge + 1);
+
+    assert(ntarget <= nedge);
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    tail = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+    head = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+
+    /* Insert a random number of edges into the graph. */
+    for (i = 0; i < nedge; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_add_edge(graph, &u, &v));
+        tail[i] = u;
+        head[i] = v;
+    }
+    assert(nedge == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high2, &u, &v);
+    } while (gnx_has_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(nedge == graph->total_edges);
+
+    /* Remove a random number of edges from the graph.  Each edge to remove is
+     * in the graph.
+     */
+    for (i = 0; i < ntarget; i++) {
+        do {
+            j = (unsigned int)g_random_int_range(0, (int)nedge);
+            u = tail[j];
+            v = head[j];
+        } while (!gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_has_edge(graph, &u, &v));
+        assert(gnx_delete_edge(graph, &u, &v));
+        assert(!gnx_has_edge(graph, &u, &v));
+    }
+    assert((nedge - ntarget) == graph->total_edges);
+
+    free(head);
+    free(tail);
+    gnx_destroy(graph);
+}
+
+/* Remove a bunch of edges from a graph that has a random number of edges.
+ * The graph is directed and weighted.
+ */
+static void
+delete_edge_random_directed_weighted(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int *head, i, j, *tail, u, v;
+    const int high = 20;
+    const int high2 = 2 * high;
+    const int low = 0;
+    const unsigned int nedge = (unsigned int)g_random_int_range(16, 64);
+    const unsigned int ntarget
+        = (unsigned int)g_random_int_range(2, (int)nedge + 1);
+
+    assert(ntarget <= nedge);
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    tail = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+    head = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+
+    /* Insert a random number of edges into the graph. */
+    for (i = 0; i < nedge; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        weight = (double)g_random_double();
+        assert(gnx_add_edgew(graph, &u, &v, &weight));
+        tail[i] = u;
+        head[i] = v;
+    }
+    assert(nedge == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high2, &u, &v);
+    } while (gnx_has_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(nedge == graph->total_edges);
+
+    /* Remove a random number of edges from the graph.  Each edge to remove is
+     * in the graph.
+     */
+    for (i = 0; i < ntarget; i++) {
+        do {
+            j = (unsigned int)g_random_int_range(0, (int)nedge);
+            u = tail[j];
+            v = head[j];
+        } while (!gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_has_edge(graph, &u, &v));
+        assert(gnx_delete_edge(graph, &u, &v));
+        assert(!gnx_has_edge(graph, &u, &v));
+    }
+    assert((nedge - ntarget) == graph->total_edges);
+
+    free(head);
+    free(tail);
+    gnx_destroy(graph);
+}
+
+/* Remove a bunch of edges from a graph that has a random number of edges.
+ * The graph is undirected and unweighted.
+ */
+static void
+delete_edge_random_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int *head, i, j, *tail, u, v;
+    const int high = 20;
+    const int high2 = 2 * high;
+    const int low = 0;
+    const unsigned int nedge = (unsigned int)g_random_int_range(16, 64);
+    const unsigned int ntarget
+        = (unsigned int)g_random_int_range(2, (int)nedge + 1);
+
+    assert(ntarget <= nedge);
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    tail = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+    head = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+
+    /* Insert a random number of edges into the graph. */
+    for (i = 0; i < nedge; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_add_edge(graph, &u, &v));
+        tail[i] = u;
+        head[i] = v;
+    }
+    assert(nedge == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high2, &u, &v);
+    } while (gnx_has_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(nedge == graph->total_edges);
+
+    /* Remove a random number of edges from the graph.  Each edge to remove is
+     * in the graph.
+     */
+    for (i = 0; i < ntarget; i++) {
+        do {
+            j = (unsigned int)g_random_int_range(0, (int)nedge);
+            u = tail[j];
+            v = head[j];
+        } while (!gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_has_edge(graph, &u, &v));
+        assert(gnx_delete_edge(graph, &u, &v));
+        assert(!gnx_has_edge(graph, &u, &v));
+    }
+    assert((nedge - ntarget) == graph->total_edges);
+
+    free(head);
+    free(tail);
+    gnx_destroy(graph);
+}
+
+/* Remove a bunch of edges from a graph that has a random number of edges.
+ * The graph is undirected and weighted.
+ */
+static void
+delete_edge_random_undirected_weighted(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int *head, i, j, *tail, u, v;
+    const int high = 20;
+    const int high2 = 2 * high;
+    const int low = 0;
+    const unsigned int nedge = (unsigned int)g_random_int_range(16, 64);
+    const unsigned int ntarget
+        = (unsigned int)g_random_int_range(2, (int)nedge + 1);
+
+    assert(ntarget <= nedge);
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    tail = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+    head = (unsigned int *)malloc(sizeof(unsigned int) * nedge);
+
+    /* Insert a random number of edges into the graph. */
+    for (i = 0; i < nedge; i++) {
+        do {
+            random_edge(&low, &high, &u, &v);
+        } while (gnx_has_edge(graph, &u, &v));
+
+        weight = (double)g_random_double();
+        assert(gnx_add_edgew(graph, &u, &v, &weight));
+        tail[i] = u;
+        head[i] = v;
+    }
+    assert(nedge == graph->total_edges);
+
+    /* Remove an edge that is not in the graph. */
+    do {
+        random_edge(&low, &high2, &u, &v);
+    } while (gnx_has_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(!gnx_delete_edge(graph, &u, &v));
+    assert(!gnx_has_edge(graph, &u, &v));
+    assert(nedge == graph->total_edges);
+
+    /* Remove a random number of edges from the graph.  Each edge to remove is
+     * in the graph.
+     */
+    for (i = 0; i < ntarget; i++) {
+        do {
+            j = (unsigned int)g_random_int_range(0, (int)nedge);
+            u = tail[j];
+            v = head[j];
+        } while (!gnx_has_edge(graph, &u, &v));
+
+        assert(gnx_has_edge(graph, &u, &v));
+        assert(gnx_delete_edge(graph, &u, &v));
+        assert(!gnx_has_edge(graph, &u, &v));
+    }
+    assert((nedge - ntarget) == graph->total_edges);
+
+    free(head);
+    free(tail);
+    gnx_destroy(graph);
+}
+
+/* Remove a self-loop from a graph that allows for self-loops.  The graph is
+ * directed and unweighted.
+ */
+static void
+delete_edge_selfloop_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, w;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is not in the graph. */
+    do {
+        w = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(!gnx_delete_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &u));
+    assert(gnx_delete_edge(graph, &u, &u));
+    assert(!gnx_has_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove a self-loop from a graph that allows for self-loops.  The graph is
+ * directed and weighted.
+ */
+static void
+delete_edge_selfloop_directed_weighted(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int u, v, w;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &u, &weight));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is not in the graph. */
+    do {
+        w = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(!gnx_delete_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &u));
+    assert(gnx_delete_edge(graph, &u, &u));
+    assert(!gnx_has_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove a self-loop from a graph that allows for self-loops.  The graph is
+ * undirected and unweighted.
+ */
+static void
+delete_edge_selfloop_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int u, v, w;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is not in the graph. */
+    do {
+        w = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(!gnx_delete_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &u));
+    assert(gnx_delete_edge(graph, &u, &u));
+    assert(!gnx_has_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove a self-loop from a graph that allows for self-loops.  The graph is
+ * undirected and weighted.
+ */
+static void
+delete_edge_selfloop_undirected_weighted(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int u, v, w;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    weight = (double)g_random_double();
+    assert(gnx_add_edgew(graph, &u, &u, &weight));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is not in the graph. */
+    do {
+        w = (unsigned int)g_random_int_range(low, high);
+    } while (gnx_has_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(!gnx_delete_edge(graph, &w, &w));
+    assert(!gnx_has_edge(graph, &w, &w));
+    assert(2 == graph->total_nodes);
+    assert(2 == graph->total_edges);
+
+    /* Remove a self-loop that is in the graph. */
+    assert(gnx_has_edge(graph, &u, &u));
+    assert(gnx_delete_edge(graph, &u, &u));
+    assert(!gnx_has_edge(graph, &u, &u));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
  * delete node
  *************************************************************************/
 
@@ -1308,6 +1952,15 @@ delete_node_random_directed_unweighted(void)
     assert(nedge == graph->total_edges);
     assert(size == graph->total_nodes);
 
+    /* Remove a node that is not in the graph. */
+    do {
+        v = (unsigned int)g_random_int_range(low, 2 * high);
+    } while (gnx_has_node(graph, &v));
+    assert(!gnx_has_node(graph, &v));
+    assert(!gnx_delete_node(graph, &v));
+    assert(nedge == graph->total_edges);
+    assert(size == graph->total_nodes);
+
     /* Remove a random number of nodes from the graph. */
     nnode = (unsigned int)g_random_int_range(1, (int)size + 1);
     for (i = 0; i < nnode; i++) {
@@ -1483,15 +2136,6 @@ delete_node_random_undirected_weighted(void)
         weight = (double)g_random_double();
         assert(gnx_add_edgew(graph, &u, &v, &weight));
     }
-    assert(nedge == graph->total_edges);
-    assert(size == graph->total_nodes);
-
-    /* Remove a node that is not in the graph. */
-    do {
-        v = (unsigned int)g_random_int_range(low, 2 * high);
-    } while (gnx_has_node(graph, &v));
-    assert(!gnx_has_node(graph, &v));
-    assert(!gnx_delete_node(graph, &v));
     assert(nedge == graph->total_edges);
     assert(size == graph->total_nodes);
 
@@ -2069,6 +2713,7 @@ main(int argc,
     g_test_add_func("/base/add-edge", add_edge);
     g_test_add_func("/base/add-edge-weighted", add_edge_weighted);
     g_test_add_func("/base/add-node", add_node);
+    g_test_add_func("/base/delete-edge", delete_edge);
     g_test_add_func("/base/delete-node", delete_node);
     g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);

@@ -917,6 +917,103 @@ gnx_allows_selfloop(const GnxGraph *graph)
 }
 
 /**
+ * @brief Removes an edge from a graph.
+ *
+ * @param graph Update this graph.
+ * @param u An end point of the edge to remove.
+ * @param v The other end point of the edge to remove.
+ * @return Nonzero if the edge @f$(u,v)@f$ was in the graph and is now removed;
+ *         zero otherwise.  We also return zero if the graph is empty or the
+ *         given edge is not in the graph.
+ */
+int
+gnx_delete_edge(GnxGraph *graph,
+                const unsigned int *u,
+                const unsigned int *v)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    int directed, weighted;
+
+    if (!gnx_has_edge(graph, u, v))
+        return GNX_FAILURE;
+
+    directed = GNX_DIRECTED & graph->directed;
+    weighted = GNX_WEIGHTED & graph->weighted;
+
+    /* Weighted graph. */
+    if (weighted) {
+        if (directed) {
+            /* Remove v from the out-neighbors of u. */
+            noded = (GnxNodeDirected *)(graph->graph[*u]);
+            g_assert(noded);
+            assert(gnx_dict_delete((GnxDict *)(noded->outneighbor), v));
+            (noded->outdegree)--;
+
+            /* Remove u from the in-neighbors of v. */
+            noded = (GnxNodeDirected *)(graph->graph[*v]);
+            g_assert(noded);
+            assert(gnx_set_delete((GnxSet *)(noded->inneighbor), u));
+            (noded->indegree)--;
+        } else {
+            /* Remove v from the neighbors of u. */
+            nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+            g_assert(nodeu);
+            assert(gnx_dict_delete((GnxDict *)(nodeu->neighbor), v));
+            (nodeu->degree)--;
+
+            /* Remove u from the neighbors of v.  If (u,v) is a self-loop, then
+             * we skip this block.
+             */
+            if (*u != *v) {
+                nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+                g_assert(nodeu);
+                assert(gnx_dict_delete((GnxDict *)(nodeu->neighbor), u));
+                (nodeu->degree)--;
+            }
+        }
+
+        (graph->total_edges)--;
+        return GNX_SUCCESS;
+    }
+
+    /* Unweighted graph. */
+    g_assert(!weighted);
+    if (directed) {
+        /* Remove v from the out-neighbors of u. */
+        noded = (GnxNodeDirected *)(graph->graph[*u]);
+        g_assert(noded);
+        assert(gnx_set_delete((GnxSet *)(noded->outneighbor), v));
+        (noded->outdegree)--;
+
+        /* Remove u from the in-neighbors of v. */
+        noded = (GnxNodeDirected *)(graph->graph[*v]);
+        g_assert(noded);
+        assert(gnx_set_delete((GnxSet *)(noded->inneighbor), u));
+        (noded->indegree)--;
+    } else {
+        /* Remove v from the neighbors of u. */
+        nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+        g_assert(nodeu);
+        assert(gnx_set_delete((GnxSet *)(nodeu->neighbor), v));
+        (nodeu->degree)--;
+
+        /* Remove u from the neighbors of v.  If (u,v) is a self-loop, then
+         * we skip this block.
+         */
+        if (*u != *v) {
+            nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
+            g_assert(nodeu);
+            assert(gnx_set_delete((GnxSet *)(nodeu->neighbor), u));
+            (nodeu->degree)--;
+        }
+    }
+
+    (graph->total_edges)--;
+    return GNX_SUCCESS;
+}
+
+/**
  * @brief Removes a node from a graph.
  *
  * @param graph We want to update this graph.

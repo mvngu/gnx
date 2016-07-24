@@ -51,6 +51,9 @@ int gnx_add_edgew(GnxGraph *graph,
                   const double *w);
 int gnx_add_node(GnxGraph *graph,
                  const unsigned int *v);
+int gnx_delete_edge(GnxGraph *graph,
+                    const unsigned int *u,
+                    const unsigned int *v);
 int gnx_delete_node(GnxGraph *graph,
                     const unsigned int *v);
 
