@@ -717,11 +717,8 @@ gnx_add_edge(GnxGraph *graph,
              const unsigned int *u,
              const unsigned int *v)
 {
-    GnxNodeDirected *noded;
-    GnxNodeUndirected *nodeu;
     int add_u = FALSE;  /* Assume that we have not added node u. */
     int add_v = FALSE;  /* Assume that we have not added node v. */
-    int directed;
 
     errno = 0;
     g_return_val_if_fail(!gnx_is_weighted(graph), GNX_FAILURE);
@@ -729,8 +726,6 @@ gnx_add_edge(GnxGraph *graph,
         return GNX_FAILURE;
     if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
         return GNX_FAILURE;
-
-    directed = GNX_DIRECTED & graph->directed;
 
     /* Add the nodes to the graph as appropriate. */
     if (!gnx_has_node(graph, u)) {
@@ -753,34 +748,10 @@ gnx_add_edge(GnxGraph *graph,
 
 cleanup:
     errno = ENOMEM;
-    if (add_u) {
-        if (directed) {
-            noded = (GnxNodeDirected *)(graph->graph[*u]);
-            gnx_destroy_set((GnxSet *)(noded->inneighbor));
-            gnx_destroy_set((GnxSet *)(noded->outneighbor));
-            free(noded);
-        } else {
-            nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
-            gnx_destroy_set((GnxSet *)(nodeu->neighbor));
-            free(nodeu);
-        }
-        graph->graph[*u] = NULL;
-        (graph->total_nodes)--;
-    }
-    if (add_v) {
-        if (directed) {
-            noded = (GnxNodeDirected *)(graph->graph[*v]);
-            gnx_destroy_set((GnxSet *)(noded->inneighbor));
-            gnx_destroy_set((GnxSet *)(noded->outneighbor));
-            free(noded);
-        } else {
-            nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
-            gnx_destroy_set((GnxSet *)(nodeu->neighbor));
-            free(nodeu);
-        }
-        graph->graph[*v] = NULL;
-        (graph->total_nodes)--;
-    }
+    if (add_u)
+        assert(gnx_delete_node(graph, u));
+    if (add_v)
+        assert(gnx_delete_node(graph, v));
     return GNX_FAILURE;
 }
 
