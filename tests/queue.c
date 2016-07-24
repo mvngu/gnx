@@ -76,14 +76,14 @@ static void
 append_empty(void)
 {
     GnxQueue *queue;
-    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int elem = (unsigned int)g_random_int();
 
     queue = gnx_init_queue();
     assert(gnx_queue_append(queue, &elem));
     assert(1 == queue->size);
     assert(0 == queue->i);
     assert(0 == queue->j);
-    assert(elem == *(queue->cell[0]));
+    assert(elem == *((unsigned int *)(queue->cell[0])));
 
     gnx_destroy_queue(queue);
 }
@@ -94,15 +94,14 @@ static void
 append_maximum(void)
 {
     GnxQueue *queue;
-    int *list;
-    unsigned int i;
+    unsigned int i, *list;
     const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);
@@ -110,7 +109,7 @@ append_maximum(void)
     assert((size - 1) == queue->j);
 
     for (i = 0; i < size; i++)
-        assert(list[i] == *(queue->cell[i]));
+        assert(list[i] == *((unsigned int *)(queue->cell[i])));
 
     free(list);
     gnx_destroy_queue(queue);
@@ -123,24 +122,24 @@ append_no_memory(void)
 {
 #ifdef GNX_ALLOC_TEST
     GnxQueue *queue;
-    int alloc_size, *elem;
-    unsigned int i;
+    int alloc_size;
+    unsigned int *elem, i;
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
     const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
 
     /* Populate a queue to capacity. */
     queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, elem));
     }
     assert(size == queue->size);
     assert(queue->size == queue->capacity);
 
     /* Cannot allocate memory to resize the queue. */
-    elem = (int *)malloc(sizeof(int));
-    *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = (unsigned int)g_random_int();
     alloc_size = 0;
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_queue_append(queue, elem));
@@ -160,8 +159,7 @@ static void
 append_random(void)
 {
     GnxQueue *queue;
-    int *elem;
-    unsigned int i;
+    unsigned int *elem, i;
     const int high = (int)GNX_DEFAULT_ALLOC_SIZE;
     const int low = 2;
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
@@ -171,8 +169,8 @@ append_random(void)
     queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
 
     for (i = 0; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, elem));
     }
     assert(size == queue->size);
@@ -188,15 +186,14 @@ static void
 append_resize(void)
 {
     GnxQueue *queue;
-    int *list;
-    unsigned int i;
+    unsigned int i, *list;
     const unsigned int size = GNX_DEFAULT_ALLOC_SIZE + 1;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);
@@ -205,7 +202,7 @@ append_resize(void)
     assert((size - 1) == queue->j);
 
     for (i = 0; i < size; i++)
-        assert(list[i] == *(queue->cell[i]));
+        assert(list[i] == *((unsigned int *)(queue->cell[i])));
 
     free(list);
     gnx_destroy_queue(queue);
@@ -359,7 +356,7 @@ static void
 peek_one(void)
 {
     GnxQueue *queue;
-    int elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int elem = (unsigned int)g_random_int();
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
 
     queue = gnx_init_queue();
@@ -379,21 +376,20 @@ static void
 peek_random(void)
 {
     GnxQueue *queue;
-    int *elem, *first;
-    unsigned int i;
+    unsigned int *elem, *first, i;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(2, 33);
 
     assert(size <= capacity);
     queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
 
-    first = (int *)malloc(sizeof(int));
-    *first = (int)g_random_int_range(INT_MIN, INT_MAX);
+    first = (unsigned int *)malloc(sizeof(unsigned int));
+    *first = (unsigned int)g_random_int();
     assert(gnx_queue_append(queue, first));
 
     for (i = 1; i < size; i++) {
-        elem = (int *)malloc(sizeof(int));
-        *elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, elem));
     }
     assert(size == queue->size);
@@ -445,17 +441,16 @@ static void
 pop_maximum(void)
 {
     GnxQueue *queue;
-    int *elem, *list;
-    unsigned int i;
+    unsigned int *elem, i, *list;
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
     const unsigned int size = capacity;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     /* Populate the queue to capacity. */
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);
@@ -484,8 +479,8 @@ static void
 pop_one(void)
 {
     GnxQueue *queue;
-    int *elem;
-    int a = (int)g_random_int_range(INT_MIN, INT_MAX);
+    unsigned int *elem;
+    unsigned int a = (unsigned int)g_random_int();
 
     queue = gnx_init_queue();
     assert(gnx_queue_append(queue, &a));
@@ -506,18 +501,17 @@ static void
 pop_random(void)
 {
     GnxQueue *queue;
-    int *list;
-    unsigned int i;
+    unsigned int i, *list;
     const int high = GNX_DEFAULT_ALLOC_SIZE + 1;
     const int low = 2;
     const unsigned int size = (unsigned int)g_random_int_range(low, high);
 
     assert(size <= GNX_DEFAULT_ALLOC_SIZE);
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);
@@ -539,17 +533,16 @@ static void
 pop_resize_wrap(void)
 {
     GnxQueue *queue;
-    int elem, *list;
-    unsigned int i;
+    unsigned int elem, i, *list;
     const unsigned int pop_size = (unsigned int)g_random_int_range(5, 21);
     const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     /* Populate to capacity. */
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);
@@ -567,7 +560,7 @@ pop_resize_wrap(void)
      */
     assert(size == queue->size);
     assert(queue->i);
-    elem = (int)g_random_int_range(INT_MIN, INT_MAX);
+    elem = (unsigned int)g_random_int();
     assert(GNX_DEFAULT_ALLOC_SIZE == queue->capacity);
     assert(gnx_queue_append(queue, &elem));
     assert(0 == queue->i);
@@ -585,17 +578,16 @@ static void
 pop_wrap(void)
 {
     GnxQueue *queue;
-    int *elem, *list;
-    unsigned int i;
+    unsigned int *elem, i, *list;
     const unsigned int pop_size = (unsigned int)g_random_int_range(1, 21);
     const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
 
-    list = (int *)malloc(sizeof(int) * size);
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     queue = gnx_init_queue();
 
     /* Populate to capacity. */
     for (i = 0; i < size; i++) {
-        list[i] = (int)g_random_int_range(INT_MIN, INT_MAX);
+        list[i] = (unsigned int)g_random_int();
         assert(gnx_queue_append(queue, &(list[i])));
     }
     assert(size == queue->size);

@@ -263,7 +263,7 @@ typedef struct {
     unsigned int j;         /**< The index of the tail of the queue. */
     unsigned int size;      /**< How many elements are in the queue. */
     unsigned int capacity;  /**< The maximum possible number of elements. */
-    gnxintptr *cell;        /**< An array of the elements of the queue. */
+    gnxptr *cell;           /**< An array of the elements of the queue. */
 } GnxQueue;
 
 /**

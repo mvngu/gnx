@@ -147,8 +147,7 @@ gnx_init_queue_full(const unsigned int *capacity,
     queue->j = 0;
     queue->size = 0;
     queue->capacity = *capacity;
-    queue->cell
-        = (gnxintptr *)malloc(sizeof(gnxintptr) * queue->capacity);
+    queue->cell = (gnxptr *)malloc(sizeof(gnxptr) * queue->capacity);
     if (!queue->cell)
         goto cleanup;
 
@@ -176,9 +175,9 @@ cleanup:
  */
 int
 gnx_queue_append(GnxQueue *queue,
-                 int *elem)
+                 unsigned int *elem)
 {
-    gnxintptr *new_cell;
+    gnxptr *new_cell;
     unsigned int ncell, new_capacity;
 
     gnx_i_check_queue(queue);
@@ -198,7 +197,7 @@ gnx_queue_append(GnxQueue *queue,
     if (queue->size >= queue->capacity) {
         new_capacity = queue->capacity << 1;
         g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
-        new_cell = (gnxintptr *)malloc(sizeof(gnxintptr) * new_capacity);
+        new_cell = (gnxptr *)malloc(sizeof(gnxptr) * new_capacity);
         if (!new_cell) {
             errno = ENOMEM;
             return GNX_FAILURE;
@@ -218,7 +217,7 @@ gnx_queue_append(GnxQueue *queue,
             g_assert(!queue->i);
             g_assert(queue->j == (queue->size - 1));
             (void)memcpy(&(new_cell[0]), &(queue->cell[0]),
-                         sizeof(gnxintptr) * (queue->size));
+                         sizeof(gnxptr) * (queue->size));
         } else {
             /* If i > j, then the queue has wrapped around the array and so we
              * need to copy two blocks of memory.  The first block of memory is
@@ -230,9 +229,9 @@ gnx_queue_append(GnxQueue *queue,
             g_assert(queue->j == (queue->i - 1));
             ncell = queue->size - queue->i;
             (void)memcpy(&(new_cell[0]), &(queue->cell[queue->i]),
-                         sizeof(gnxintptr) * ncell);
+                         sizeof(gnxptr) * ncell);
             (void)memcpy(&(new_cell[ncell]), &(queue->cell[0]),
-                         sizeof(gnxintptr) * (queue->j + 1));
+                         sizeof(gnxptr) * (queue->j + 1));
         }
 
         free(queue->cell);
@@ -281,14 +280,14 @@ gnx_queue_append(GnxQueue *queue,
  * @return The element at the head of the queue.  If the queue is empty, then
  *         we return @c NULL.
  */
-int*
+unsigned int*
 gnx_queue_peek(const GnxQueue *queue)
 {
     gnx_i_check_queue(queue);
     if (!queue->size)
         return NULL;
 
-    return queue->cell[queue->i];
+    return (unsigned int *)(queue->cell[queue->i]);
 }
 
 /**
@@ -302,17 +301,16 @@ gnx_queue_peek(const GnxQueue *queue)
  * @return The element that was previously at the head of the queue.  If the
  *         queue is empty, then we return @c NULL.
  */
-int*
+unsigned int*
 gnx_queue_pop(GnxQueue *queue)
 {
-    int *elem, *head;
-    unsigned int idx;
+    unsigned int *elem, *head, idx;
 
     gnx_i_check_queue(queue);
     if (!queue->size)
         return NULL;
 
-    elem = queue->cell[queue->i];
+    elem = (unsigned int *)(queue->cell[queue->i]);
     queue->cell[queue->i] = NULL;
 
     if (1 == queue->size) {
@@ -358,7 +356,7 @@ gnx_queue_pop(GnxQueue *queue)
      */
     if (1 == queue->size) {
         g_assert(queue->i == queue->j);
-        head = queue->cell[queue->i];
+        head = (unsigned int *)(queue->cell[queue->i]);
         queue->cell[queue->i] = NULL;
         queue->cell[0] = head;
         queue->i = 0;
