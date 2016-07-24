@@ -542,6 +542,14 @@ add_edge_weighted_no_memory(void)
     assert(ENOMEM == errno);
     is_empty_graph(graph);
 
+    /* Cannot add v to the collection of out-neighbors of u. */
+    alloc_size = (2 * GNX_ALLOC_NODE_DIRECTED_WEIGHTED_SIZE)
+        + (2 * GNX_ALLOC_MAYBE_ALLOCATE_NODE_SIZE) + 1;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_add_edgew(graph, &u, &v, &weight));
+    assert(ENOMEM == errno);
+    is_empty_graph(graph);
+
     gnx_destroy(graph);
     gnx_alloc_reset_limit();
 #endif

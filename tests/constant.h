@@ -64,6 +64,13 @@
  * compound #define
  *************************************************************************/
 
+/* The number of allocations that is required to add a node to graph->node.
+ * Any non-negative integer below this number would result in an out-of-memory
+ * error.
+ */
+#define GNX_ALLOC_MAYBE_ALLOCATE_NODE_SIZE                                 \
+    (1 + GNX_ALLOC_ARRAY_SIZE)
+
 /* The number of allocations that is required to add a node to an unweighted
  * digraph.  This does not take into account the allocations to possibly resize
  * the graph.  Any non-negative integer below this number would result in an

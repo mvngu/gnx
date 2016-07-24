@@ -266,10 +266,8 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
         x = gnx_set_has(graph->node, v);
-        if (!gnx_dict_add((GnxDict *)(noded->outneighbor), x, weight)) {
-            free(weight);
-            return GNX_FAILURE;
-        }
+        if (!gnx_dict_add((GnxDict *)(noded->outneighbor), x, weight))
+            goto cleanup;
         (noded->outdegree)++;
 
         /* Add u to the set of in-neighbors of v. */
@@ -294,10 +292,8 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
     x = gnx_set_has(graph->node, u);
-    if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
-        free(weight);
-        return GNX_FAILURE;
-    }
+    if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight))
+        goto cleanup;
     (nodeu->degree)++;
 
     /* Add v to the dictionary of neighbors of u.  If (u,v) is a self-loop,
@@ -311,16 +307,18 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
         nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
         g_assert(nodeu);
         x = gnx_set_has(graph->node, v);
-        if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight)) {
-            free(weight);
-            return GNX_FAILURE;
-        }
+        if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight))
+            goto cleanup;
         (nodeu->degree)++;
     }
 
     (graph->total_edges)++;
 
     return GNX_SUCCESS;
+
+cleanup:
+    free(weight);
+    return GNX_FAILURE;
 }
 
 /**
