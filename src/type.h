@@ -229,10 +229,10 @@ typedef struct {
  * via the function gnx_dict_iter_init().
  */
 typedef struct {
-    gboolean bootstrap;  /**< Are we bootstrapping the process? */
-    GnxDict *dict;       /**< Iterate over this dictionary. */
-    unsigned int i;      /**< The bucket index. */
-    unsigned int j;      /**< The entry index within bucket i. */
+    int bootstrap;   /**< Are we bootstrapping the process? */
+    GnxDict *dict;   /**< Iterate over this dictionary. */
+    unsigned int i;  /**< The bucket index. */
+    unsigned int j;  /**< The entry index within bucket i. */
 } GnxDictIter;
 
 /**
@@ -312,10 +312,10 @@ typedef struct {
  * via the function gnx_set_iter_init().
  */
 typedef struct {
-    gboolean bootstrap;  /**< Are we bootstrapping the process? */
-    GnxSet *set;         /**< Iterate over this set. */
-    unsigned int i;      /**< The bucket index. */
-    unsigned int j;      /**< The entry index within bucket i. */
+    int bootstrap;   /**< Are we bootstrapping the process? */
+    GnxSet *set;     /**< Iterate over this set. */
+    unsigned int i;  /**< The bucket index. */
+    unsigned int j;  /**< The entry index within bucket i. */
 } GnxSetIter;
 
 /**
