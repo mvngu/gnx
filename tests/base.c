@@ -116,6 +116,14 @@ static void has_edge_two_nodes_undirected_unweighted(void);
 /* has node */
 static void has_node_empty(void);
 
+/* in-degree */
+static void indegree_one_unweighted(void);
+static void indegree_one_weighted(void);
+static void indegree_unweighted(void);
+static void indegree_weighted(void);
+static void indegree_selfloop_unweighted(void);
+static void indegree_selfloop_weighted(void);
+
 /* new: create and destroy */
 static void new_empty(void);
 static void new_no_memory(void);
@@ -2794,6 +2802,233 @@ has_node_empty(void)
 }
 
 /**************************************************************************
+ * in-degree
+ *************************************************************************/
+
+static void
+indegree(void)
+{
+    indegree_one_unweighted();
+    indegree_one_weighted();
+    indegree_unweighted();
+    indegree_weighted();
+    indegree_selfloop_unweighted();
+    indegree_selfloop_weighted();
+}
+
+/* In-degree of a node in a digraph that has exactly one node.  The digraph
+ * is unweighted.
+ */
+static void
+indegree_one_unweighted(void)
+{
+    GnxGraph *graph;
+    const int high = 32;
+    const int low = 0;
+    const unsigned int v = (unsigned int)g_random_int_range(low, high);
+
+    /* Allows self-loops. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_indegree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* No self-loops. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_indegree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* In-degree of a node in a digraph that has exactly one node.  The digraph
+ * is weighted.
+ */
+static void
+indegree_one_weighted(void)
+{
+    GnxGraph *graph;
+    const int high = 32;
+    const int low = 0;
+    const unsigned int v = (unsigned int)g_random_int_range(low, high);
+
+    /* Allows self-loops. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_indegree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* No self-loops. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_indegree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* In-degree of a node in a digraph that is unweighted.
+ */
+static void
+indegree_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int indegree[7] = {0, 1, 1, 2, 0, 0, 1};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int size = 5;
+
+    /**********************************************************************
+     * Allows self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * No self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* In-degree of a node in a digraph that is weighted.
+ */
+static void
+indegree_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int indegree[7] = {0, 1, 1, 2, 0, 0, 1};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const double weight[5]     = {0, 1, 2, 3, 4};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int size = 5;
+
+    /**********************************************************************
+     * Allows self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * No self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* In-degree of a self-loop in a digraph that is unweighted.
+ */
+static void
+indegree_selfloop_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const unsigned int indegree[7] = {0, 2, 1, 2, 1, 0, 1};
+    const unsigned int size = 7;
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < size; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    gnx_destroy(graph);
+}
+
+/* In-degree of a self-loop in a digraph that is weighted.
+ */
+static void
+indegree_selfloop_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
+    const unsigned int indegree[7] = {0, 2, 1, 2, 1, 0, 1};
+    const unsigned int size = 7;
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < size; i++)
+        assert(indegree[i] == gnx_indegree(graph, &i));
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -3188,6 +3423,7 @@ main(int argc,
     g_test_add_func("/base/delete-node", delete_node);
     g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);
+    g_test_add_func("/base/indegree", indegree);
     g_test_add_func("/base/new", new);
     g_test_add_func("/base/outdegree", outdegree);
 

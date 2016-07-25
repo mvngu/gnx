@@ -1242,6 +1242,32 @@ gnx_has_node(const GnxGraph *graph,
 }
 
 /**
+ * @brief The in-degree of a node.
+ *
+ * The degree of a node @f$v@f$ is the number of neighbors that @f$v@f$ has.
+ * If a graph is directed, then gnx_indegree() returns the in-degree of
+ * @f$v@f$ as the number of edges that have @f$v@f$ as their head end point.
+ *
+ * @param graph The graph to query.  We assume that this is a digraph.
+ * @param v Find the in-degree of this node in the given graph.  The node is
+ *        assumed to be in the graph.
+ * @return The in-degree of the given node.
+ */
+unsigned int
+gnx_indegree(const GnxGraph *graph,
+             const unsigned int *v)
+{
+    GnxNodeDirected *node;
+
+    g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
+    g_return_val_if_fail(GNX_DIRECTED & graph->directed, GNX_FAILURE);
+
+    node = (GnxNodeDirected *)(graph->graph[*v]);
+    g_assert(node);
+    return node->indegree;
+}
+
+/**
  * @brief Whether a graph is directed.
  *
  * @param graph The graph to test for directedness.
