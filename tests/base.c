@@ -66,6 +66,14 @@ static void add_node_random_unweighted(void);
 static void add_node_random_weighted(void);
 static void add_node_resize(void);
 
+/* degree undirected */
+static void degree_undirected_one_unweighted(void);
+static void degree_undirected_one_weighted(void);
+static void degree_undirected_unweighted(void);
+static void degree_undirected_weighted(void);
+static void degree_undirected_selfloop_unweighted(void);
+static void degree_undirected_selfloop_weighted(void);
+
 /* delete edge */
 static void delete_edge_empty(void);
 static void delete_edge_one_directed_unweighted(void);
@@ -1086,6 +1094,233 @@ add_node_resize(void)
     assert(gnx_add_node(graph, &i));
     assert((size + 1) == graph->total_nodes);
     assert((size << 1) == graph->capacity);
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
+ * degree undirected
+ *************************************************************************/
+
+static void
+degree_undirected(void)
+{
+    degree_undirected_one_unweighted();
+    degree_undirected_one_weighted();
+    degree_undirected_unweighted();
+    degree_undirected_weighted();
+    degree_undirected_selfloop_unweighted();
+    degree_undirected_selfloop_weighted();
+}
+
+/* Degree of a node in a graph that has exactly one node.  The graph is
+ * undirected and unweighted.
+ */
+static void
+degree_undirected_one_unweighted(void)
+{
+    GnxGraph *graph;
+    const int high = 32;
+    const int low = 0;
+    const unsigned int v = (unsigned int)g_random_int_range(low, high);
+
+    /* Allows self-loops. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* No self-loops. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* Degree of a node in a graph that has exactly one node.  The graph is
+ * undirected and weighted.
+ */
+static void
+degree_undirected_one_weighted(void)
+{
+    GnxGraph *graph;
+    const int high = 32;
+    const int low = 0;
+    const unsigned int v = (unsigned int)g_random_int_range(low, high);
+
+    /* Allows self-loops. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* No self-loops. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* Degree of a node in a graph that is undirected and unweighted.
+ */
+static void
+degree_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int degree[7] = {1, 3, 2, 2, 0, 1, 1};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int size = 5;
+
+    /**********************************************************************
+     * Allows self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * No self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Degree of a node in a graph that is undirected and weighted.
+ */
+static void
+degree_undirected_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int degree[7] = {1, 3, 2, 2, 0, 1, 1};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const double weight[5]     = {0, 1, 2, 3, 4};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int size = 5;
+
+    /**********************************************************************
+     * Allows self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * No self-loops.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < nnode; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
+
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Degree of a self-loop in a graph that is undirected and unweighted.
+ */
+static void
+degree_undirected_selfloop_unweighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const unsigned int degree[7] = {1, 4, 2, 2, 1, 1, 1};
+    const unsigned int size = 7;
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &size);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < size; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
+
+    gnx_destroy(graph);
+}
+
+/* Degree of a self-loop in a graph that is undirected and weighted.
+ */
+static void
+degree_undirected_selfloop_weighted(void)
+{
+    GnxGraph *graph;
+    unsigned int i;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
+    const unsigned int degree[7] = {1, 4, 2, 2, 1, 1, 1};
+    const unsigned int size = 7;
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &size);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    for (i = 0; i < size; i++)
+        assert(degree[i] == gnx_degree(graph, &i));
 
     gnx_destroy(graph);
 }
@@ -2713,6 +2948,7 @@ main(int argc,
     g_test_add_func("/base/add-edge", add_edge);
     g_test_add_func("/base/add-edge-weighted", add_edge_weighted);
     g_test_add_func("/base/add-node", add_node);
+    g_test_add_func("/base/degree-undirected", degree_undirected);
     g_test_add_func("/base/delete-edge", delete_edge);
     g_test_add_func("/base/delete-node", delete_node);
     g_test_add_func("/base/has-edge", has_edge);

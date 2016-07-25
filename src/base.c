@@ -917,6 +917,32 @@ gnx_allows_selfloop(const GnxGraph *graph)
 }
 
 /**
+ * @brief The degree of a node in an undirected graph.
+ *
+ * The degree of a node @f$v@f$ is the number of neighbors that @f$v@f$ has.
+ * If a graph is undirected, then gnx_degree() returns the degree of @f$v@f$ as
+ * the number of nodes that are incident on @f$v@f$.
+ *
+ * @param graph The graph to query.  The graph is assumed to be undirected.
+ * @param v Find the degree of this node in the given graph.  The node is
+ *        assumed to be in the graph.
+ * @return The degree of the node if the node is in the graph.
+ */
+unsigned int
+gnx_degree(const GnxGraph *graph,
+           const unsigned int *v)
+{
+    GnxNodeUndirected *node;
+
+    g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
+    g_return_val_if_fail(GNX_UNDIRECTED & graph->directed, GNX_FAILURE);
+
+    node = (GnxNodeUndirected *)(graph->graph[*v]);
+    g_assert(node);
+    return node->degree;
+}
+
+/**
  * @brief Removes an edge from a graph.
  *
  * @param graph Update this graph.
