@@ -1355,3 +1355,29 @@ cleanup:
     gnx_destroy(graph);
     return NULL;
 }
+
+/**
+ * @brief The out-degree of a node in a digraph.
+ *
+ * The degree of a node @f$v@f$ is the number of neighbors that @f$v@f$ has.
+ * If a graph is directed, then gnx_outdegree() returns the out-degree of
+ * @f$v@f$ as the number of edges that have @f$v@f$ as their tail end point.
+ *
+ * @param graph The graph to query.  The graph is assumed to be directed.
+ * @param v Find the out-degree of this node in the given graph.  The node is
+ *        assumed to be in the graph.
+ * @return The out-degree of the node if the node is in the graph.
+ */
+unsigned int
+gnx_outdegree(const GnxGraph *graph,
+              const unsigned int *v)
+{
+    GnxNodeDirected *node;
+
+    g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
+    g_return_val_if_fail(GNX_DIRECTED & graph->directed, GNX_FAILURE);
+
+    node = (GnxNodeDirected *)(graph->graph[*v]);
+    g_assert(node);
+    return node->outdegree;
+}
