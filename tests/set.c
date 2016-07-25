@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#include <glib.h>
 #include <gnx.h>
 
 #include "constant.h"

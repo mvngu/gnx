@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <string.h>  /* memmove */
 
+#include <glib.h>
+
 #include "array.h"
 #include "sanity.h"
 

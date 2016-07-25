@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 
+#include <glib.h>
 #include <gnx.h>
 
 #include "constant.h"

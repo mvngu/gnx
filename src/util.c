@@ -17,6 +17,7 @@
 
 #include <assert.h>
 
+#include <glib.h>
 #include <mpfr.h>
 
 #include "util.h"

@@ -24,8 +24,6 @@
 
 #include <limits.h>
 
-#include <glib.h>
-
 /**
  * @file type.h
  * @brief Definitions of commonly used types and constants.

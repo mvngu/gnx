@@ -19,6 +19,8 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <glib.h>
+
 #include "dict.h"
 #include "heap.h"
 #include "sanity.h"

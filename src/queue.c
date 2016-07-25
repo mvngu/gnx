@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <string.h>  /* memcpy */
 
+#include <glib.h>
+
 #include "queue.h"
 #include "sanity.h"
 

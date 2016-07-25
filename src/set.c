@@ -20,6 +20,8 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#include <glib.h>
+
 #include "array.h"
 #include "sanity.h"
 #include "set.h"
