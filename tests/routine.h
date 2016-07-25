@@ -27,6 +27,15 @@
  * prototypes for helper functions
  *************************************************************************/
 
+void add_edges(GnxGraph *graph,
+               const unsigned int tail[],
+               const unsigned int head[],
+               const unsigned int *size);
+void add_edges_weighted(GnxGraph *graph,
+                        const unsigned int tail[],
+                        const unsigned int head[],
+                        const double weight[],
+                        const unsigned int *size);
 void random_edge(const int *low,
                  const int *high,
                  unsigned int *u,
@@ -36,6 +45,55 @@ unsigned int random_node_id(void);
 /**************************************************************************
  * helper functions
  *************************************************************************/
+
+/**
+ * @brief Insert a bunch of edges into an unweighted graph.
+ *
+ * @param graph Add edges to this unweighted graph.
+ * @param tail An array of tail nodes.
+ * @param head An array of corresponding head nodes. An edge is
+ *        (tail[i], head[i]).
+ * @param size How many edges to insert.
+ */
+void
+add_edges(GnxGraph *graph,
+          const unsigned int tail[],
+          const unsigned int head[],
+          const unsigned int *size)
+{
+    unsigned int i;
+
+    assert(size);
+    assert(*size > 0);
+
+    for (i = 0; i < *size; i++)
+        assert(gnx_add_edge(graph, &(tail[i]), &(head[i])));
+}
+
+/**
+ * @brief Insert a bunch of edges into an unweighted graph.
+ *
+ * @param graph Add edges to this unweighted graph.
+ * @param tail An array of tail nodes.
+ * @param head An array of corresponding head nodes. An edge is
+ *        (tail[i], head[i]).
+ * @param size How many edges to insert.
+ */
+void
+add_edges_weighted(GnxGraph *graph,
+                   const unsigned int tail[],
+                   const unsigned int head[],
+                   const double weight[],
+                   const unsigned int *size)
+{
+    unsigned int i;
+
+    assert(size);
+    assert(*size > 0);
+
+    for (i = 0; i < *size; i++)
+        assert(gnx_add_edgew(graph, &(tail[i]), &(head[i]), &(weight[i])));
+}
 
 /**
  * @brief A random edge that is not a self-loop.
