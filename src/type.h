@@ -372,4 +372,13 @@ typedef struct {
     unsigned int total_nodes;  /**< How many nodes or vertices? */
 } GnxGraph;
 
+/**
+ * @brief Iterator over the nodes of a graph.
+ */
+typedef struct {
+    int bootstrap;    /**< Are we bootstrapping the process? */
+    GnxGraph *graph;  /**< Iterate over the nodes of this graph. */
+    unsigned int i;   /**< The index into the array of adjacency lists. */
+} GnxNodeIter;
+
 #endif  /* GNX_TYPE_H */
