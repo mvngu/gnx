@@ -1139,6 +1139,47 @@ gnx_destroy(GnxGraph *graph)
 }
 
 /**
+ * @brief Retrieves the weight of the given edge.
+ *
+ * @param graph The weighted graph to query.
+ * @param u An end point of a weighted edge.
+ * @param v The other end point of the weighted edge.  The edge @f$(u,v)@f$ is
+ *        assumed to be in the graph.
+ * @return The weight of the edge @f$(u,v)@f$.
+ */
+double
+gnx_edge_weight(const GnxGraph *graph,
+                const unsigned int *u,
+                const unsigned int *v)
+{
+    double *weight;
+    GnxDict *neighbor;
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+
+    g_return_val_if_fail(gnx_has_edge(graph, u, v), GNX_FAILURE);
+    g_return_val_if_fail(GNX_WEIGHTED & graph->weighted, GNX_FAILURE);
+
+    /* Directed graph. */
+    if (GNX_DIRECTED & graph->directed) {
+        noded = (GnxNodeDirected *)(graph->graph[*u]);
+        g_assert(noded);
+        neighbor = (GnxDict *)(noded->outneighbor);
+        weight = (double *)gnx_dict_has(neighbor, v);
+        g_assert(weight);
+        return *weight;
+    }
+
+    /* Undirected graph. */
+    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+    g_assert(nodeu);
+    neighbor = (GnxDict *)(nodeu->neighbor);
+    weight = (double *)gnx_dict_has(neighbor, v);
+    g_assert(weight);
+    return *weight;
+}
+
+/**
  * @brief Whether a graph contains a given edge.
  *
  * For a digraph, the directed edge @f$(u,v)@f$ means that the edge goes from

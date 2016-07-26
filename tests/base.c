@@ -144,6 +144,14 @@ static void outdegree_weighted(void);
 static void outdegree_selfloop_unweighted(void);
 static void outdegree_selfloop_weighted(void);
 
+/* weight */
+static void weight_directed(void);
+static void weight_undirected(void);
+static void weight_one_directed(void);
+static void weight_one_undirected(void);
+static void weight_selfloop_directed(void);
+static void weight_selfloop_undirected(void);
+
 /**************************************************************************
  * helper functions
  *************************************************************************/
@@ -3406,6 +3414,209 @@ outdegree_selfloop_weighted(void)
 }
 
 /**************************************************************************
+ * weight
+ *************************************************************************/
+
+static void
+weight(void)
+{
+    weight_directed();
+    weight_undirected();
+    weight_one_directed();
+    weight_one_undirected();
+    weight_selfloop_directed();
+    weight_selfloop_undirected();
+}
+
+/* The weight of an edge in a digraph.
+ */
+static void
+weight_directed(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int i;
+    const double weight[5]     = {0, 1, 2, 3, 4};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+
+    /* Insert a bunch of weighted edges. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    assert(0 == gnx_indegree(graph, &singleton));
+    assert(0 == gnx_outdegree(graph, &singleton));
+
+    /* Compare the weight of each edge to the known weight. */
+    for (i = 0; i < nedge; i++) {
+        w = gnx_edge_weight(graph, &(tail[i]), &(head[i]));
+        assert(gnx_double_cmp_eq(&w, &(weight[i])));
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    assert(0 == gnx_indegree(graph, &singleton));
+    assert(0 == gnx_outdegree(graph, &singleton));
+
+    gnx_destroy(graph);
+}
+
+/* The weight of an edge in an undirected graph.
+ */
+static void
+weight_undirected(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int i;
+    const double weight[5]     = {0, 1, 2, 3, 4};
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const unsigned int singleton = 4;  /* An isolated node. */
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 5;
+
+    /* Insert a bunch of weighted edges. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    assert(gnx_add_node(graph, &singleton));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    assert(0 == gnx_degree(graph, &singleton));
+
+    /* Compare the weight of each edge to the known weight. */
+    for (i = 0; i < nedge; i++) {
+        w = gnx_edge_weight(graph, &(tail[i]), &(head[i]));
+        assert(gnx_double_cmp_eq(&w, &(weight[i])));
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    assert(0 == gnx_degree(graph, &singleton));
+
+    gnx_destroy(graph);
+}
+
+/* The weight of an edge in a digraph.  The graph has exactly one edge.
+ */
+static void
+weight_one_directed(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int u, v;
+    const double weight = (double)g_random_double();
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    w = gnx_edge_weight(graph, &u, &v);
+    assert(gnx_double_cmp_eq(&w, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* The weight of an edge in an undirected graph.  The graph has exactly one
+ * edge.
+ */
+static void
+weight_one_undirected(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int u, v;
+    const double weight = (double)g_random_double();
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    w = gnx_edge_weight(graph, &u, &v);
+    assert(gnx_double_cmp_eq(&w, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* The weight of an edge in a digraph.  The graph allows for self-loops.
+ */
+static void
+weight_selfloop_directed(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int i;
+    const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    /* Insert a bunch of weighted edges. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Compare the weight of each edge to the known weight. */
+    for (i = 0; i < nedge; i++) {
+        w = gnx_edge_weight(graph, &(tail[i]), &(head[i]));
+        assert(gnx_double_cmp_eq(&w, &(weight[i])));
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* The weight of an edge in an undirected graph.  The graph allows for
+ * self-loops.
+ */
+static void
+weight_selfloop_undirected(void)
+{
+    double w;
+    GnxGraph *graph;
+    unsigned int i;
+    const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const unsigned int nnode = 7;
+    const unsigned int nedge = 7;
+
+    /* Insert a bunch of weighted edges. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Compare the weight of each edge to the known weight. */
+    for (i = 0; i < nedge; i++) {
+        w = gnx_edge_weight(graph, &(tail[i]), &(head[i]));
+        assert(gnx_double_cmp_eq(&w, &(weight[i])));
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -3426,6 +3637,7 @@ main(int argc,
     g_test_add_func("/base/indegree", indegree);
     g_test_add_func("/base/new", new);
     g_test_add_func("/base/outdegree", outdegree);
+    g_test_add_func("/base/weight", weight);
 
     return g_test_run();
 }
