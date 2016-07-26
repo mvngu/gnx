@@ -31,6 +31,12 @@ GnxGraph* gnx_new_full(const GnxBool directed,
                        const GnxBool selfloop,
                        const GnxBool weighted);
 
+/* node and edge iterators */
+void gnx_node_iter_init(GnxNodeIter *iter,
+                        GnxGraph *graph);
+int gnx_node_iter_next(GnxNodeIter *iter,
+                       unsigned int *v);
+
 /* query the graph properties */
 int gnx_allows_selfloop(const GnxGraph *graph);
 unsigned int gnx_degree(const GnxGraph *graph,

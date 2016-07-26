@@ -1426,6 +1426,88 @@ cleanup:
 }
 
 /**
+ * @brief Initializes the node iterator.
+ *
+ * A node iterator is used to iterate over the nodes of a graph.  If you modify
+ * the graph after calling the function gnx_node_iter_init(), then the iterator
+ * becomes invalid.
+ *
+ * @param iter An uninitialized node iterator.  Note that a node iterator is
+ *        typically allocated on the runtime stack.
+ * @param graph Iterate over the nodes of this graph.
+ */
+void
+gnx_node_iter_init(GnxNodeIter *iter,
+                   GnxGraph *graph)
+{
+    g_return_if_fail(iter);
+    gnx_i_check(graph);
+
+    iter->bootstrap = TRUE;
+    iter->graph = graph;
+    iter->i = 0;
+}
+
+/**
+ * @brief Retrieves the next node ID.
+ *
+ * We advance the node iterator by one step and retrieve the node ID at the
+ * current position.
+ *
+ * @param iter A node iterator that has been initialized via the function
+ *        gnx_node_iter_init().
+ * @param v Store the current node ID here.  If @c NULL, then we will ignore
+ *        the current node ID.
+ * @return Nonzero if we have not yet exhausted all nodes of the graph;
+ *         zero otherwise.  If nonzero, then there is a node that we have
+ *         not visited.  If zero, then the iterator is now invalid.
+ */
+int
+gnx_node_iter_next(GnxNodeIter *iter,
+                   unsigned int *v)
+{
+    g_return_val_if_fail(iter, GNX_FAILURE);
+
+    /* We are bootstrapping the process.  Search for the first node in the
+     * graph.
+     */
+    if (iter->bootstrap) {
+        /* The graph has zero nodes. */
+        if (!(iter->graph->total_nodes))
+            return GNX_FAILURE;
+
+        /* Search for the node with the lowest ID. */
+        for (iter->i = 0; iter->i < iter->graph->capacity; (iter->i)++) {
+            if (iter->graph->graph[iter->i]) {
+                if (v)
+                    *v = iter->i;
+
+                iter->bootstrap = FALSE;
+                (iter->i)++;
+                return GNX_SUCCESS;
+            }
+        }
+    }
+
+    /* The graph has at least one node and we have reached at least one of
+     * those nodes.  Now search for the next node in the graph.
+     */
+    while (iter->i < iter->graph->capacity) {
+        if (iter->graph->graph[iter->i]) {
+            if (v)
+                *v = iter->i;
+
+            (iter->i)++;
+            return GNX_SUCCESS;
+        }
+        (iter->i)++;
+    }
+
+    /* We have exhausted all nodes of the graph. */
+    return GNX_FAILURE;
+}
+
+/**
  * @brief The out-degree of a node in a digraph.
  *
  * The degree of a node @f$v@f$ is the number of neighbors that @f$v@f$ has.
