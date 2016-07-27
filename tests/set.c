@@ -41,7 +41,6 @@ static void add_one(void);
 static void add_resize(void);
 
 /* any element */
-static void any_empty(void);
 static void any_one(void);
 static void any_random(void);
 
@@ -253,24 +252,8 @@ add_resize(void)
 static void
 any(void)
 {
-    any_empty();
     any_one();
     any_random();
-}
-
-/* Choose an element from an empty set.
- */
-static void
-any_empty(void)
-{
-    GnxSet *set;
-
-    set = gnx_init_set();
-    assert(0 == set->size);
-    assert(!gnx_set_any(set));
-    assert(0 == set->size);
-
-    gnx_destroy_set(set);
 }
 
 /* Choose an element from a set that has exactly one element.
@@ -280,14 +263,14 @@ any_one(void)
 {
     GnxSet *set;
     unsigned int elem = (unsigned int)g_random_int();
-    unsigned int *target;
+    unsigned int target;
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &elem));
     assert(1 == set->size);
 
     target = gnx_set_any(set);
-    assert(*target == elem);
+    assert(target == elem);
     assert(1 == set->size);
 
     gnx_destroy_set(set);
@@ -299,7 +282,7 @@ static void
 any_random(void)
 {
     GnxSet *set;
-    unsigned int elem, i, j, *list, *target, unique;
+    unsigned int elem, i, j, *list, target, unique;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
     list = (unsigned int *)malloc(sizeof(unsigned int) * size);
@@ -335,7 +318,7 @@ any_random(void)
      */
     target = gnx_set_any(set);
     for (i = 0; i < size; i++) {
-        if (*target == list[i])
+        if (target == list[i])
             break;
     }
     assert(i < size);
@@ -665,10 +648,10 @@ iter_empty(void)
 static void
 iter_one(void)
 {
-    gnxptr elem;
     GnxSet *set;
     GnxSetIter iter;
     unsigned int a = (unsigned int)g_random_int();
+    unsigned int elem;
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &a));
@@ -676,7 +659,7 @@ iter_one(void)
 
     gnx_set_iter_init(&iter, set);
     assert(gnx_set_iter_next(&iter, &elem));
-    assert(*((unsigned int *)elem) == a);
+    assert(elem == a);
     assert(!gnx_set_iter_next(&iter, NULL));
 
     gnx_destroy_set(set);
@@ -687,7 +670,6 @@ iter_one(void)
 static void
 iter_random(void)
 {
-    gnxptr e;
     GnxSet *set;
     GnxSetIter iter;
     unsigned int elem, i, j, *list, unique;
@@ -725,8 +707,7 @@ iter_random(void)
      * elements of the list.
      */
     gnx_set_iter_init(&iter, set);
-    while (gnx_set_iter_next(&iter, &e)) {
-        elem = *((unsigned int *)e);
+    while (gnx_set_iter_next(&iter, &elem)) {
         for (i = 0; i < size; i++) {
             if (elem == list[i])
                 break;

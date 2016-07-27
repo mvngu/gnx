@@ -451,24 +451,23 @@ cleanup:
  * function merely iterates over the set and returns as soon as an element is
  * found.
  *
- * @param set Choose an element from this set.
- * @return An element from the given set.  If the set is empty, then we return
- *         @c NULL.
+ * @param set Choose an element from this set.  The set is assumed to be
+ *        non-empty.
+ * @return An element from the given set.
  */
-unsigned int*
+unsigned int
 gnx_set_any(GnxSet *set)
 {
-    gnxptr elem;
     GnxSetIter iter;
+    unsigned int elem;
 
     gnx_i_check_set(set);
-    if (!set->size)
-        return NULL;
+    g_return_val_if_fail(set->size, GNX_FAILURE);
 
     gnx_set_iter_init(&iter, set);
     assert(gnx_set_iter_next(&iter, &elem));
 
-    return (unsigned int *)elem;
+    return elem;
 }
 
 /**
@@ -556,7 +555,7 @@ gnx_set_iter_init(GnxSetIter *iter,
  */
 int
 gnx_set_iter_next(GnxSetIter *iter,
-                  gnxptr *elem)
+                  unsigned int *elem)
 {
     GnxArray *bucket;
     unsigned int i;
@@ -584,7 +583,7 @@ gnx_set_iter_next(GnxSetIter *iter,
         g_assert(bucket->size);
         iter->j = 0;
         if (elem)
-            *elem = bucket->cell[iter->j];
+            *elem = *((unsigned int *)(bucket->cell[iter->j]));
 
         iter->bootstrap = FALSE;
         return GNX_SUCCESS;
@@ -596,7 +595,7 @@ gnx_set_iter_next(GnxSetIter *iter,
     bucket = (GnxArray *)(iter->set->bucket[iter->i]);
     for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
         if (elem)
-            *elem = bucket->cell[iter->j];
+            *elem = *((unsigned int *)(bucket->cell[iter->j]));
         return GNX_SUCCESS;
     }
 
@@ -614,7 +613,7 @@ gnx_set_iter_next(GnxSetIter *iter,
         g_assert(bucket->size);
         iter->j = 0;
         if (elem)
-            *elem = bucket->cell[iter->j];
+            *elem = *((unsigned int *)(bucket->cell[iter->j]));
         return GNX_SUCCESS;
     }
 

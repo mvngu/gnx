@@ -36,7 +36,7 @@ int gnx_set_delete(GnxSet *set,
                    const unsigned int *elem);
 
 /* query */
-unsigned int* gnx_set_any(GnxSet *set);
+unsigned int gnx_set_any(GnxSet *set);
 unsigned int* gnx_set_has(const GnxSet *set,
                           const unsigned int *elem);
 
@@ -44,6 +44,6 @@ unsigned int* gnx_set_has(const GnxSet *set,
 void gnx_set_iter_init(GnxSetIter *iter,
                        GnxSet *set);
 int gnx_set_iter_next(GnxSetIter *iter,
-                      gnxptr *elem);
+                      unsigned int *elem);
 
 #endif  /* GNX_SET_H */
