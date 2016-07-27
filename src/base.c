@@ -143,6 +143,9 @@ static int gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
                                          unsigned int *v);
 static int gnx_i_maybe_allocate_node(GnxGraph *graph,
                                      const unsigned int *v);
+static int gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
+                                           unsigned int *u,
+                                           unsigned int *v);
 
 /**************************************************************************
  * internal helper functions
@@ -810,6 +813,193 @@ gnx_i_maybe_allocate_node(GnxGraph *graph,
     }
 
     return GNX_SUCCESS;
+}
+
+/**
+ * @brief Retrieves the next undirected edge.
+ *
+ * We advance the edge iterator by one step and retrieve the undirected edge
+ * at the current position.
+ *
+ * @param iter An edge iterator that has been initialized via the function
+ *        gnx_edge_iter_init().
+ * @param u Store here the ID of the current tail node.  If @c NULL, then we
+ *        will not retrieve the ID of the current tail node.
+ * @param v Store here the ID of the current head node.  If @c NULL, then we
+ *        will not retrieve the ID of the current head node.
+ * @return Nonzero if we have not yet exhausted all undirected edges of the
+ *         graph; zero otherwise.  If nonzero, then there is an undirected edge
+ *         that we have not visited.  If zero, then we have exhausted all
+ *         undirected edges and the iterator is now invalid.
+ */
+static int
+gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
+                                unsigned int *u,
+                                unsigned int *v)
+{
+    GnxNodeUndirected *node;
+    int done, has_head;
+    unsigned int i, w;
+
+    /* Are we bootstrapping the process? */
+    if (iter->bootstrap) {
+        iter->bootstrap = FALSE;
+
+        /* The graph has zero edges. */
+        if (!(iter->graph->total_edges))
+            return GNX_FAILURE;
+
+        /* If (u,v) is an undirected edge, then we assume that u <= v.  Find
+         * the first node u that has a neighbor and the first node v such that
+         * (u,v) is an undirected edge in the graph and u <= v.
+         */
+        done = FALSE;
+        iter->i = UINT_MAX;
+        while (!done) {
+            /* Find the first node that has a neighbor. */
+            for (i = (iter->i + 1); i < iter->graph->capacity; i++) {
+                if (iter->graph->graph[i]) {
+                    if (gnx_degree(iter->graph, &i))
+                        break;
+                }
+            }
+            g_assert(i < iter->graph->capacity);
+            iter->i = i;
+            node = (GnxNodeUndirected *)(iter->graph->graph[iter->i]);
+            g_assert(node);
+
+            /* Initialize an iterator over the neighbors of node i. */
+            if (iter->weighted)
+                gnx_dict_iter_init(&(iter->dict), (GnxDict *)(node->neighbor));
+            else
+                gnx_set_iter_init(&(iter->set), (GnxSet *)(node->neighbor));
+
+            /* Retrieve an undirected edge.  Find the first neighbor w of i
+             * such that i <= w.  If i does not have any such neighbor w, then
+             * we find the next node that has a neighbor.
+             */
+            has_head = FALSE;
+            if (iter->weighted) {
+                while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
+                    if (iter->i <= w) {
+                        has_head = TRUE;
+                        break;
+                    }
+                }
+            } else {
+                while (gnx_set_iter_next(&(iter->set), &w)) {
+                    if (iter->i <= w) {
+                        has_head = TRUE;
+                        break;
+                    }
+                }
+            }
+
+            if (has_head)
+                done = TRUE;
+        }
+
+        if (u)
+            *u = iter->i;
+        if (v)
+            *v = w;
+
+        return GNX_SUCCESS;
+    }
+
+    /* We have iterated over an undirected edge of the graph.  Now step to the
+     * next undirected edge.  Find a neighbor w of i such that i <= w.
+     */
+    has_head = FALSE;
+    if (iter->weighted) {
+        while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
+            if (iter->i <= w) {
+                has_head = TRUE;
+                break;
+            }
+        }
+    } else {
+        while (gnx_set_iter_next(&(iter->set), &w)) {
+            if (iter->i <= w) {
+                has_head = TRUE;
+                break;
+            }
+        }
+    }
+
+    /* We have successfully retrieved another undirected edge. */
+    if (has_head) {
+        if (u)
+            *u = iter->i;
+        if (v)
+            *v = w;
+
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted all neighbors of node i.  If (u,v) is an undirected
+     * edge, then we assume that u <= v.  Find the first node u that has a
+     * neighbor and the first node v such that (u,v) is an undirected edge in
+     * the graph and u <= v.
+     */
+    for (;;) {
+        /* Find the first node that has a neighbor. */
+        for (i = (iter->i + 1); i < iter->graph->capacity; i++) {
+            if (iter->graph->graph[i]) {
+                if (gnx_degree(iter->graph, &i))
+                    break;
+            }
+        }
+
+        /* None of the remaining nodes have a neighbor. */
+        if (i >= iter->graph->capacity)
+            break;
+
+        g_assert(i < iter->graph->capacity);
+        iter->i = i;
+        node = (GnxNodeUndirected *)(iter->graph->graph[iter->i]);
+        g_assert(node);
+
+        /* Initialize an iterator over the neighbors of node i. */
+        if (iter->weighted)
+            gnx_dict_iter_init(&(iter->dict), (GnxDict *)(node->neighbor));
+        else
+            gnx_set_iter_init(&(iter->set), (GnxSet *)(node->neighbor));
+
+        /* Retrieve an undirected edge.  Find the first neighbor w of i
+         * such that i <= w.  If i does not have any such neighbor w, then
+         * we find the next node that has a neighbor.
+         */
+        has_head = FALSE;
+        if (iter->weighted) {
+            while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
+                if (iter->i <= w) {
+                    has_head = TRUE;
+                    break;
+                }
+            }
+        } else {
+            while (gnx_set_iter_next(&(iter->set), &w)) {
+                if (iter->i <= w) {
+                    has_head = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (has_head) {
+            if (u)
+                *u = iter->i;
+            if (v)
+                *v = w;
+
+            return GNX_SUCCESS;
+        }
+    }
+
+    /* All undirected edges have been exhausted. */
+    g_assert(i >= iter->graph->capacity);
+    return GNX_FAILURE;
 }
 
 /**************************************************************************
