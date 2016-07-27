@@ -669,7 +669,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
 {
     GnxBucket *bucket;
     GnxNode *node;
-    int i;
+    unsigned int i;
 
     g_return_val_if_fail(iter, GNX_FAILURE);
     gnx_i_check_dict(iter->dict);
@@ -683,12 +683,12 @@ gnx_dict_iter_next(GnxDictIter *iter,
             return GNX_FAILURE;
 
         /* The index of the first bucket that has at least one entry. */
-        i = -1;
+        i = UINT_MAX;
         do {
             i++;
             bucket = (GnxBucket *)(iter->dict->bucket[i]);
         } while (!bucket);
-        iter->i = (unsigned int)i;
+        iter->i = i;
 
         /* The first entry within the first non-empty bucket. */
         g_assert(bucket->size);
