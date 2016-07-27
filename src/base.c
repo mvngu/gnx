@@ -573,8 +573,7 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
     GnxNodeUndirected *nodeu, *nodeu_w;
     GnxSet *neighbor_in;
     GnxSetIter iters;
-    gnxptr key;
-    unsigned int degree, *w, x;
+    unsigned int degree, w;
     const int directed = GNX_DIRECTED & graph->directed;
 
     /* Removing a node from a graph requires that we also delete every edge
@@ -594,9 +593,8 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
         neighbor = (GnxDict *)(noded->outneighbor);
         degree = neighbor->size;
         gnx_dict_iter_init(&iter, neighbor);
-        while (gnx_dict_iter_next(&iter, &key, NULL)) {
-            w = (unsigned int *)key;
-            noded_w = (GnxNodeDirected *)(graph->graph[*w]);
+        while (gnx_dict_iter_next(&iter, &w, NULL)) {
+            noded_w = (GnxNodeDirected *)(graph->graph[w]);
             g_assert(noded_w);
             assert(gnx_set_delete((GnxSet *)(noded_w->inneighbor), v));
             (noded_w->indegree)--;
@@ -609,8 +607,8 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
         neighbor_in = (GnxSet *)(noded->inneighbor);
         degree += neighbor_in->size;
         gnx_set_iter_init(&iters, neighbor_in);
-        while (gnx_set_iter_next(&iters, &x)) {
-            noded_w = (GnxNodeDirected *)(graph->graph[x]);
+        while (gnx_set_iter_next(&iters, &w)) {
+            noded_w = (GnxNodeDirected *)(graph->graph[w]);
             g_assert(noded_w);
             assert(gnx_dict_delete((GnxDict *)(noded_w->outneighbor), v));
             (noded_w->outdegree)--;
@@ -637,14 +635,12 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
     neighbor = (GnxDict *)(nodeu->neighbor);
     degree = neighbor->size;
     gnx_dict_iter_init(&iter, neighbor);
-    while (gnx_dict_iter_next(&iter, &key, NULL)) {
-        w = (unsigned int *)key;
-
+    while (gnx_dict_iter_next(&iter, &w, NULL)) {
         /* Skip over any self-loop. */
-        if (*v == *w)
+        if (*v == w)
             continue;
 
-        nodeu_w = (GnxNodeUndirected *)(graph->graph[*w]);
+        nodeu_w = (GnxNodeUndirected *)(graph->graph[w]);
         g_assert(nodeu_w);
         assert(gnx_dict_delete((GnxDict *)(nodeu_w->neighbor), v));
         (nodeu_w->degree)--;

@@ -45,7 +45,7 @@ gnxptr gnx_dict_has(const GnxDict *dict,
 void gnx_dict_iter_init(GnxDictIter *iter,
                         GnxDict *dict);
 int gnx_dict_iter_next(GnxDictIter *iter,
-                       gnxptr *key,
-                       gnxptr *value);
+                       unsigned int *key,
+                       double *value);
 
 #endif  /* GNX_DICT_H */

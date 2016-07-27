@@ -664,8 +664,8 @@ gnx_dict_iter_init(GnxDictIter *iter,
  */
 int
 gnx_dict_iter_next(GnxDictIter *iter,
-                   gnxptr *key,
-                   gnxptr *value)
+                   unsigned int *key,
+                   double *value)
 {
     GnxBucket *bucket;
     GnxNode *node;
@@ -695,9 +695,9 @@ gnx_dict_iter_next(GnxDictIter *iter,
         iter->j = 0;
         node = (GnxNode *)(bucket->node[iter->j]);
         if (key)
-            *key = node->key;
+            *key = *(node->key);
         if (value)
-            *value = node->value;
+            *value = *((double *)(node->value));
 
         iter->bootstrap = FALSE;
         return GNX_SUCCESS;
@@ -711,9 +711,9 @@ gnx_dict_iter_next(GnxDictIter *iter,
     for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
         node = (GnxNode *)(bucket->node[iter->j]);
         if (key)
-            *key = node->key;
+            *key = *(node->key);
         if (value)
-            *value = node->value;
+            *value = *((double *)(node->value));
         return GNX_SUCCESS;
     }
 
@@ -732,9 +732,9 @@ gnx_dict_iter_next(GnxDictIter *iter,
         iter->j = 0;
         node = (GnxNode *)(bucket->node[iter->j]);
         if (key)
-            *key = node->key;
+            *key = *(node->key);
         if (value)
-            *value = node->value;
+            *value = *((double *)(node->value));
         return GNX_SUCCESS;
     }
 

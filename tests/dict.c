@@ -915,8 +915,8 @@ iter_one(void)
     double v = (double)g_random_double();
     GnxDict *dict;
     GnxDictIter iter;
-    gnxptr key;
     unsigned int k = (unsigned int)g_random_int();
+    unsigned int key;
 
     dict = gnx_init_dict();
     assert(gnx_dict_add(dict, &k, &v));
@@ -924,7 +924,7 @@ iter_one(void)
 
     gnx_dict_iter_init(&iter, dict);
     assert(gnx_dict_iter_next(&iter, &key, NULL));
-    assert(*((unsigned int *)key) == k);
+    assert(key == k);
     assert(!gnx_dict_iter_next(&iter, NULL, NULL));
 
     gnx_destroy_dict(dict);
@@ -935,10 +935,9 @@ iter_one(void)
 static void
 iter_random(void)
 {
-    double *listv;
+    double *listv, value;
     GnxDict *dict;
     GnxDictIter iter;
-    gnxptr key, value;
     int unique;
     unsigned int i, j, k, *listk;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
@@ -977,8 +976,7 @@ iter_random(void)
      * the elements of the list.
      */
     gnx_dict_iter_init(&iter, dict);
-    while (gnx_dict_iter_next(&iter, &key, &value)) {
-        k = *((unsigned int *)key);
+    while (gnx_dict_iter_next(&iter, &k, &value)) {
         for (i = 0; i < size; i++) {
             if (k == listk[i])
                 break;
