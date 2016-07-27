@@ -3577,8 +3577,7 @@ node_iterator_noselfloop_directed_unweighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
     add_edges(graph, tail, head, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3629,8 +3628,7 @@ node_iterator_noselfloop_directed_weighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
     add_edges_weighted(graph, tail, head, weight, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3680,8 +3678,7 @@ node_iterator_noselfloop_undirected_unweighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
     add_edges(graph, tail, head, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3732,8 +3729,7 @@ node_iterator_noselfloop_undirected_weighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
     add_edges_weighted(graph, tail, head, weight, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3783,8 +3779,7 @@ node_iterator_selfloop_directed_unweighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
     add_edges(graph, tail, head, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3835,8 +3830,7 @@ node_iterator_selfloop_directed_weighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
     add_edges_weighted(graph, tail, head, weight, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3886,8 +3880,7 @@ node_iterator_selfloop_undirected_unweighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
     add_edges(graph, tail, head, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
@@ -3938,8 +3931,7 @@ node_iterator_selfloop_undirected_weighted(void)
     /* Insert a bunch of edges and nodes into the graph. */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
     add_edges_weighted(graph, tail, head, weight, &nedge);
-    for (i = 0; i < nsingleton; i++)
-        assert(gnx_add_node(graph, &(singleton[i])));
+    add_nodes(graph, singleton, &nsingleton);
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
