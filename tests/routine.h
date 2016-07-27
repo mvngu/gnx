@@ -36,6 +36,9 @@ void add_edges_weighted(GnxGraph *graph,
                         const unsigned int head[],
                         const double weight[],
                         const unsigned int *size);
+void add_nodes(GnxGraph *graph,
+               const unsigned int node[],
+               const unsigned int *size);
 void is_empty_graph(const GnxGraph *graph);
 void random_edge(const int *low,
                  const int *high,
@@ -98,6 +101,24 @@ add_edges_weighted(GnxGraph *graph,
 
     for (i = 0; i < *size; i++)
         assert(gnx_add_edgew(graph, &(tail[i]), &(head[i]), &(weight[i])));
+}
+
+/**
+ * @brief Insert a bunch of nodes into a graph.
+ *
+ * @param graph Update this graph.
+ * @param node Insert this bunch of nodes.
+ * @param size How many nodes to insert.
+ */
+void
+add_nodes(GnxGraph *graph,
+          const unsigned int node[],
+          const unsigned int *size)
+{
+    unsigned int i;
+
+    for (i = 0; i < *size; i++)
+        assert(gnx_add_node(graph, &(node[i])));
 }
 
 /**
