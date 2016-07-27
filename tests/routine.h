@@ -36,11 +36,16 @@ void add_edges_weighted(GnxGraph *graph,
                         const unsigned int head[],
                         const double weight[],
                         const unsigned int *size);
+void is_empty_graph(const GnxGraph *graph);
 void random_edge(const int *low,
                  const int *high,
                  unsigned int *u,
                  unsigned int *v);
 unsigned int random_node_id(void);
+void test_properties(const GnxGraph *graph,
+                     const GnxBool directed,
+                     const GnxBool selfloop,
+                     const GnxBool weighted);
 
 /**************************************************************************
  * helper functions
@@ -96,6 +101,20 @@ add_edges_weighted(GnxGraph *graph,
 }
 
 /**
+ * @brief Test that a graph is empty.
+ *
+ * A graph is empty if it has zero nodes and zero edges.
+ *
+ * @param graph Test this graph.
+ */
+void
+is_empty_graph(const GnxGraph *graph)
+{
+    assert(0 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+}
+
+/**
  * @brief A random edge that is not a self-loop.
  *
  * This function generates a random node ID for each end point of the edge.
@@ -134,6 +153,41 @@ unsigned int
 random_node_id(void)
 {
     return (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+}
+
+/**
+ * @brief Test a graph for a specified list of properties.
+ *
+ * @param graph Test this graph.
+ * @param directed Whether the graph is directed or undirected.
+ * @param selfloop Whether the graph allows for self-loops.
+ * @param weighted Whether the graph is weighted or unweighted.
+ */
+void
+test_properties(const GnxGraph *graph,
+                const GnxBool directed,
+                const GnxBool selfloop,
+                const GnxBool weighted)
+{
+    assert(graph);
+    assert((directed == GNX_DIRECTED) || (directed == GNX_UNDIRECTED));
+    assert((selfloop == GNX_SELFLOOP) || (selfloop == GNX_NO_SELFLOOP));
+    assert((weighted == GNX_WEIGHTED) || (weighted == GNX_UNWEIGHTED));
+
+    if (directed == GNX_DIRECTED)
+        assert(gnx_is_directed(graph));
+    else
+        assert(!gnx_is_directed(graph));
+
+    if (selfloop == GNX_SELFLOOP)
+        assert(gnx_allows_selfloop(graph));
+    else
+        assert(!gnx_allows_selfloop(graph));
+
+    if (weighted == GNX_WEIGHTED)
+        assert(gnx_is_weighted(graph));
+    else
+        assert(!gnx_is_weighted(graph));
 }
 
 #endif  /* GNX_ROUTINE_H */

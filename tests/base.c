@@ -32,12 +32,6 @@
  * prototypes of helper functions
  *************************************************************************/
 
-static void is_empty_graph(const GnxGraph *graph);
-static void test_properties(const GnxGraph *graph,
-                            const GnxBool directed,
-                            const GnxBool selfloop,
-                            const GnxBool weighted);
-
 /* add edge: unweighted edge */
 static void add_edge_no_memory(void);
 static void add_edge_no_selfloop(void);
@@ -162,49 +156,6 @@ static void weight_one_directed(void);
 static void weight_one_undirected(void);
 static void weight_selfloop_directed(void);
 static void weight_selfloop_undirected(void);
-
-/**************************************************************************
- * helper functions
- *************************************************************************/
-
-/* Test that a graph is empty.  A graph is empty if it has zero nodes and
- * zero edges.
- */
-static void
-is_empty_graph(const GnxGraph *graph)
-{
-    assert(0 == graph->total_nodes);
-    assert(0 == graph->total_edges);
-}
-
-/* Test a graph for a specified list of properties.
- */
-static void
-test_properties(const GnxGraph *graph,
-                const GnxBool directed,
-                const GnxBool selfloop,
-                const GnxBool weighted)
-{
-    assert(graph);
-    assert((directed == GNX_DIRECTED) || (directed == GNX_UNDIRECTED));
-    assert((selfloop == GNX_SELFLOOP) || (selfloop == GNX_NO_SELFLOOP));
-    assert((weighted == GNX_WEIGHTED) || (weighted == GNX_UNWEIGHTED));
-
-    if (directed == GNX_DIRECTED)
-        assert(gnx_is_directed(graph));
-    else
-        assert(!gnx_is_directed(graph));
-
-    if (selfloop == GNX_SELFLOOP)
-        assert(gnx_allows_selfloop(graph));
-    else
-        assert(!gnx_allows_selfloop(graph));
-
-    if (weighted == GNX_WEIGHTED)
-        assert(gnx_is_weighted(graph));
-    else
-        assert(!gnx_is_weighted(graph));
-}
 
 /**************************************************************************
  * add edge: unweighted edge
