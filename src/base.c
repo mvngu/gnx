@@ -138,6 +138,9 @@ static void gnx_i_delete_node_unweighted(GnxGraph *graph,
                                          const unsigned int *v);
 static void gnx_i_delete_node_weighted(GnxGraph *graph,
                                        const unsigned int *v);
+static int gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
+                                         unsigned int *u,
+                                         unsigned int *v);
 static int gnx_i_maybe_allocate_node(GnxGraph *graph,
                                      const unsigned int *v);
 
@@ -655,6 +658,131 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
 }
 
 /**
+ * @brief Retrieves the next directed edge.
+ *
+ * We advance the edge iterator by one step and retrieve the directed edge
+ * at the current position.
+ *
+ * @param iter An edge iterator that has been initialized via the function
+ *        gnx_edge_iter_init().
+ * @param u Store here the ID of the current tail node.  If @c NULL, then we
+ *        will not retrieve the ID of the current tail node.
+ * @param v Store here the ID of the current head node.  If @c NULL, then we
+ *        will not retrieve the ID of the current head node.
+ * @return Nonzero if we have not yet exhausted all directed edges of the
+ *         graph; zero otherwise.  If nonzero, then there is a directed edge
+ *         that we have not visited.  If zero, then we have exhausted all
+ *         directed edges and the iterator is now invalid.
+ */
+static int
+gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
+                              unsigned int *u,
+                              unsigned int *v)
+{
+    GnxNodeDirected *node;
+    int retval;
+    unsigned int i, w;
+
+    /* Are we bootstrapping the process? */
+    if (iter->bootstrap) {
+        iter->bootstrap = FALSE;
+
+        /* The graph has zero edges. */
+        if (!(iter->graph->total_edges))
+            return GNX_FAILURE;
+
+        /* Find the first node that has an out-neighbor. */
+        for (i = 0; i < iter->graph->capacity; i++) {
+            if (iter->graph->graph[i]) {
+                if (gnx_outdegree(iter->graph, &i))
+                    break;
+            }
+        }
+        g_assert(i < iter->graph->capacity);
+        iter->i = i;
+        node = (GnxNodeDirected *)(iter->graph->graph[iter->i]);
+        g_assert(node);
+
+        /* Initialize an iterator over the out-neighbors of node i. */
+        if (iter->weighted)
+            gnx_dict_iter_init(&(iter->dict), (GnxDict *)(node->outneighbor));
+        else
+            gnx_set_iter_init(&(iter->set), (GnxSet *)(node->outneighbor));
+
+        /* Retrieve a directed edge. */
+        if (iter->weighted)
+            assert(gnx_dict_iter_next(&(iter->dict), &w, NULL));
+        else
+            assert(gnx_set_iter_next(&(iter->set), &w));
+        if (u)
+            *u = iter->i;
+        if (v)
+            *v = w;
+
+        return GNX_SUCCESS;
+    }
+
+    /* We have iterated over a directed edge of the graph.  Now step to the
+     * next directed edge.
+     */
+    if (iter->weighted)
+        retval = gnx_dict_iter_next(&(iter->dict), &w, NULL);
+    else
+        retval = gnx_set_iter_next(&(iter->set), &w);
+
+    /* We have successfully retrieved another directed edge. */
+    if (retval) {
+        if (u)
+            *u = iter->i;
+        if (v)
+            *v = w;
+
+        return GNX_SUCCESS;
+    }
+
+    /* We have exhausted all out-neighbors of node i.  Find the next node that
+     * has at least one out-neighbor.
+     */
+    g_assert(!retval);
+    (iter->i)++;
+    for (i = iter->i; i < iter->graph->capacity; i++) {
+        if (iter->graph->graph[i]) {
+            if (gnx_outdegree(iter->graph, &i))
+                break;
+        }
+    }
+
+    /* We have found another node that has an out-neighbor. */
+    if (i < iter->graph->capacity) {
+        iter->i = i;
+        node = (GnxNodeDirected *)(iter->graph->graph[iter->i]);
+        g_assert(node);
+
+        /* Initialize an iterator over the out-neighbors of node i. */
+        if (iter->weighted)
+            gnx_dict_iter_init(&(iter->dict), (GnxDict *)(node->outneighbor));
+        else
+            gnx_set_iter_init(&(iter->set), (GnxSet *)(node->outneighbor));
+
+        /* Retrieve a directed edge. */
+        if (iter->weighted)
+            assert(gnx_dict_iter_next(&(iter->dict), &w, NULL));
+        else
+            assert(gnx_set_iter_next(&(iter->set), &w));
+        if (u)
+            *u = iter->i;
+        if (v)
+            *v = w;
+
+        return GNX_SUCCESS;
+    }
+
+    /* All directed edges have been exhausted. */
+    g_assert(i >= iter->graph->capacity);
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Maybe allocate memory for an edge node.
  *
  * @param graph The graph to update.
@@ -1126,6 +1254,63 @@ gnx_destroy(GnxGraph *graph)
     }
     free(graph);
     graph = NULL;
+}
+
+/**
+ * @brief Initializes an edge iterator.
+ *
+ * An edge iterator is used to iterate over the edges of a graph.  If you
+ * modify the graph after calling the function gnx_edge_iter_init(), then the
+ * iterator becomes invalid.
+ *
+ * @param iter An uninitialized edge iterator.  Note that an edge iterator is
+ *        typically allocated on the runtime stack.
+ * @param graph Iterate over the edges of this graph.
+ */
+void
+gnx_edge_iter_init(GnxEdgeIter *iter,
+                   GnxGraph *graph)
+{
+    g_return_if_fail(iter);
+    gnx_i_check(graph);
+
+    iter->bootstrap = TRUE;
+    iter->directed = GNX_DIRECTED & graph->directed;
+    iter->weighted = GNX_WEIGHTED & graph->weighted;
+    iter->graph = graph;
+    iter->i = 0;
+}
+
+/**
+ * @brief Retrieves the next edge.
+ *
+ * We advance the edge iterator by one step and retrieve the edge at the
+ * current position.  If the graph is undirected, then the edges @f$(u,v)@f$
+ * and @f$(v,u)@f$ are the same edge, hence we will iterate over @f$(u,v)@f$ at
+ * most once and ignore @f$(v,u)@f$.  That is, we iterate over the unique edges
+ * of an undirected graph.
+ *
+ * @param iter An edge iterator that has been initialized via the function
+ *        gnx_edge_iter_init().
+ * @param u This will store the ID of the current tail node.  If @c NULL, then
+ *        we will not retrieve the ID of the current tail node.
+ * @param v This will store the ID of the current head node.  If @c NULL, then
+ *        we will not retrieve the ID of the current head node.
+ * @return Nonzero if we have not yet exhausted all edges of the graph;
+ *         zero otherwise.  If nonzero, then there is an edge that we have
+ *         not visited.  If zero, then the iterator is now invalid.
+ */
+int
+gnx_edge_iter_next(GnxEdgeIter *iter,
+                   unsigned int *u,
+                   unsigned int *v)
+{
+    g_return_val_if_fail(iter, GNX_FAILURE);
+
+    if (iter->directed)
+        return gnx_i_directed_edge_iter_next(iter, u, v);
+
+    return gnx_i_undirected_edge_iter_next(iter, u, v);
 }
 
 /**

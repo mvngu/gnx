@@ -32,6 +32,11 @@ GnxGraph* gnx_new_full(const GnxBool directed,
                        const GnxBool weighted);
 
 /* node and edge iterators */
+void gnx_edge_iter_init(GnxEdgeIter *iter,
+                        GnxGraph *graph);
+int gnx_edge_iter_next(GnxEdgeIter *iter,
+                       unsigned int *u,
+                       unsigned int *v);
 void gnx_node_iter_init(GnxNodeIter *iter,
                         GnxGraph *graph);
 int gnx_node_iter_next(GnxNodeIter *iter,

@@ -373,6 +373,27 @@ typedef struct {
 } GnxGraph;
 
 /**
+ * @brief Iterator over the edges of a graph.
+ */
+typedef struct {
+    int bootstrap;     /**< Are we bootstrapping the process? */
+    int directed;      /**< Is the graph directed? */
+    int weighted;      /**< Is the graph weighted? */
+    GnxGraph *graph;   /**< Iterate over the edges of this graph. */
+    unsigned int i;    /**< The index into the array of adjacency lists.  This
+                        * is also the ID of the tail node.
+                        */
+    GnxSetIter set;    /**< Iterator over the set of neighbors of node
+                        * @f$i@f$.  This is only used for unweighted graphs.
+                        */
+    GnxDictIter dict;  /**< Iterator over the dictionary of neighbors of
+                        * node @f$i@f$.  This is only used for weighted
+                        * graphs.  If the graph is directed, then we will
+                        * iterate over the out-neighbors of node @f$i@f$.
+                        */
+} GnxEdgeIter;
+
+/**
  * @brief Iterator over the nodes of a graph.
  */
 typedef struct {

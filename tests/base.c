@@ -98,6 +98,21 @@ static void delete_node_selfloop_directed_weighted(void);
 static void delete_node_selfloop_undirected_unweighted(void);
 static void delete_node_selfloop_undirected_weighted(void);
 
+/* edge iterator */
+static void edge_iterator_empty(void);
+static void edge_iterator_one_directed_unweighted(void);
+static void edge_iterator_one_directed_weighted(void);
+static void edge_iterator_one_undirected_unweighted(void);
+static void edge_iterator_one_undirected_weighted(void);
+static void edge_iterator_directed_unweighted(void);
+static void edge_iterator_directed_weighted(void);
+static void edge_iterator_undirected_unweighted(void);
+static void edge_iterator_undirected_weighted(void);
+static void edge_iterator_selfloop_directed_unweighted(void);
+static void edge_iterator_selfloop_directed_weighted(void);
+static void edge_iterator_selfloop_undirected_unweighted(void);
+static void edge_iterator_selfloop_undirected_weighted(void);
+
 /* has edge */
 static void has_edge_empty(void);
 static void has_edge_one_node(void);
@@ -2484,6 +2499,316 @@ delete_node_selfloop_undirected_weighted(void)
 }
 
 /**************************************************************************
+ * edge iterator
+ *************************************************************************/
+
+static void
+edge_iterator(void)
+{
+    edge_iterator_empty();
+    edge_iterator_one_directed_unweighted();
+    edge_iterator_one_directed_weighted();
+    edge_iterator_one_undirected_unweighted();
+    edge_iterator_one_undirected_weighted();
+    edge_iterator_directed_unweighted();
+    edge_iterator_directed_weighted();
+    edge_iterator_undirected_unweighted();
+    edge_iterator_undirected_weighted();
+    edge_iterator_selfloop_directed_unweighted();
+    edge_iterator_selfloop_directed_weighted();
+    edge_iterator_selfloop_undirected_unweighted();
+    edge_iterator_selfloop_undirected_weighted();
+}
+
+/* Iterate over the edges of an empty graph.
+ */
+static void
+edge_iterator_empty(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+
+    /* Directed, self-loop, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_edge_iter_init(&iter, graph);
+    assert(!gnx_edge_iter_next(&iter, NULL, NULL));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Directed, self-loop, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_edge_iter_init(&iter, graph);
+    assert(!gnx_edge_iter_next(&iter, NULL, NULL));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loop, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_edge_iter_init(&iter, graph);
+    assert(!gnx_edge_iter_next(&iter, NULL, NULL));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loop, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_edge_iter_init(&iter, graph);
+    assert(!gnx_edge_iter_next(&iter, NULL, NULL));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loop, weighted. */
+    /* Undirected, self-loop, unweighted. */
+    /* Undirected, no self-loop, weighted. */
+    /* Undirected, no self-loop, unweighted. */
+}
+
+/* Iterate over the edges of a graph that has exactly one edge.  The graph is
+ * directed, unweighted, and does not allow self-loops.
+ */
+static void
+edge_iterator_one_directed_unweighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_edge_iter_init(&iter, graph);
+    assert(gnx_edge_iter_next(&iter, &x, &y));
+    assert(u == x);
+    assert(v == y);
+    assert(!gnx_edge_iter_next(&iter, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Iterate over the edges of a graph that has exactly one edge.  The graph is
+ * directed, weighted, and does not allow self-loops.
+ */
+static void
+edge_iterator_one_directed_weighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int u, v, x, y;
+    const double weight = (double)g_random_double();
+    const int high = 32;
+    const int low = 0;
+
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    random_edge(&low, &high, &u, &v);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_edge_iter_init(&iter, graph);
+    assert(gnx_edge_iter_next(&iter, &x, &y));
+    assert(u == x);
+    assert(v == y);
+    assert(!gnx_edge_iter_next(&iter, &x, &y));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+static void edge_iterator_one_undirected_unweighted(void){}
+static void edge_iterator_one_undirected_weighted(void){}
+
+/* Iterate over the edges of a graph that is directed, unweighted, and does
+ * not allow self-loops.
+ */
+static void
+edge_iterator_directed_unweighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int i, k, u, v;
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const unsigned int singleton[3] = {4, 9, 11};  /* Isolated nodes. */
+    const unsigned int nsingleton = 3;
+    const unsigned int nnode = 9;
+    const unsigned int nedge = 5;
+
+    /* Insert a bunch of nodes and edges into the graph. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &nedge);
+    add_nodes(graph, singleton, &nsingleton);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Iterate over the edges of the graph.  Each iterated edge must be one
+     * of the known edges.
+     */
+    k = 0;
+    gnx_edge_iter_init(&iter, graph);
+    while (gnx_edge_iter_next(&iter, &u, &v)) {
+        for (i = 0; i < nedge; i++) {
+            if ((tail[i] == u) && (head[i] == v))
+                break;
+        }
+        assert(i < nedge);
+        k++;
+    }
+    assert(nedge == k);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Iterate over the edges of a graph that is directed, weighted, and does
+ * not allow self-loops.
+ */
+static void
+edge_iterator_directed_weighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int i, k, u, v;
+    const unsigned int tail[5] = {0, 1, 1, 2, 5};
+    const unsigned int head[5] = {1, 2, 3, 3, 6};
+    const double weight[5]     = {0, 1, 2, 3, 4};
+    const unsigned int singleton[3] = {4, 9, 11};  /* Isolated nodes. */
+    const unsigned int nsingleton = 3;
+    const unsigned int nnode = 9;
+    const unsigned int nedge = 5;
+
+    /* Insert a bunch of nodes and edges into the graph. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    add_nodes(graph, singleton, &nsingleton);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Iterate over the edges of the graph.  Each iterated edge must be one
+     * of the known edges.
+     */
+    k = 0;
+    gnx_edge_iter_init(&iter, graph);
+    while (gnx_edge_iter_next(&iter, &u, &v)) {
+        for (i = 0; i < nedge; i++) {
+            if ((tail[i] == u) && (head[i] == v))
+                break;
+        }
+        assert(i < nedge);
+        k++;
+    }
+    assert(nedge == k);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+static void edge_iterator_undirected_unweighted(void){}
+static void edge_iterator_undirected_weighted(void){}
+
+/* Iterate over the edges of a graph that is directed, unweighted, and
+ * allows for self-loops.
+ */
+static void
+edge_iterator_selfloop_directed_unweighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int i, k, u, v;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const unsigned int singleton[2] = {9, 11};  /* Isolated nodes. */
+    const unsigned int nsingleton = 2;
+    const unsigned int nnode = 9;
+    const unsigned int nedge = 7;
+
+    /* Insert a bunch of nodes and edges into the graph. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(graph, tail, head, &nedge);
+    add_nodes(graph, singleton, &nsingleton);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Iterate over the edges of the graph.  Each iterated edge must be one
+     * of the known edges.
+     */
+    k = 0;
+    gnx_edge_iter_init(&iter, graph);
+    while (gnx_edge_iter_next(&iter, &u, &v)) {
+        for (i = 0; i < nedge; i++) {
+            if ((tail[i] == u) && (head[i] == v))
+                break;
+        }
+        assert(i < nedge);
+        k++;
+    }
+    assert(nedge == k);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Iterate over the edges of a graph that is directed, weighted, and
+ * allows for self-loops.
+ */
+static void
+edge_iterator_selfloop_directed_weighted(void)
+{
+    GnxEdgeIter iter;
+    GnxGraph *graph;
+    unsigned int i, k, u, v;
+    const unsigned int tail[7] = {0, 1, 1, 1, 2, 4, 5};
+    const unsigned int head[7] = {1, 1, 2, 3, 3, 4, 6};
+    const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
+    const unsigned int singleton[2] = {9, 11};  /* Isolated nodes. */
+    const unsigned int nsingleton = 2;
+    const unsigned int nnode = 9;
+    const unsigned int nedge = 7;
+
+    /* Insert a bunch of nodes and edges into the graph. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(graph, tail, head, weight, &nedge);
+    add_nodes(graph, singleton, &nsingleton);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Iterate over the edges of the graph.  Each iterated edge must be one
+     * of the known edges.
+     */
+    k = 0;
+    gnx_edge_iter_init(&iter, graph);
+    while (gnx_edge_iter_next(&iter, &u, &v)) {
+        for (i = 0; i < nedge; i++) {
+            if ((tail[i] == u) && (head[i] == v))
+                break;
+        }
+        assert(i < nedge);
+        k++;
+    }
+    assert(nedge == k);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+static void edge_iterator_selfloop_undirected_unweighted(void){}
+static void edge_iterator_selfloop_undirected_weighted(void){}
+
+/**************************************************************************
  * has edge
  *************************************************************************/
 
@@ -4089,6 +4414,7 @@ main(int argc,
     g_test_add_func("/base/degree-undirected", degree_undirected);
     g_test_add_func("/base/delete-edge", delete_edge);
     g_test_add_func("/base/delete-node", delete_node);
+    g_test_add_func("/base/edge-iterator", edge_iterator);
     g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);
     g_test_add_func("/base/indegree", indegree);
