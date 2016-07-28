@@ -143,6 +143,9 @@ static int gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
                                          unsigned int *v);
 static int gnx_i_maybe_allocate_node(GnxGraph *graph,
                                      const unsigned int *v);
+static void gnx_i_next_undirected_edge(GnxEdgeIter *iter,
+                                       int *has_head,
+                                       unsigned int *w);
 static int gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
                                            unsigned int *u,
                                            unsigned int *v);
@@ -816,6 +819,39 @@ gnx_i_maybe_allocate_node(GnxGraph *graph,
 }
 
 /**
+ * @brief Retrieve an undirected edge.
+ *
+ * Find the first neighbor w of node i such that i <= w.
+ *
+ * @param iter An edge iterator that has been initialized via the function
+ *        gnx_edge_iter_init().
+ * @param has_head Whether we have found a neighbor w of i such that i <= w.
+ * @param w This will hold a neighbor of i.
+ */
+static void
+gnx_i_next_undirected_edge(GnxEdgeIter *iter,
+                           int *has_head,
+                           unsigned int *w)
+{
+    *has_head = FALSE;
+    if (iter->weighted) {
+        while (gnx_dict_iter_next(&(iter->dict), w, NULL)) {
+            if (iter->i <= *w) {
+                *has_head = TRUE;
+                break;
+            }
+        }
+    } else {
+        while (gnx_set_iter_next(&(iter->set), w)) {
+            if (iter->i <= *w) {
+                *has_head = TRUE;
+                break;
+            }
+        }
+    }
+}
+
+/**
  * @brief Retrieves the next undirected edge.
  *
  * We advance the edge iterator by one step and retrieve the undirected edge
@@ -878,22 +914,7 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
              * such that i <= w.  If i does not have any such neighbor w, then
              * we find the next node that has a neighbor.
              */
-            has_head = FALSE;
-            if (iter->weighted) {
-                while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
-                    if (iter->i <= w) {
-                        has_head = TRUE;
-                        break;
-                    }
-                }
-            } else {
-                while (gnx_set_iter_next(&(iter->set), &w)) {
-                    if (iter->i <= w) {
-                        has_head = TRUE;
-                        break;
-                    }
-                }
-            }
+            gnx_i_next_undirected_edge(iter, &has_head, &w);
 
             if (has_head)
                 done = TRUE;
@@ -910,22 +931,7 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
     /* We have iterated over an undirected edge of the graph.  Now step to the
      * next undirected edge.  Find a neighbor w of i such that i <= w.
      */
-    has_head = FALSE;
-    if (iter->weighted) {
-        while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
-            if (iter->i <= w) {
-                has_head = TRUE;
-                break;
-            }
-        }
-    } else {
-        while (gnx_set_iter_next(&(iter->set), &w)) {
-            if (iter->i <= w) {
-                has_head = TRUE;
-                break;
-            }
-        }
-    }
+    gnx_i_next_undirected_edge(iter, &has_head, &w);
 
     /* We have successfully retrieved another undirected edge. */
     if (has_head) {
@@ -970,22 +976,7 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
          * such that i <= w.  If i does not have any such neighbor w, then
          * we find the next node that has a neighbor.
          */
-        has_head = FALSE;
-        if (iter->weighted) {
-            while (gnx_dict_iter_next(&(iter->dict), &w, NULL)) {
-                if (iter->i <= w) {
-                    has_head = TRUE;
-                    break;
-                }
-            }
-        } else {
-            while (gnx_set_iter_next(&(iter->set), &w)) {
-                if (iter->i <= w) {
-                    has_head = TRUE;
-                    break;
-                }
-            }
-        }
+        gnx_i_next_undirected_edge(iter, &has_head, &w);
 
         if (has_head) {
             if (u)
