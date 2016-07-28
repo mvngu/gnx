@@ -603,7 +603,7 @@ new(void)
     new_no_memory();
 }
 
-/* An array with a capcity to hold 256 elements.
+/* An array with a capacity to hold 256 elements.
  */
 static void
 new_capacity_256(void)
