@@ -874,7 +874,7 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
                                 unsigned int *v)
 {
     GnxNodeUndirected *node;
-    int done, has_head;
+    int has_head;
     unsigned int i, w;
 
     /* Are we bootstrapping the process? */
@@ -889,9 +889,8 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
          * the first node u that has a neighbor and the first node v such that
          * (u,v) is an undirected edge in the graph and u <= v.
          */
-        done = FALSE;
         iter->i = UINT_MAX;
-        while (!done) {
+        for (;;) {
             /* Find the first node that has a neighbor. */
             for (i = (iter->i + 1); i < iter->graph->capacity; i++) {
                 if (iter->graph->graph[i]) {
@@ -917,7 +916,7 @@ gnx_i_undirected_edge_iter_next(GnxEdgeIter *iter,
             gnx_i_next_undirected_edge(iter, &has_head, &w);
 
             if (has_head)
-                done = TRUE;
+                break;
         }
 
         if (u)
