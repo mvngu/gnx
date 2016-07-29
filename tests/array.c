@@ -49,14 +49,6 @@ static void delete_tail_free(void);
 static void delete_tail_one(void);
 static void delete_tail_random(void);
 
-/* has an element: search */
-static void has_empty(void);
-static void has_first(void);
-static void has_last(void);
-static void has_middle(void);
-static void has_not(void);
-static void has_random(void);
-
 /* new: create and destroy */
 static void new_capacity_256(void);
 static void new_capacity_default(void);
@@ -77,8 +69,8 @@ append(void)
     append_three();
 }
 
-/* Append elements to an array that has been set to release the memory of its
- * elements.
+/* Append elements to an array of pointer.  The array has been configured to
+ * release the memory of its elements.
  */
 static void
 append_free_elements(void)
@@ -131,7 +123,7 @@ append_no_memory(void)
 #endif
 }
 
-/* Append enough elements to trigger a resize of an array.
+/* Append enough elements to trigger a resize of an array of pointers.
  */
 static void
 append_resize(void)
@@ -155,8 +147,8 @@ append_resize(void)
     gnx_destroy_array(array);
 }
 
-/* Append elements to an array.  The array has been set to not release the
- * memory of its elements.
+/* Append elements to an array of pointers.  The array has been configured to
+ * not release the memory of its elements.
  */
 static void
 append_three(void)
@@ -326,7 +318,7 @@ delete_tail(void)
     delete_tail_random();
 }
 
-/* Deletes the tail element of an empty array.
+/* Deletes the tail element of an empty array of pointers.
  */
 static void
 delete_tail_empty(void)
@@ -347,7 +339,7 @@ static void
 delete_tail_free(void)
 {
     GnxArray *array;
-    unsigned int *elem, i, target;
+    unsigned int *elem, i;
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
     const unsigned int size = 3;
 
@@ -360,10 +352,7 @@ delete_tail_free(void)
     }
     assert(size == array->size);
 
-    target = *((unsigned int *)(array->cell[size - 1]));
-    assert(gnx_array_has(array, &target));
     assert(gnx_array_delete_tail(array));
-    assert(!gnx_array_has(array, &target));
     assert((size - 1) == array->size);
 
     gnx_destroy_array(array);
@@ -382,10 +371,8 @@ delete_tail_one(void)
     assert(gnx_array_append(array, &a));
     assert(size == array->size);
 
-    assert(gnx_array_has(array, &a));
     assert(gnx_array_delete_tail(array));
     assert((size - 1) == array->size);
-    assert(!gnx_array_has(array, &a));
 
     gnx_destroy_array(array);
 }
@@ -396,195 +383,22 @@ static void
 delete_tail_random(void)
 {
     GnxArray *array;
-    unsigned int *elem, i, target;
+    unsigned int *elem, i;
     const unsigned int capacity = 32;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
 
     array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
 
-    /* Append a bunch of unique elements to the array. */
+    /* Append a bunch of elements to the array. */
     for (i = 0; i < size; i++) {
-        elem = (unsigned int *)malloc(sizeof(unsigned int));
-        do {
-            *elem = (unsigned int)g_random_int();
-        } while (gnx_array_has(array, elem));
-
-        assert(gnx_array_append(array, elem));
-    }
-    assert(size == array->size);
-
-    target = *((unsigned int *)(array->cell[size - 1]));
-    assert(gnx_array_has(array, &target));
-    assert(gnx_array_delete_tail(array));
-    assert((size - 1) == array->size);
-    assert(!gnx_array_has(array, &target));
-
-    gnx_destroy_array(array);
-}
-
-/**************************************************************************
- * has an element: search
- *************************************************************************/
-
-static void
-has(void)
-{
-    has_empty();
-    has_first();
-    has_last();
-    has_middle();
-    has_not();
-    has_random();
-}
-
-/* Search for an element in an empty array.
- */
-static void
-has_empty(void)
-{
-    GnxArray *array;
-    unsigned int elem = (unsigned int)g_random_int();
-
-    array = gnx_init_array();
-    assert(0 == array->size);
-    assert(!gnx_array_has(array, &elem));
-    assert(0 == array->size);
-
-    gnx_destroy_array(array);
-}
-
-/* Search for an element that is at the start of the array.
- */
-static void
-has_first(void)
-{
-    GnxArray *array;
-    unsigned int a = (unsigned int)g_random_int();
-    unsigned int b = (unsigned int)g_random_int();
-    unsigned int c = (unsigned int)g_random_int();
-    unsigned int target = a;
-    const unsigned int size = 3;
-
-    array = gnx_init_array();
-    assert(gnx_array_append(array, &a));
-    assert(gnx_array_append(array, &b));
-    assert(gnx_array_append(array, &c));
-    assert(size == array->size);
-
-    assert(gnx_array_has(array, &target));
-    assert(size == array->size);
-
-    gnx_destroy_array(array);
-}
-
-/* Search for an element that is at the end of the array.
- */
-static void
-has_last(void)
-{
-    GnxArray *array;
-    unsigned int a = (unsigned int)g_random_int();
-    unsigned int b = (unsigned int)g_random_int();
-    unsigned int c = (unsigned int)g_random_int();
-    unsigned int target = c;
-    const unsigned int size = 3;
-
-    array = gnx_init_array();
-    assert(gnx_array_append(array, &a));
-    assert(gnx_array_append(array, &b));
-    assert(gnx_array_append(array, &c));
-    assert(size == array->size);
-
-    assert(gnx_array_has(array, &target));
-    assert(size == array->size);
-
-    gnx_destroy_array(array);
-}
-
-/* Search for an element that is in the middle of the array.
- */
-static void
-has_middle(void)
-{
-    GnxArray *array;
-    unsigned int a = (unsigned int)g_random_int();
-    unsigned int b = (unsigned int)g_random_int();
-    unsigned int c = (unsigned int)g_random_int();
-    unsigned int target = b;
-    const unsigned int size = 3;
-
-    array = gnx_init_array();
-    assert(gnx_array_append(array, &a));
-    assert(gnx_array_append(array, &b));
-    assert(gnx_array_append(array, &c));
-    assert(size == array->size);
-
-    assert(gnx_array_has(array, &target));
-    assert(size == array->size);
-
-    gnx_destroy_array(array);
-}
-
-/* Search for an element that is not in the array.
- */
-static void
-has_not(void)
-{
-    GnxArray *array;
-    unsigned int *elem, target;
-    const unsigned int capacity = 64;
-    const unsigned int size = (unsigned int)g_random_int_range(4, 34);
-
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
-
-    /* Append a bunch of random elements to the array. */
-    while (array->size < size) {
         elem = (unsigned int *)malloc(sizeof(unsigned int));
         *elem = (unsigned int)g_random_int();
         assert(gnx_array_append(array, elem));
     }
     assert(size == array->size);
 
-    /* Generate an element that is not in the array. */
-    do {
-        target = (unsigned int)g_random_int();
-    } while (gnx_array_has(array, &target));
-
-    assert(!gnx_array_has(array, &target));
-    assert(size == array->size);
-
-    gnx_destroy_array(array);
-}
-
-/* Search for a random element in the array.
- */
-static void
-has_random(void)
-{
-    GnxArray *array;
-    unsigned int *elem, target;
-    const int high = 100;
-    const int low = -100;
-    const unsigned int capacity = 64;
-    const unsigned int size = (unsigned int)g_random_int_range(4, 34);
-
-    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS);
-
-    /* Append a bunch of random elements to the array. */
-    while (array->size < size) {
-        elem = (unsigned int *)malloc(sizeof(unsigned int));
-        *elem = (unsigned int)g_random_int_range(low, high);
-        assert(gnx_array_append(array, elem));
-    }
-    assert(size == array->size);
-
-    /* Generate a random element that is in the array. */
-    do {
-        target = (unsigned int)g_random_int_range(low, high);
-    } while (!gnx_array_has(array, &target));
-
-    assert(gnx_array_has(array, &target));
-    assert(size == array->size);
+    assert(gnx_array_delete_tail(array));
+    assert((size - 1) == array->size);
 
     gnx_destroy_array(array);
 }
@@ -703,7 +517,6 @@ main(int argc,
     g_test_add_func("/array/append", append);
     g_test_add_func("/array/delete", delete);
     g_test_add_func("/array/delete-tail", delete_tail);
-    g_test_add_func("/array/has", has);
     g_test_add_func("/array/new", new);
 
     return g_test_run();

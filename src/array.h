@@ -32,13 +32,9 @@ GnxArray* gnx_init_array_full(const unsigned int *capacity,
 
 /* insert and remove */
 int gnx_array_append(GnxArray *array,
-                     unsigned int *elem);
+                     gnxptr elem);
 int gnx_array_delete(GnxArray *array,
                      const unsigned int *i);
 int gnx_array_delete_tail(GnxArray *array);
-
-/* query */
-int gnx_array_has(const GnxArray *array,
-                  const unsigned int *elem);
 
 #endif  /* GNX_ARRAY_H */
