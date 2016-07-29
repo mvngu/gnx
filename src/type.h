@@ -165,6 +165,8 @@ typedef void* gnxptr;    /**< An untyped pointer. */
 
 /**
  * @brief Array of pointers.
+ *
+ * All pointers in the array must reference the same data type.
  */
 typedef struct {
     GnxBool free_elem;      /**< Whether to release the memory of each element
