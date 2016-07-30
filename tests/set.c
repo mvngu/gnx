@@ -441,7 +441,7 @@ static void
 delete_one(void)
 {
     GnxSet *set;
-    unsigned int *elem;
+    unsigned int *elem, target;
 
     /***********************************************************************
      * The set was configured to not release memory.
@@ -471,10 +471,11 @@ delete_one(void)
     assert(gnx_set_add(set, elem));
     assert(1 == set->size);
 
-    assert(gnx_set_has(set, elem));
-    assert(gnx_set_delete(set, elem));
+    target = *elem;
+    assert(gnx_set_has(set, &target));
+    assert(gnx_set_delete(set, &target));
     assert(0 == set->size);
-    assert(!gnx_set_has(set, elem));
+    assert(!gnx_set_has(set, &target));
 
     gnx_destroy_set(set);
 }
