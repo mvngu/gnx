@@ -410,7 +410,13 @@ gnx_set_add(GnxSet *set,
      */
     if ((set->size + 1) >= (3u << (set->k - 2))) {
         if (!gnx_i_resize(set)) {
-            assert(gnx_array_delete_tail(bucket));
+            /* Do not free the memory of the last element that was appended
+             * to the bucket.  We have failed to resize the set, so we should
+             * not mess with the memory of the element that we wanted to add.
+             * Only set the tail element to NULL.
+             */
+            (bucket->size)--;
+            bucket->cell[bucket->size] = NULL;
             goto cleanup;
         }
     }
