@@ -230,10 +230,29 @@ add_one(void)
 {
     GnxSet *set;
     unsigned int elem = (unsigned int)g_random_int();
+    unsigned int *x;
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
 
     set = gnx_init_set();
     assert(0 == set->size);
     assert(gnx_set_add(set, &elem));
+    assert(1 == set->size);
+
+    gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    x = (unsigned int *)malloc(sizeof(unsigned int));
+    *x = (unsigned int)g_random_int();
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    assert(0 == set->size);
+    assert(gnx_set_add(set, x));
     assert(1 == set->size);
 
     gnx_destroy_set(set);
