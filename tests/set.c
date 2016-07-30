@@ -42,7 +42,8 @@ static void add_resize(void);
 
 /* any element */
 static void any_one(void);
-static void any_random(void);
+static void any_random_dont_free_elements(void);
+static void any_random_free_elements(void);
 
 /* delete elements */
 static void delete_empty(void);
@@ -298,7 +299,8 @@ static void
 any(void)
 {
     any_one();
-    any_random();
+    any_random_dont_free_elements();
+    any_random_free_elements();
 }
 
 /* Choose an element from a set that has exactly one element.
@@ -308,7 +310,11 @@ any_one(void)
 {
     GnxSet *set;
     unsigned int elem = (unsigned int)g_random_int();
-    unsigned int target;
+    unsigned int *e, target;
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &elem));
@@ -319,12 +325,29 @@ any_one(void)
     assert(1 == set->size);
 
     gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    e = (unsigned int *)malloc(sizeof(unsigned int));
+    *e = elem;
+    assert(gnx_set_add(set, e));
+    assert(1 == set->size);
+
+    target = gnx_set_any(set);
+    assert(target == elem);
+    assert(1 == set->size);
+
+    gnx_destroy_set(set);
 }
 
-/* Choose an element from a set that has a random number of elements.
+/* Choose an element from a set that has a random number of elements.  The set
+ * was configured to not release the memory of its elements.
  */
 static void
-any_random(void)
+any_random_dont_free_elements(void)
 {
     GnxSet *set;
     unsigned int elem, i, j, *list, target, unique;
@@ -355,6 +378,59 @@ any_random(void)
 
         list[i] = elem;
         assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    /* Check that any element that is chosen from the set is an element of
+     * the list.
+     */
+    target = gnx_set_any(set);
+    for (i = 0; i < size; i++) {
+        if (target == list[i])
+            break;
+    }
+    assert(i < size);
+
+    free(list);
+    gnx_destroy_set(set);
+}
+
+/* Choose an element from a set that has a random number of elements.  The set
+ * was configured to release the memory of its elements.
+ */
+static void
+any_random_free_elements(void)
+{
+    GnxSet *set;
+    unsigned int *elem, i, j, *list, target, unique;
+    const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
+
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+
+    /* Generate a bunch of unique random integers.  The size of the list is
+     * chosen such that we do not trigger a resize of the set.  Here we assume
+     * that a resize of the set will not be triggered provided that the number
+     * of elements inserted into the set is kept below 3 * 2^(k-2), where k is
+     * the exponent that is used to compute the number of buckets.  In other
+     * words, a resize will not be triggered provided that the load factor is
+     * kept below the threshold of 3/4.
+     */
+    for (i = 0; i < size; i++) {
+        unique = FALSE;
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        do {
+            *elem = (unsigned int)g_random_int();
+            for (j = 0; j < i; j++) {
+                if (*elem == list[j])
+                    break;
+            }
+            if (j >= i)
+                unique = TRUE;
+        } while (!unique);
+
+        list[i] = *elem;
+        assert(gnx_set_add(set, elem));
     }
     assert(size == set->size);
 
