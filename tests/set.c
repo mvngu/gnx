@@ -568,7 +568,22 @@ has_empty(void)
     GnxSet *set;
     const unsigned int a = (unsigned int)g_random_int();
 
+    /**********************************************************************
+     * Do no release memory of elements.
+     *********************************************************************/
+
     set = gnx_init_set();
+    assert(0 == set->size);
+    assert(!gnx_set_has(set, &a));
+    assert(0 == set->size);
+
+    gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(0 == set->size);
     assert(!gnx_set_has(set, &a));
     assert(0 == set->size);
@@ -582,8 +597,12 @@ static void
 has_member(void)
 {
     GnxSet *set;
-    unsigned int i, *list;
+    unsigned int *elem, i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    /**********************************************************************
+     * Do no release memory of elements.
+     *********************************************************************/
 
     list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
@@ -591,6 +610,29 @@ has_member(void)
     for (i = 0; i < size; i++) {
         list[i] = i;
         assert(gnx_set_add(set, &(list[i])));
+    }
+    assert(size == set->size);
+
+    for (i = 0; i < size; i++)
+        assert(gnx_set_has(set, &(list[i])));
+
+    assert(size == set->size);
+
+    free(list);
+    gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = i;
+        list[i] = *elem;
+        assert(gnx_set_add(set, elem));
     }
     assert(size == set->size);
 
@@ -609,8 +651,12 @@ static void
 has_non_member(void)
 {
     GnxSet *set;
-    unsigned int elem, i, *list;
+    unsigned int elem, i, *list, *target;
     const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    /**********************************************************************
+     * Do no release memory of elements.
+     *********************************************************************/
 
     list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
@@ -626,6 +672,30 @@ has_non_member(void)
     assert(size == set->size);
 
     free(list);
+    gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        target = (unsigned int *)malloc(sizeof(unsigned int));
+        *target = i;
+        list[i] = *target;
+        assert(gnx_set_add(set, target));
+    }
+    assert(size == set->size);
+
+    target = (unsigned int *)malloc(sizeof(unsigned int));
+    *target = size;
+    assert(!gnx_set_has(set, target));
+    assert(size == set->size);
+
+    free(list);
+    free(target);
     gnx_destroy_set(set);
 }
 
