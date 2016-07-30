@@ -89,7 +89,12 @@ add_duplicate(void)
     GnxSet *set;
     unsigned int a = (unsigned int)g_random_int();
     unsigned int b = a;
+    unsigned int *x, *y;
     const unsigned int size = 1;
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
 
     set = gnx_init_set();
     assert(gnx_set_add(set, &a));
@@ -99,6 +104,26 @@ add_duplicate(void)
     assert(!gnx_set_add(set, &b));
     assert(size == set->size);
 
+    gnx_destroy_set(set);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    x = (unsigned int *)malloc(sizeof(unsigned int));
+    *x = (unsigned int)g_random_int();
+    y = (unsigned int *)malloc(sizeof(unsigned int));
+    *y = *x;
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    assert(gnx_set_add(set, x));
+    assert(size == set->size);
+
+    assert(*x == *y);
+    assert(!gnx_set_add(set, y));
+    assert(size == set->size);
+
+    free(y);
     gnx_destroy_set(set);
 }
 
