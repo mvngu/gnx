@@ -239,28 +239,14 @@ cleanup:
 void
 gnx_destroy_set(GnxSet *set)
 {
-    GnxArray *bucket;
-    int free_elem;
-    unsigned int i, j;
+    unsigned int i;
 
     if (!set)
         return;
     if (set->bucket) {
-        free_elem = GNX_FREE_ELEMENTS & set->free_elem;
         for (i = 0; i < set->capacity; i++) {
-            bucket = (GnxArray *)(set->bucket[i]);
-            if (bucket && bucket->cell) {
-                if (free_elem) {
-                    for (j = 0; j < bucket->size; j++) {
-                        if (bucket->cell[j]) {
-                            free(bucket->cell[j]);
-                            bucket->cell[j] = NULL;
-                        }
-                    }
-                }
-                gnx_destroy_array(bucket);
-                set->bucket[i] = NULL;
-            }
+            gnx_destroy_array((GnxArray *)(set->bucket[i]));
+            set->bucket[i] = NULL;
         }
         free(set->bucket);
         set->bucket = NULL;
