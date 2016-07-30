@@ -394,13 +394,9 @@ gnx_set_add(GnxSet *set,
     if (gnx_i_has(set, elem, &i, NULL))
         return GNX_FAILURE;
 
-    /* Initialize a new empty bucket, which is represented as an array.  Note
-     * that we do not allow the underlying array to release the memory of its
-     * elements.  The destruction and release of memory must be handled by the
-     * function gnx_destroy_set().
-     */
+    /* Initialize a new empty bucket, which is represented as an array. */
     if (!(set->bucket[i])) {
-        bucket = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+        bucket = gnx_init_array_full(&capacity, set->free_elem);
         if (!bucket)
             goto cleanup;
         set->bucket[i] = bucket;
