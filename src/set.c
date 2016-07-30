@@ -198,6 +198,7 @@ gnx_i_resize(GnxSet *set)
             }
             new_bucket = (GnxArray *)(new_bucket_array[idx]);
             assert(gnx_array_append(new_bucket, key));
+            old_bucket->cell[j] = NULL;
         }
         gnx_destroy_array(old_bucket);
         set->bucket[i] = NULL;
