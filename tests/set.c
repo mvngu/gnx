@@ -414,8 +414,12 @@ static void
 delete_non_member(void)
 {
     GnxSet *set;
-    unsigned int elem, i, *list;
+    unsigned int *e, elem, i, *list;
     const unsigned int size = (unsigned int)g_random_int_range(2, 21);
+
+    /***********************************************************************
+     * Do not release memory of elements.
+     **********************************************************************/
 
     list = (unsigned int *)malloc(sizeof(unsigned int) * size);
     set = gnx_init_set();
@@ -432,6 +436,28 @@ delete_non_member(void)
     assert(size == set->size);
 
     free(list);
+    gnx_destroy_set(set);
+
+    /***********************************************************************
+     * Release memory of elements.
+     **********************************************************************/
+
+    set = gnx_init_set_full(GNX_FREE_ELEMENTS);
+
+    for (i = 0; i < size; i++) {
+        e = (unsigned int *)malloc(sizeof(unsigned int));
+        *e = i;
+        assert(gnx_set_add(set, e));
+    }
+    assert(size == set->size);
+
+    e = (unsigned int *)malloc(sizeof(unsigned int));
+    *e = size;
+    assert(!gnx_set_has(set, e));
+    assert(!gnx_set_delete(set, e));
+    assert(size == set->size);
+
+    free(e);
     gnx_destroy_set(set);
 }
 
