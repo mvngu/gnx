@@ -198,8 +198,8 @@ gnx_i_has(const GnxDict *dict,
  * @brief Hash of the given key.
  *
  * @param key We want to hash this key.
- * @param a A parameter of the hash function.  This is an odd integer.
- * @param c Another parameter of the hash function.  This is an integer.
+ * @param a A parameter of the hash function.  This is an odd positive integer.
+ * @param c Another parameter of the hash function.  This is a positive integer.
  * @param d Still another parameter of the hash function.  This is the
  *        difference between the number of bits in the representation of an
  *        <tt>unsigned int</tt> type, and the exponent that is used to compute
