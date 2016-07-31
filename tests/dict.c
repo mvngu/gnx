@@ -407,7 +407,8 @@ add_one(void)
     gnx_destroy_dict(dict);
 }
 
-/* Add enough elements to trigger a resize of a bucket.
+/* Add enough elements to trigger a resize of a bucket.  The dictionary was
+ * configured to release the memory of its key/value pairs.
  */
 static void
 add_resize_bucket(void)
