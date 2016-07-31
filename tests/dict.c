@@ -87,18 +87,56 @@ add(void)
 static void
 add_duplicate(void)
 {
-    double value1 = (double)g_random_double();
-    double value2 = (double)g_random_double() + 1.0;
+    double *value1, *value2;
     GnxDict *dict;
-    unsigned int key1 = (unsigned int)g_random_int();
-    unsigned int key2 = key1;
+    unsigned int *key1, *key2;
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
+
+    key1 = (unsigned int *)malloc(sizeof(unsigned int));
+    key2 = (unsigned int *)malloc(sizeof(unsigned int));
+    value1 = (double *)malloc(sizeof(double));
+    value2 = (double *)malloc(sizeof(double));
+    *key1 = (unsigned int)g_random_int();
+    *key2 = *key1;
+    *value1 = (double)g_random_double();
+    *value2 = (double)g_random_double() + 1.0;
 
     dict = gnx_init_dict();
-    assert(gnx_dict_add(dict, &key1, &value1));
-    assert(key1 == key2);
-    assert(!gnx_dict_add(dict, &key2, &value2));
+    assert(gnx_dict_add(dict, key1, value1));
+    assert(*key1 == *key2);
+    assert(!gnx_dict_add(dict, key2, value2));
     assert(1 == dict->size);
 
+    free(key1);
+    free(key2);
+    free(value1);
+    free(value2);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    key1 = (unsigned int *)malloc(sizeof(unsigned int));
+    key2 = (unsigned int *)malloc(sizeof(unsigned int));
+    value1 = (double *)malloc(sizeof(double));
+    value2 = (double *)malloc(sizeof(double));
+    *key1 = (unsigned int)g_random_int();
+    *key2 = *key1;
+    *value1 = (double)g_random_double();
+    *value2 = (double)g_random_double() + 1.0;
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    assert(gnx_dict_add(dict, key1, value1));
+    assert(*key1 == *key2);
+    assert(!gnx_dict_add(dict, key2, value2));
+    assert(1 == dict->size);
+
+    free(key2);
+    free(value2);
     gnx_destroy_dict(dict);
 }
 
