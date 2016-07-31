@@ -416,7 +416,9 @@ gnx_destroy_dict(GnxDict *dict)
  * @return Nonzero if the key/value pair is successfully inserted into the
  *         dictionary; zero otherwise.  We also return zero if the key is
  *         already in the dictionary.  For an insertion to be successful, the
- *         given key must not already be in the dictionary.
+ *         given key must not already be in the dictionary.  If we are unable
+ *         to allocate memory, then we set @c errno to @c ENOMEM and return
+ *         zero.
  */
 int
 gnx_dict_add(GnxDict *dict,
