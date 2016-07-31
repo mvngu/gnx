@@ -746,7 +746,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
  * @brief Initializes a new dictionary.
  *
  * The dictionary is initialized with default settings.  In particular, the
- * dictionary will not release the memory of its keys and values.  It is your
+ * dictionary will not release the memory of its key/value pairs.  It is your
  * responsibility to ensure that the memory of the keys and values are released
  * as appropriate.
  *
