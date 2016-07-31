@@ -330,34 +330,42 @@ add_no_memory_resize_dict_delete_tail(void)
 static void
 add_one(void)
 {
-    double *v, value;
+    double *value;
     GnxDict *dict;
-    unsigned int *k, key;
+    unsigned int *key;
 
     /**********************************************************************
      * Do not release the memory of key and value.
      *********************************************************************/
 
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    value = (double *)malloc(sizeof(double));
+    *key = (unsigned int)g_random_int();
+    *value = (double)g_random_double();
+
     dict = gnx_init_dict();
     assert(0 == dict->size);
-    key = (unsigned int)g_random_int();
-    value = (double)g_random_double();
-    assert(gnx_dict_add(dict, &key, &value));
+    assert(gnx_dict_add(dict, key, value));
     assert(1 == dict->size);
+
+    free(key);
+    free(value);
     gnx_destroy_dict(dict);
 
     /**********************************************************************
      * Release the memory of key and value.
      *********************************************************************/
 
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    value = (double *)malloc(sizeof(double));
+    *key = (unsigned int)g_random_int();
+    *value = (double)g_random_double();
+
     dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
     assert(0 == dict->size);
-    k = (unsigned int *)malloc(sizeof(unsigned int));
-    *k = (unsigned int)g_random_int();
-    v = (double *)malloc(sizeof(double));
-    *v = (double)g_random_double();
-    assert(gnx_dict_add(dict, k, v));
+    assert(gnx_dict_add(dict, key, value));
     assert(1 == dict->size);
+
     gnx_destroy_dict(dict);
 }
 
