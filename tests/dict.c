@@ -1094,7 +1094,7 @@ new_no_memory(void)
 #ifdef GNX_ALLOC_TEST
     int alloc_size;
 
-    /* Cannot allocate memory for a hash table. */
+    /* Cannot allocate memory for a dictionary. */
     alloc_size = 0;
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_init_dict());
