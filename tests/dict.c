@@ -427,7 +427,7 @@ add_resize_bucket(void)
     dict->a = a;
     dict->c = c;
 
-    /* Insert elements to trigger a resize of bucket, but does not trigger a
+    /* Insert elements to trigger a resize of a bucket, but does not trigger a
      * resize of the dictionary.  With the given values for the a and c
      * parameters, the keys with values in the range [0, 4] all map to the same
      * bucket index of 0.  However, the key value of 5 maps to the bucket
