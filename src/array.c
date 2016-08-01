@@ -186,17 +186,19 @@ gnx_array_delete_tail(GnxArray *array)
 void
 gnx_destroy_array(GnxArray *array)
 {
+    int free_element;
     unsigned int i;
 
     if (!array)
         return;
     if (array->cell) {
-        if (GNX_FREE_ELEMENTS & array->free_elem) {
-            for (i = 0; i < array->size; i++) {
-                if (array->cell[i]) {
+        free_element = GNX_FREE_ELEMENTS & array->free_elem;
+        for (i = 0; i < array->size; i++) {
+            if (array->cell[i]) {
+                if (free_element)
                     free(array->cell[i]);
-                    array->cell[i] = NULL;
-                }
+
+                array->cell[i] = NULL;
             }
         }
         free(array->cell);
