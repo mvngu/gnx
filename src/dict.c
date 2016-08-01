@@ -21,6 +21,7 @@
 
 #include <glib.h>
 
+#include "array.h"
 #include "dict.h"
 #include "sanity.h"
 
@@ -70,7 +71,7 @@ typedef struct {
  * prototypes for internal helper functions
  *************************************************************************/
 
-static int gnx_i_append_node(GnxBucket *bucket,
+static int gnx_i_append_node(GnxArray *bucket,
                              unsigned int *key,
                              gnxptr value);
 static GnxNode* gnx_i_has(const GnxDict *dict,
@@ -101,42 +102,32 @@ static int gnx_i_resize_dict(GnxDict *dict);
  *         entry, then we set @c errno to @c ENOMEM and return zero.
  */
 static int
-gnx_i_append_node(GnxBucket *bucket,
+gnx_i_append_node(GnxArray *bucket,
                   unsigned int *key,
                   gnxptr value)
 {
     GnxNode *node;
-    gnxptr *new_node;
-    unsigned int new_capacity;
 
     errno = 0;
-
-    /* Possibly resize the bucket by doubling its current capacity. */
-    if (bucket->size >= bucket->capacity) {
-        new_capacity = bucket->capacity << 1;
-        g_assert(new_capacity <= GNX_MAXIMUM_ELEMENTS);
-        new_node
-            = (gnxptr *)realloc(bucket->node, new_capacity * sizeof(gnxptr));
-        if (!new_node)
-            goto cleanup;
-
-        bucket->node = new_node;
-        bucket->capacity = new_capacity;
-    }
-
-    /* Append the new entry to the bucket. */
     node = (GnxNode *)malloc(sizeof(GnxNode));
     if (!node)
         goto cleanup;
+
     node->key = key;
     node->value = value;
-    bucket->node[bucket->size] = node;
-    (bucket->size)++;
+    if (!gnx_array_append(bucket, node))
+        goto cleanup;
 
     return GNX_SUCCESS;
 
 cleanup:
     errno = ENOMEM;
+    if (node) {
+        node->key = NULL;
+        node->value = NULL;
+        free(node);
+        node = NULL;
+    }
     return GNX_FAILURE;
 }
 
@@ -160,7 +151,7 @@ gnx_i_has(const GnxDict *dict,
           unsigned int *i,
           unsigned int *j)
 {
-    GnxBucket *bucket;
+    GnxArray *bucket;
     GnxNode *node;
     unsigned int idx, jdx;
 
@@ -177,13 +168,13 @@ gnx_i_has(const GnxDict *dict,
     /* The bucket to which the key hashes is empty.  Therefore the given key
      * is not in the dictionary.
      */
-    bucket = (GnxBucket *)(dict->bucket[idx]);
+    bucket = (GnxArray *)(dict->bucket[idx]);
     if (!bucket)
         return NULL;
 
     /* Linear search through the entries of the bucket. */
     for (jdx = 0; jdx < bucket->size; jdx++) {
-        node = (GnxNode *)(bucket->node[jdx]);
+        node = (GnxNode *)(bucket->cell[jdx]);
         if (*key == *(node->key)) {
             if (j)
                 *j = jdx;
@@ -237,11 +228,11 @@ gnx_i_hash(const unsigned int *key,
 static int
 gnx_i_resize_dict(GnxDict *dict)
 {
-    GnxBucket *bucket, *new_bucket, *old_bucket;
+    GnxArray *bucket, *new_bucket, *old_bucket;
     GnxNode *node;
     gnxptr *new_bucket_array;
     unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
-    const unsigned int bucket_capacity = 2;
+    const unsigned int bucket_capacity = GNX_DICT_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     new_k = dict->k + 1;
@@ -269,45 +260,43 @@ gnx_i_resize_dict(GnxDict *dict)
     if (!new_bucket_array)
         goto cleanup;
 
-    /* Rehash each entry. */
+    /* First, we only rehash each entry.  Each entry is rehashed and moved to
+     * a new bucket.  If for any reason we are unable to rehash an entry, then
+     * the content of the old buckets would be remain unmodified.
+     */
     for (i = 0; i < dict->capacity; i++) {
-        old_bucket = (GnxBucket *)(dict->bucket[i]);
+        old_bucket = (GnxArray *)(dict->bucket[i]);
         if (!old_bucket)
             continue;
 
         /* Rehash each entry j of the old bucket i.  The entry is then moved
-         * to a new bucket.  Finally, we release the memory of the old bucket.
+         * to a new bucket.
          */
         for (j = 0; j < old_bucket->size; j++) {
-            node = (GnxNode *)(old_bucket->node[j]);
+            node = (GnxNode *)(old_bucket->cell[j]);
             idx = gnx_i_hash(node->key, &new_a, &new_c, &new_d);
             if (!(new_bucket_array[idx])) {
-                new_bucket = (GnxBucket *)malloc(sizeof(GnxBucket));
+                new_bucket
+                    = gnx_init_array_full(&bucket_capacity,
+                                          GNX_DONT_FREE_ELEMENTS);
                 if (!new_bucket)
                     goto cleanup;
 
-                new_bucket->node
-                    = (gnxptr *)malloc(sizeof(gnxptr) * bucket_capacity);
-                if (!new_bucket->node)
-                    goto cleanup;
-
-                new_bucket->size = 0;
-                new_bucket->capacity = bucket_capacity;
                 new_bucket_array[idx] = new_bucket;
             }
-            new_bucket = (GnxBucket *)(new_bucket_array[idx]);
-            if (!gnx_i_append_node(new_bucket, node->key, node->value))
+            new_bucket = (GnxArray *)(new_bucket_array[idx]);
+            if (!gnx_array_append(new_bucket, node))
                 goto cleanup;
-
-            node->key = NULL;
-            node->value = NULL;
-            free(node);
-            old_bucket->node[j] = NULL;
         }
-        free(old_bucket->node);
-        old_bucket->node = NULL;
-        free(old_bucket);
-        dict->bucket[i] = NULL;
+    }
+
+    /* We have successfully rehashed each entry.  Now free the memory of the
+     * old buckets.  Note that each bucket was configured to not release the
+     * memory of its elements.  So it is safe to destroy each bucket as below.
+     */
+    for (i = 0; i < dict->capacity; i++) {
+        old_bucket = (GnxArray *)(dict->bucket[i]);
+        gnx_destroy_array(old_bucket);
     }
     free(dict->bucket);
 
@@ -325,19 +314,11 @@ cleanup:
     errno = ENOMEM;
     if (new_bucket_array) {
         for (i = 0; i < new_capacity; i++) {
-            bucket = (GnxBucket *)(new_bucket_array[i]);
-            if (bucket) {
-                for (j = 0; j < bucket->size; j++) {
-                    node = (GnxNode *)(bucket->node[j]);
-                    node->key = NULL;
-                    node->value = NULL;
-                    free(node);
-                    bucket->node[j] = NULL;
-                }
-            }
-            new_bucket_array[i] = NULL;
+            bucket = (GnxArray *)(new_bucket_array[i]);
+            gnx_destroy_array(bucket);
         }
         free(new_bucket_array);
+        new_bucket_array = NULL;
     }
     return GNX_FAILURE;
 }
@@ -357,7 +338,7 @@ cleanup:
 void
 gnx_destroy_dict(GnxDict *dict)
 {
-    GnxBucket *bucket;
+    GnxArray *bucket;
     GnxNode *node;
     int free_key, free_value;
     unsigned int i, j;
@@ -369,25 +350,20 @@ gnx_destroy_dict(GnxDict *dict)
         free_value = GNX_FREE_VALUES & dict->free_value;
 
         for (i = 0; i < dict->capacity; i++) {
-            bucket = (GnxBucket *)(dict->bucket[i]);
+            bucket = (GnxArray *)(dict->bucket[i]);
             if (bucket) {
                 for (j = 0; j < bucket->size; j++) {
-                    node = (GnxNode *)(bucket->node[j]);
-                    if (free_key) {
+                    node = (GnxNode *)(bucket->cell[j]);
+                    if (free_key)
                         free(node->key);
-                        node->key = NULL;
-                    }
-                    if (free_value) {
+                    if (free_value)
                         free(node->value);
-                        node->value = NULL;
-                    }
+
+                    node->key = NULL;
+                    node->value = NULL;
                     free(node);
-                    bucket->node[j] = NULL;
                 }
-                free(bucket->node);
-                bucket->node = NULL;
-                free(bucket);
-                dict->bucket[i] = NULL;
+                gnx_destroy_array(bucket);
             }
         }
         free(dict->bucket);
@@ -425,11 +401,11 @@ gnx_dict_add(GnxDict *dict,
              unsigned int *key,
              gnxptr value)
 {
-    GnxBucket *bucket;           /* A bucket of entries. */
-    GnxNode *node;
+    GnxArray *bucket;            /* A bucket of entries. */
+    GnxNode *node;               /* An entry of a bucket. */
     int created_bucket = FALSE;  /* Whether a new bucket has been created. */
     unsigned int i, tail;
-    const unsigned int capacity = 2;
+    const unsigned int capacity = GNX_DICT_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     gnx_i_check_dict(dict);
@@ -444,23 +420,16 @@ gnx_dict_add(GnxDict *dict,
      * function gnx_destroy_dict().
      */
     if (!(dict->bucket[i])) {
-        bucket = (GnxBucket *)malloc(sizeof(GnxBucket));
+        bucket = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
         if (!bucket)
             goto cleanup;
 
-        bucket->size = 0;
-        bucket->capacity = capacity;
-        bucket->node = (gnxptr *)calloc(capacity, sizeof(gnxptr));
-        if (!bucket->node) {
-            free(bucket);
-            goto cleanup;
-        }
         dict->bucket[i] = bucket;
         created_bucket = TRUE;
     }
 
-    /* Append the new entry to the bucket with index i. */
-    if (!gnx_i_append_node((GnxBucket *)(dict->bucket[i]), key, value))
+    /* Append the new entry to the bucket that has index i. */
+    if (!gnx_i_append_node((GnxArray *)(dict->bucket[i]), key, value))
         goto cleanup;
 
     /* Possibly resize the dictionary by doubling the current number of
@@ -479,20 +448,24 @@ gnx_dict_add(GnxDict *dict,
      */
     if ((dict->size + 1) >= (3u << (dict->k - 2))) {
         if (!gnx_i_resize_dict(dict)) {
-            if (created_bucket)
-                goto cleanup;
-
             /* Remove the entry that was last added to the bucket.  In other
              * words, we remove the tail of the bucket.
              */
-            bucket = (GnxBucket *)(dict->bucket[i]);
-            g_assert(bucket->size > 1);
-            tail = bucket->size - 1;
-            node = (GnxNode *)(bucket->node[tail]);
+            bucket = (GnxArray *)(dict->bucket[i]);
+
+            if (created_bucket) {
+                g_assert(1 == bucket->size);
+                tail = 0;
+            } else {
+                g_assert(bucket->size > 1);
+                tail = bucket->size - 1;
+            }
+
+            node = (GnxNode *)(bucket->cell[tail]);
             node->key = NULL;
             node->value = NULL;
             free(node);
-            bucket->node[tail] = NULL;
+            bucket->cell[tail] = NULL;
             (bucket->size)--;
             goto cleanup;
         }
@@ -504,17 +477,9 @@ gnx_dict_add(GnxDict *dict,
 cleanup:
     errno = ENOMEM;
     if (created_bucket) {
-        bucket = (GnxBucket *)(dict->bucket[i]);
-        node = (GnxNode *)(bucket->node[0]);
-        if (node) {
-            node->key = NULL;
-            node->value = NULL;
-            free(node);
-            bucket->node[0] = NULL;
-            free(bucket->node);
-            bucket->node = NULL;
-        }
-        free(bucket);
+        bucket = (GnxArray *)(dict->bucket[i]);
+        g_assert(0 == bucket->size);
+        gnx_destroy_array(bucket);
         dict->bucket[i] = NULL;
     }
     return GNX_FAILURE;
