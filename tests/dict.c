@@ -876,7 +876,22 @@ has_empty(void)
     GnxDict *dict;
     const unsigned int key = (unsigned int)g_random_int();
 
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
+
     dict = gnx_init_dict();
+    assert(0 == dict->size);
+    assert(!gnx_dict_has(dict, &key));
+    assert(0 == dict->size);
+
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
     assert(0 == dict->size);
     assert(!gnx_dict_has(dict, &key));
     assert(0 == dict->size);
