@@ -15,6 +15,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>  /* memmove */
@@ -499,9 +500,9 @@ int
 gnx_dict_delete(GnxDict *dict,
                 const unsigned int *key)
 {
-    GnxBucket *bucket;
+    GnxArray *bucket;
     GnxNode *node;
-    unsigned int bsize, i, j, ncell;
+    unsigned int i, j;
 
     gnx_i_check_dict(dict);
     g_return_val_if_fail(key, GNX_FAILURE);
@@ -511,60 +512,25 @@ gnx_dict_delete(GnxDict *dict,
     if (!gnx_i_has(dict, key, &i, &j))
         return GNX_FAILURE;
 
-    /* Delete the entry with index j in bucket i. */
-    bucket = (GnxBucket *)(dict->bucket[i]);
-    node = (GnxNode *)(bucket->node[j]);
-    if (GNX_FREE_KEYS & dict->free_key) {
+    /* Delete the entry that has index j in bucket i. */
+    bucket = (GnxArray *)(dict->bucket[i]);
+    g_assert(bucket);
+    g_assert(bucket->size);
+    node = (GnxNode *)(bucket->cell[j]);
+    if (GNX_FREE_KEYS & dict->free_key)
         free(node->key);
-        node->key = NULL;
-    }
-    if (GNX_FREE_VALUES & dict->free_value) {
+    if (GNX_FREE_VALUES & dict->free_value)
         free(node->value);
-        node->value = NULL;
-    }
-
-    /* We have deleted the only entry in a bucket of size 1 or we have deleted
-     * the tail of the bucket.  In either of these cases, we do not need to
-     * reorganize bucket i.
-     */
-    bsize = bucket->size;
-    if (1 == bsize) {
-        g_assert(0 == j);
-        free(node);
-        bucket->node[j] = NULL;
-        free(bucket);
-        dict->bucket[i] = NULL;
-        (dict->size)--;
-        return GNX_SUCCESS;
-    }
-    if (j == (bsize - 1)) {
-        g_assert(bsize > 1);
-        free(node);
-        bucket->node[j] = NULL;
-        (bucket->size)--;
-        (dict->size)--;
-        return GNX_SUCCESS;
-    }
-
-    /* Now j indexes either the head of the bucket or an entry that is
-     * sandwiched between the first and last entries of the bucket.  In any
-     * case, the bucket is known to have at least two entries.  Let j be the
-     * index of the target entry.  Now all entries from index j upward must be
-     * shifted down by one position.  The number of positions to shift downward
-     * can be computed as the number of entries from index j + 1 to the index
-     * of the last entry (which is the size of the bucket minus one). Hence the
-     * formula:
-     *
-     * #position to shift down
-     * = (index of last entry) - (index of target entry)
-     */
-    g_assert(bsize > 1);
-    g_assert((0 == j) || (j < (bsize - 1)));
+    node->key = NULL;
+    node->value = NULL;
     free(node);
-    ncell = bsize - 1 - j;
-    (void)memmove(&(bucket->node[j]), &(bucket->node[j + 1]),
-                  sizeof(gnxptr) * ncell);
-    (bucket->size)--;
+    bucket->cell[j] = NULL;
+
+    /* Use the backend to shift all entries from index j upward down by one
+     * position.
+     */
+    g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+    assert(gnx_array_delete(bucket, &j));
     (dict->size)--;
 
     return GNX_SUCCESS;
