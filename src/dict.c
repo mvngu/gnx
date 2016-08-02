@@ -228,7 +228,7 @@ gnx_i_hash(const unsigned int *key,
 static int
 gnx_i_resize_dict(GnxDict *dict)
 {
-    GnxArray *bucket, *new_bucket, *old_bucket;
+    GnxArray *new_bucket, *old_bucket;
     GnxNode *node;
     gnxptr *new_bucket_array;
     unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
