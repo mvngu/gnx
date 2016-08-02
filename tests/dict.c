@@ -789,6 +789,7 @@ delete_one(void)
 
     assert(gnx_dict_has(dict, key));
     assert(gnx_dict_delete(dict, key));
+    assert(!gnx_dict_has(dict, key));
     assert(0 == dict->size);
 
     free(key);
@@ -809,6 +810,7 @@ delete_one(void)
 
     assert(gnx_dict_has(dict, key));
     assert(gnx_dict_delete(dict, key));
+    assert(!gnx_dict_has(dict, key));
     assert(0 == dict->size);
 
     gnx_destroy_dict(dict);
@@ -840,6 +842,7 @@ delete_random_dont_free_key_value(void)
     i = (unsigned int)g_random_int_range(0, (int)size);
     assert(gnx_dict_has(dict, &(key[i])));
     assert(gnx_dict_delete(dict, &(key[i])));
+    assert(!gnx_dict_has(dict, &(key[i])));
     assert((size - 1) == dict->size);
 
     free(key);
@@ -886,6 +889,7 @@ delete_random_free_key_value(void)
 
     assert(gnx_dict_has(dict, &target));
     assert(gnx_dict_delete(dict, &target));
+    assert(!gnx_dict_has(dict, &target));
     assert((size - 1) == dict->size);
 
     gnx_destroy_dict(dict);
