@@ -489,8 +489,9 @@ cleanup:
 /**
  * @brief Remove a key and its value from a dictionary.
  *
- * @param dict We want to remove from this dictionary.
- * @param key Remove this key from the given dictionary.
+ * @param dict We want to update this dictionary.
+ * @param key Remove this key (and its corresponding value) from the given
+ *        dictionary.
  * @return Nonzero if the deletion was successful; zero otherwise.  We also
  *         return zero if the dictionary is empty.
  */
