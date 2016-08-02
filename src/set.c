@@ -177,14 +177,14 @@ gnx_i_resize(GnxSet *set)
     if (!new_bucket_array)
         goto cleanup;
 
-    /* Rehash each entry. */
+    /* First, we rehash each entry and move the entry to a new bucket. */
     for (i = 0; i < set->capacity; i++) {
         old_bucket = (GnxArray *)(set->bucket[i]);
         if (!old_bucket)
             continue;
 
         /* Rehash each entry j of the old bucket i.  The entry is then moved
-         * to a new bucket.  Finally, we release the memory for the old bucket.
+         * to a new bucket.
          */
         for (j = 0; j < old_bucket->size; j++) {
             key = old_bucket->cell[j];
@@ -198,14 +198,28 @@ gnx_i_resize(GnxSet *set)
             }
             new_bucket = (GnxArray *)(new_bucket_array[idx]);
             assert(gnx_array_append(new_bucket, key));
-            old_bucket->cell[j] = NULL;
         }
+    }
+
+    /* Next, we destroy the old buckets. */
+    for (i = 0; i < set->capacity; i++) {
+        old_bucket = (GnxArray *)(set->bucket[i]);
+        if (!old_bucket)
+            continue;
+
+        /* Set each entry of the old bucket to NULL.  Note that we do not
+         * free the memory of each element, regardless of whether we originally
+         * configured the bucket to release the memory of its elements.
+         */
+        old_bucket->free_elem = GNX_DONT_FREE_ELEMENTS;
         gnx_destroy_array(old_bucket);
+
         set->bucket[i] = NULL;
+
     }
     free(set->bucket);
 
-    /* The new parameters of the set. */
+    /* Finally, we configure the new parameters of the set. */
     set->k = new_k;
     set->capacity = new_capacity;
     set->bucket = new_bucket_array;
@@ -219,10 +233,16 @@ cleanup:
     errno = ENOMEM;
     if (new_bucket_array) {
         for (i = 0; i < new_capacity; i++) {
-            gnx_destroy_array((GnxArray *)(new_bucket_array[i]));
+            new_bucket = (GnxArray *)(new_bucket_array[i]);
+            if (!new_bucket)
+                continue;
+
+            new_bucket->free_elem = GNX_DONT_FREE_ELEMENTS;
+            gnx_destroy_array(new_bucket);
             new_bucket_array[i] = NULL;
         }
         free(new_bucket_array);
+        new_bucket_array = NULL;
     }
     return GNX_FAILURE;
 }
