@@ -906,8 +906,12 @@ has_member(void)
 {
     double *value;
     GnxDict *dict;
-    unsigned int i, *key;
+    unsigned int i, *key, *list;
     const unsigned int size = (unsigned int)g_random_int_range(1, 21);
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
 
     key = (unsigned int *)malloc(sizeof(unsigned int) * size);
     value = (double *)malloc(sizeof(double) * size);
@@ -927,6 +931,32 @@ has_member(void)
 
     free(key);
     free(value);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    list = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+
+    for (i = 0; i < size; i++) {
+        key = (unsigned int *)malloc(sizeof(unsigned int));
+        value = (double *)malloc(sizeof(double));
+
+        list[i] = i;
+        *key = i;
+        *value = (double)g_random_double();
+        assert(gnx_dict_add(dict, key, value));
+    }
+    assert(size == dict->size);
+
+    for (i = 0; i < size; i++)
+        assert(gnx_dict_has(dict, &(list[i])));
+
+    assert(size == dict->size);
+
+    free(list);
     gnx_destroy_dict(dict);
 }
 
