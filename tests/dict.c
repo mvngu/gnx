@@ -606,6 +606,7 @@ delete_bucket_inbetween(void)
      */
     i = (unsigned int)g_random_int_range(0, (int)size);
     target = list[i];
+    assert(gnx_dict_has(dict, &target));
     assert(gnx_dict_delete(dict, &target));
     assert(!gnx_dict_has(dict, &target));
     assert((n - 1) == dict->size);
@@ -671,7 +672,9 @@ delete_bucket_tail(void)
      * with key 78 is the tail of the bucket.
      */
     target = 78;
+    assert(gnx_dict_has(dict, &target));
     assert(gnx_dict_delete(dict, &target));
+    assert(!gnx_dict_has(dict, &target));
     assert((n - 1) == dict->size);
 
     gnx_destroy_dict(dict);
@@ -688,14 +691,18 @@ delete_empty(void)
     /* The dictionary was configured to not release memory of key and value. */
     dict = gnx_init_dict();
     assert(0 == dict->size);
+    assert(!gnx_dict_has(dict, &key));
     assert(!gnx_dict_delete(dict, &key));
+    assert(!gnx_dict_has(dict, &key));
     assert(0 == dict->size);
     gnx_destroy_dict(dict);
 
     /* The dictionary was configured to release memory of key and value. */
     dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
     assert(0 == dict->size);
+    assert(!gnx_dict_has(dict, &key));
     assert(!gnx_dict_delete(dict, &key));
+    assert(!gnx_dict_has(dict, &key));
     assert(0 == dict->size);
     gnx_destroy_dict(dict);
 }
