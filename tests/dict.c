@@ -288,7 +288,6 @@ add_no_memory_resize_bucket(void)
     unsigned int i, *key;
     const unsigned int a = 5047397;   /* The a parameter. */
     const unsigned int c = 11657812;  /* The c parameter. */
-    const unsigned int n = 6;         /* How many elements to insert. */
 
     /* Initialize the dictionary to have a pair of pre-determined values for
      * its a and c parameters.
