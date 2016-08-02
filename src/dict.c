@@ -262,7 +262,7 @@ gnx_i_resize_dict(GnxDict *dict)
 
     /* First, we only rehash each entry.  Each entry is rehashed and moved to
      * a new bucket.  If for any reason we are unable to rehash an entry, then
-     * the content of the old buckets would be remain unmodified.
+     * the content of the old buckets would remain unmodified.
      */
     for (i = 0; i < dict->capacity; i++) {
         old_bucket = (GnxArray *)(dict->bucket[i]);
