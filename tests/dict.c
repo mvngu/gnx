@@ -457,14 +457,62 @@ add_resize(void)
 {
     double *value;
     GnxDict *dict;
-    unsigned int i, *key;
+    int unique;
+    unsigned int i, j, k, *key;
+    const unsigned int size = GNX_DEFAULT_ALLOC_SIZE;
+
+    /**********************************************************************
+     * Do not release the memory of elements.
+     *********************************************************************/
+
+    key = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    value = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+    assert(0 == dict->size);
+    assert(size == dict->capacity);
+
+    /* Add a bunch of elements to trigger a resize of the dictionary. */
+    for (i = 0; i < size; i++) {
+        /* Generate a unique key. */
+        unique = FALSE;
+        while (!unique) {
+            k = (unsigned int)g_random_int();
+            for (j = 0; j < i; j++) {
+                if (k == key[j])
+                    break;
+            }
+            if (i == j)
+                unique = TRUE;
+        }
+        key[i] = k;
+
+        value[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(key[i]), &(value[i])));
+    }
+
+    /* The dictionary has been resized because the capacity has doubled. */
+    assert(size == dict->size);
+    assert((size << 1) == dict->capacity);
+    assert(GNX_DEFAULT_EXPONENT + 1 == dict->k);
+    assert(dict->b - dict->k == dict->d);
+    assert(dict->a <= UINT_MAX);
+    assert(1 == dict->a % 2);
+    assert(dict->c <= (1u << dict->d));
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release the memory of elements.
+     *********************************************************************/
 
     dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
     assert(0 == dict->size);
-    assert(GNX_DEFAULT_ALLOC_SIZE == dict->capacity);
+    assert(size == dict->capacity);
 
     /* Add a bunch of elements to trigger a resize of the dictionary. */
-    for (i = 0; i < GNX_DEFAULT_ALLOC_SIZE; i++) {
+    for (i = 0; i < size; i++) {
         key = (unsigned int *)malloc(sizeof(unsigned int));
         *key = i;
         value = (double *)malloc(sizeof(double));
@@ -473,8 +521,8 @@ add_resize(void)
     }
 
     /* The dictionary has been resized because the capacity has doubled. */
-    assert(GNX_DEFAULT_ALLOC_SIZE == dict->size);
-    assert((GNX_DEFAULT_ALLOC_SIZE << 1) == dict->capacity);
+    assert(size == dict->size);
+    assert((size << 1) == dict->capacity);
     assert(GNX_DEFAULT_EXPONENT + 1 == dict->k);
     assert(dict->b - dict->k == dict->d);
     assert(dict->a <= UINT_MAX);
