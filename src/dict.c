@@ -361,22 +361,23 @@ gnx_destroy_dict(GnxDict *dict)
 
         for (i = 0; i < dict->capacity; i++) {
             bucket = (GnxArray *)(dict->bucket[i]);
-            if (bucket) {
-                for (j = 0; j < bucket->size; j++) {
-                    node = (GnxNode *)(bucket->cell[j]);
-                    if (free_key)
-                        free(node->key);
-                    if (free_value)
-                        free(node->value);
+            if (!bucket)
+                continue;
 
-                    node->key = NULL;
-                    node->value = NULL;
-                    free(node);
-                }
-                g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
-                gnx_destroy_array(bucket);
-                dict->bucket[i] = NULL;
+            for (j = 0; j < bucket->size; j++) {
+                node = (GnxNode *)(bucket->cell[j]);
+                if (free_key)
+                    free(node->key);
+                if (free_value)
+                    free(node->value);
+
+                node->key = NULL;
+                node->value = NULL;
+                free(node);
             }
+            g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+            gnx_destroy_array(bucket);
+            dict->bucket[i] = NULL;
         }
         free(dict->bucket);
         dict->bucket = NULL;
