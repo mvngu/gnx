@@ -290,9 +290,10 @@ gnx_i_resize_dict(GnxDict *dict)
         }
     }
 
-    /* We have successfully rehashed each entry.  Now free the memory of the
-     * old buckets.  Note that each bucket was configured to not release the
-     * memory of its elements.  So it is safe to destroy each bucket as below.
+    /* Next, we destroy the old buckets.  We have successfully rehashed each
+     * entry.  Now free the memory of the old buckets.  Note that each bucket
+     * was configured to not release the memory of its elements.  So it is safe
+     * to destroy each bucket as below.
      */
     for (i = 0; i < dict->capacity; i++) {
         old_bucket = (GnxArray *)(dict->bucket[i]);
@@ -305,7 +306,7 @@ gnx_i_resize_dict(GnxDict *dict)
     }
     free(dict->bucket);
 
-    /* Set the new parameters of the dictionary. */
+    /* Finally, we configure the new parameters of the dictionary. */
     dict->k = new_k;
     dict->capacity = new_capacity;
     dict->bucket = new_bucket_array;
