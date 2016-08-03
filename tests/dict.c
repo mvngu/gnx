@@ -1224,12 +1224,15 @@ iter_one(void)
 static void
 iter_random(void)
 {
-    double *listv, value;
+    double *listv, *v, value;
     GnxDict *dict;
     GnxDictIter iter;
-    int unique;
-    unsigned int i, j, k, *listk;
+    unsigned int i, *k, key, *listk;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
+
+    /**********************************************************************
+     * Do not release the memory of elements.
+     *********************************************************************/
 
     listk = (unsigned int *)malloc(sizeof(unsigned int) * size);
     listv = (double *)malloc(sizeof(double) * size);
@@ -1244,18 +1247,11 @@ iter_random(void)
      * that the load factor is kept below the threshold of 3/4.
      */
     for (i = 0; i < size; i++) {
-        unique = FALSE;
         do {
-            k = (unsigned int)g_random_int();
-            for (j = 0; j < i; j++) {
-                if (k == listk[j])
-                    break;
-            }
-            if (j >= i)
-                unique = TRUE;
-        } while (!unique);
+            key = (unsigned int)g_random_int();
+        } while (gnx_dict_has(dict, &key));
 
-        listk[i] = k;
+        listk[i] = key;
         listv[i] = (double)g_random_double();
         assert(gnx_dict_add(dict, &(listk[i]), &(listv[i])));
     }
@@ -1265,9 +1261,57 @@ iter_random(void)
      * the elements of the list.
      */
     gnx_dict_iter_init(&iter, dict);
-    while (gnx_dict_iter_next(&iter, &k, &value)) {
+    while (gnx_dict_iter_next(&iter, &key, &value)) {
         for (i = 0; i < size; i++) {
-            if (k == listk[i])
+            if (key == listk[i])
+                break;
+        }
+        assert(i < size);
+    }
+
+    free(listk);
+    free(listv);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release the memory of elements.
+     *********************************************************************/
+
+    listk = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    listv = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+
+    /* Generate a bunch of unique random integers.  The size of the list is
+     * chosen such that we do not trigger a resize of the dictionary.  Here we
+     * assume that a resize of the dictionary will not be triggered provided
+     * that the number of elements inserted into the dictionary is kept below
+     * 3 * 2^(k-2), where k is the exponent that is used to compute the number
+     * of buckets.  In other words, a resize will not be triggered provided
+     * that the load factor is kept below the threshold of 3/4.
+     */
+    for (i = 0; i < size; i++) {
+        k = (unsigned int *)malloc(sizeof(unsigned int));
+        v = (double *)malloc(sizeof(double));
+
+        do {
+            key = (unsigned int)g_random_int();
+        } while (gnx_dict_has(dict, &key));
+
+        *k = key;
+        listk[i] = *k;
+        *v = (double)g_random_double();
+        listv[i] = *v;
+        assert(gnx_dict_add(dict, k, v));
+    }
+    assert(size == dict->size);
+
+    /* Check that all the elements that were inserted into the dictionary are
+     * the elements of the list.
+     */
+    gnx_dict_iter_init(&iter, dict);
+    while (gnx_dict_iter_next(&iter, &key, &value)) {
+        for (i = 0; i < size; i++) {
+            if (key == listk[i])
                 break;
         }
         assert(i < size);
