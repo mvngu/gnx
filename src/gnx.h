@@ -27,6 +27,7 @@
 #include "queue.h"
 #include "set.h"
 #include "stack.h"
+#include "type.h"
 #include "util.h"
 /* GNX_HOOK:ALLOC_H */
 
