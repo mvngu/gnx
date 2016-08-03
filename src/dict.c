@@ -295,7 +295,12 @@ gnx_i_resize_dict(GnxDict *dict)
      * memory of its elements.  So it is safe to destroy each bucket as below.
      */
     for (i = 0; i < dict->capacity; i++) {
-        gnx_destroy_array((GnxArray *)(dict->bucket[i]));
+        old_bucket = (GnxArray *)(dict->bucket[i]);
+        if (!old_bucket)
+            continue;
+
+        g_assert(GNX_DONT_FREE_ELEMENTS & old_bucket->free_elem);
+        gnx_destroy_array(old_bucket);
         dict->bucket[i] = NULL;
     }
     free(dict->bucket);
@@ -314,7 +319,12 @@ cleanup:
     errno = ENOMEM;
     if (new_bucket_array) {
         for (i = 0; i < new_capacity; i++) {
-            gnx_destroy_array((GnxArray *)(new_bucket_array[i]));
+            new_bucket = (GnxArray *)(new_bucket_array[i]);
+            if (!new_bucket)
+                continue;
+
+            g_assert(GNX_DONT_FREE_ELEMENTS & new_bucket->free_elem);
+            gnx_destroy_array(new_bucket);
             new_bucket_array[i] = NULL;
         }
         free(new_bucket_array);
@@ -363,6 +373,7 @@ gnx_destroy_dict(GnxDict *dict)
                     node->value = NULL;
                     free(node);
                 }
+                g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
                 gnx_destroy_array(bucket);
                 dict->bucket[i] = NULL;
             }
