@@ -1323,9 +1323,9 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/dict/add", add);
-    /* g_test_add_func("/dict/delete", delete); */
-    /* g_test_add_func("/dict/has", has); */
-    /* g_test_add_func("/dict/iter", iter); */
+    g_test_add_func("/dict/delete", delete);
+    g_test_add_func("/dict/has", has);
+    g_test_add_func("/dict/iter", iter);
     g_test_add_func("/dict/new", new);
 
     return g_test_run();
