@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <string.h>  /* memmove */
 
 #include <glib.h>
 
