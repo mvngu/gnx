@@ -1141,7 +1141,23 @@ iter_empty(void)
     GnxDict *dict;
     GnxDictIter iter;
 
+    /**********************************************************************
+     * Do not release the memory of elements.
+     *********************************************************************/
+
     dict = gnx_init_dict();
+    assert(0 == dict->size);
+
+    gnx_dict_iter_init(&iter, dict);
+    assert(!gnx_dict_iter_next(&iter, NULL, NULL));
+
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release the memory of elements.
+     *********************************************************************/
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
     assert(0 == dict->size);
 
     gnx_dict_iter_init(&iter, dict);
