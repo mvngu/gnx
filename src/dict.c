@@ -218,7 +218,7 @@ gnx_i_resize_dict(GnxDict *dict)
     GnxNode *node;
     gnxptr *new_bucket_array;
     unsigned int i, idx, j, new_a, new_c, new_d, new_k, new_capacity;
-    const unsigned int bucket_capacity = GNX_DICT_DEFAULT_BUCKET_SIZE;
+    const unsigned int bucket_capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     new_k = dict->k + 1;
@@ -405,7 +405,7 @@ gnx_dict_add(GnxDict *dict,
     GnxNode *node;               /* An entry of a bucket. */
     int created_bucket = FALSE;  /* Whether a new bucket has been created. */
     unsigned int i, tail;
-    const unsigned int capacity = GNX_DICT_DEFAULT_BUCKET_SIZE;
+    const unsigned int capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     gnx_i_check_dict(dict);

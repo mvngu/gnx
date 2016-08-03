@@ -301,14 +301,14 @@ add_no_memory_resize_bucket(void)
      * values in the range [0, 4] all map to the same bucket index of 0.
      * However, the key value of 5 maps to the bucket index of 1.
      */
-    for (i = 0; i < GNX_DICT_DEFAULT_BUCKET_SIZE; i++) {
+    for (i = 0; i < GNX_DEFAULT_BUCKET_SIZE; i++) {
         key = (unsigned int *)malloc(sizeof(unsigned int));
         *key = i;
         value = (double *)malloc(sizeof(double));
         *value = (double)g_random_double();
         assert(gnx_dict_add(dict, key, value));
     }
-    assert(GNX_DICT_DEFAULT_BUCKET_SIZE == dict->size);
+    assert(GNX_DEFAULT_BUCKET_SIZE == dict->size);
 
     /* Another element to trigger a resize of a bucket. */
     key = (unsigned int *)malloc(sizeof(unsigned int));
@@ -321,7 +321,7 @@ add_no_memory_resize_bucket(void)
     gnx_alloc_set_limit(alloc_size);
     assert(!gnx_dict_add(dict, key, value));
     assert(ENOMEM == errno);
-    assert(GNX_DICT_DEFAULT_BUCKET_SIZE == dict->size);
+    assert(GNX_DEFAULT_BUCKET_SIZE == dict->size);
 
     free(key);
     free(value);

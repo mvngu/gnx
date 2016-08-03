@@ -45,10 +45,10 @@
                                   * allocation size must be a power of 2.
                                   */
 
-#define GNX_DICT_DEFAULT_BUCKET_SIZE                                       \
+#define GNX_DEFAULT_BUCKET_SIZE                                            \
     (2)                          /**< @hideinitializer
-                                  * By default, each bucket of a dictionary
-                                  * can hold this many entries.  As more
+                                  * By default, each bucket of a dictionary or
+                                  * set can hold this many entries.  As more
                                   * entries are added to a bucket, the bucket
                                   * would need to resize.  The default
                                   * capacity of a bucket must be a power of 2.
