@@ -1072,11 +1072,46 @@ iter(void)
 static void
 iter_count(void)
 {
-    double *value;
+    double *listv, *value;
     GnxDict *dict;
     GnxDictIter iter;
-    unsigned int i, *key;
+    unsigned int i, k, *key, *listk;
     const unsigned int size = (unsigned int)g_random_int_range(2, 51);
+
+    /**********************************************************************
+     * Do not release the memory of elements.
+     *********************************************************************/
+
+    listk = (unsigned int *)malloc(sizeof(unsigned int) * size);
+    listv = (double *)malloc(sizeof(double) * size);
+    dict = gnx_init_dict();
+
+    for (i = 0; i < size; i++) {
+        /* Generate a unique key. */
+        do {
+            k = (unsigned int)g_random_int();
+        } while (gnx_dict_has(dict, &k));
+
+        listk[i] = k;
+        listv[i] = (double)g_random_double();
+        assert(gnx_dict_add(dict, &(listk[i]), &(listv[i])));
+    }
+    assert(size == dict->size);
+
+    gnx_dict_iter_init(&iter, dict);
+    i = 0;
+    while (gnx_dict_iter_next(&iter, NULL, NULL))
+        i++;
+
+    assert(i == dict->size);
+
+    free(listk);
+    free(listv);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release the memory of elements.
+     *********************************************************************/
 
     dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
 
