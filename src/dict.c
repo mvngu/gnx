@@ -466,7 +466,6 @@ gnx_dict_add(GnxDict *dict,
              * words, we remove the tail of the bucket.
              */
             bucket = (GnxArray *)(dict->bucket[i]);
-
             if (created_bucket) {
                 g_assert(1 == bucket->size);
                 tail = 0;
@@ -479,8 +478,8 @@ gnx_dict_add(GnxDict *dict,
             node->key = NULL;
             node->value = NULL;
             free(node);
-            bucket->cell[tail] = NULL;
-            (bucket->size)--;
+            g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+            assert(gnx_array_delete_tail(bucket));
             goto cleanup;
         }
     }
