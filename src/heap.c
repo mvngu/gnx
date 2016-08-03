@@ -116,9 +116,6 @@ gnx_i_node_key(const GnxHeap *heap,
  * @param heap A minimum binary heap.
  * @param v We want to update the index of this node.
  * @param i The new index of the node.
- * @return Nonzero if we successfully updated the index of the node; zero
- *         otherwise.  If we are unable to allocate memory while performing the
- *         update, then @c errno is set to @c ENOMEM and we return zero.
  */
 static inline void
 gnx_i_update_node_index(GnxHeap *heap,
