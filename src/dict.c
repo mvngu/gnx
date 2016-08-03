@@ -528,6 +528,10 @@ gnx_dict_delete(GnxDict *dict,
      */
     g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
     assert(gnx_array_delete(bucket, &j));
+    if (!bucket->size) {
+        gnx_destroy_array(bucket);
+        dict->bucket[i] = NULL;
+    }
     (dict->size)--;
 
     return GNX_SUCCESS;
