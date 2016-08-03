@@ -1171,19 +1171,49 @@ iter_empty(void)
 static void
 iter_one(void)
 {
-    double v = (double)g_random_double();
+    double *value;
     GnxDict *dict;
     GnxDictIter iter;
-    unsigned int k = (unsigned int)g_random_int();
-    unsigned int key;
+    unsigned int k, *key;
+
+    /**********************************************************************
+     * Do not release the memory of elements.
+     *********************************************************************/
+
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    *key = (unsigned int)g_random_int();
+    value = (double *)malloc(sizeof(double));
+    *value = (double)g_random_double();
 
     dict = gnx_init_dict();
-    assert(gnx_dict_add(dict, &k, &v));
+    assert(gnx_dict_add(dict, key, value));
     assert(1 == dict->size);
 
     gnx_dict_iter_init(&iter, dict);
-    assert(gnx_dict_iter_next(&iter, &key, NULL));
-    assert(key == k);
+    assert(gnx_dict_iter_next(&iter, &k, NULL));
+    assert(*key == k);
+    assert(!gnx_dict_iter_next(&iter, NULL, NULL));
+
+    free(key);
+    free(value);
+    gnx_destroy_dict(dict);
+
+    /**********************************************************************
+     * Release the memory of elements.
+     *********************************************************************/
+
+    key = (unsigned int *)malloc(sizeof(unsigned int));
+    *key = (unsigned int)g_random_int();
+    value = (double *)malloc(sizeof(double));
+    *value = (double)g_random_double();
+
+    dict = gnx_init_dict_full(GNX_FREE_KEYS, GNX_FREE_VALUES);
+    assert(gnx_dict_add(dict, key, value));
+    assert(1 == dict->size);
+
+    gnx_dict_iter_init(&iter, dict);
+    assert(gnx_dict_iter_next(&iter, &k, NULL));
+    assert(*key == k);
     assert(!gnx_dict_iter_next(&iter, NULL, NULL));
 
     gnx_destroy_dict(dict);
