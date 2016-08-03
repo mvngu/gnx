@@ -53,20 +53,6 @@ typedef struct {
 } GnxNode;
 /* @endcond */
 
-/* @cond */
-/* A bucket of entries.  In effect we say that a bucket is an array of nodes.
- */
-typedef struct {
-    unsigned int size;      /* How many nodes are in the bucket. */
-    unsigned int capacity;  /* The maximum possible number of entries in a
-                             * bucket.  When the bucket reaches capacity, we
-                             * must first resize the bucket before inserting
-                             * a new node.
-                             */
-    gnxptr *node;           /* The array of nodes. */
-} GnxBucket;
-/* @endcond */
-
 /**************************************************************************
  * prototypes for internal helper functions
  *************************************************************************/
