@@ -613,7 +613,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
                    unsigned int *key,
                    double *value)
 {
-    GnxBucket *bucket;
+    GnxArray *bucket;
     GnxNode *node;
     unsigned int i;
 
@@ -632,18 +632,18 @@ gnx_dict_iter_next(GnxDictIter *iter,
         i = UINT_MAX;
         do {
             i++;
-            bucket = (GnxBucket *)(iter->dict->bucket[i]);
+            bucket = (GnxArray *)(iter->dict->bucket[i]);
         } while (!bucket);
         iter->i = i;
 
         /* The first entry within the first non-empty bucket. */
         g_assert(bucket->size);
         iter->j = 0;
-        node = (GnxNode *)(bucket->node[iter->j]);
+        node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *((double *)(node->value));
+            *value = *(node->value);
 
         iter->bootstrap = FALSE;
         return GNX_SUCCESS;
@@ -653,13 +653,13 @@ gnx_dict_iter_next(GnxDictIter *iter,
      * Start from the current element and iterate to the next element of the
      * dictionary.
      */
-    bucket = (GnxBucket *)(iter->dict->bucket[iter->i]);
+    bucket = (GnxArray *)(iter->dict->bucket[iter->i]);
     for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
-        node = (GnxNode *)(bucket->node[iter->j]);
+        node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *((double *)(node->value));
+            *value = *(node->value);
         return GNX_SUCCESS;
     }
 
@@ -668,7 +668,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
      */
     (iter->i)++;
     while (iter->i < (iter->dict->capacity)) {
-        bucket = (GnxBucket *)(iter->dict->bucket[iter->i]);
+        bucket = (GnxArray *)(iter->dict->bucket[iter->i]);
         if (!bucket) {
             (iter->i)++;
             continue;
@@ -676,11 +676,11 @@ gnx_dict_iter_next(GnxDictIter *iter,
 
         g_assert(bucket->size);
         iter->j = 0;
-        node = (GnxNode *)(bucket->node[iter->j]);
+        node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *((double *)(node->value));
+            *value = *(node->value);
         return GNX_SUCCESS;
     }
 
