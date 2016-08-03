@@ -50,7 +50,7 @@
  */
 typedef struct {
     unsigned int *key;  /* The key of a bucket entry. */
-    gnxptr value;       /* The value of a bucket entry. */
+    double *value;      /* The value of a bucket entry. */
 } GnxNode;
 /* @endcond */
 
@@ -74,7 +74,7 @@ typedef struct {
 
 static int gnx_i_append_node(GnxArray *bucket,
                              unsigned int *key,
-                             gnxptr value);
+                             double *value);
 static GnxNode* gnx_i_has(const GnxDict *dict,
                           const unsigned int *key,
                           unsigned int *i,
@@ -105,7 +105,7 @@ static int gnx_i_resize_dict(GnxDict *dict);
 static int
 gnx_i_append_node(GnxArray *bucket,
                   unsigned int *key,
-                  gnxptr value)
+                  double *value)
 {
     GnxNode *node;
 
@@ -401,7 +401,7 @@ gnx_destroy_dict(GnxDict *dict)
 int
 gnx_dict_add(GnxDict *dict,
              unsigned int *key,
-             gnxptr value)
+             double *value)
 {
     GnxArray *bucket;            /* A bucket of entries. */
     GnxNode *node;               /* An entry of a bucket. */
@@ -545,7 +545,7 @@ gnx_dict_delete(GnxDict *dict,
  *         value that is associated with the key.  Otherwise we return @c NULL.
  *         We also return @c NULL if the dictionary is empty.
  */
-gnxptr
+double*
 gnx_dict_has(const GnxDict *dict,
              const unsigned int *key)
 {

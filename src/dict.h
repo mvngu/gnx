@@ -33,13 +33,13 @@ GnxDict* gnx_init_dict_full(const GnxBool free_key,
 /* add and remove */
 int gnx_dict_add(GnxDict *dict,
                  unsigned int *key,
-                 gnxptr value);
+                 double *value);
 int gnx_dict_delete(GnxDict *dict,
                     const unsigned int *key);
 
 /* query */
-gnxptr gnx_dict_has(const GnxDict *dict,
-                    const unsigned int *key);
+double* gnx_dict_has(const GnxDict *dict,
+                     const unsigned int *key);
 
 /* iterator */
 void gnx_dict_iter_init(GnxDictIter *iter,
