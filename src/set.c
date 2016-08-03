@@ -149,7 +149,7 @@ gnx_i_resize(GnxSet *set)
     GnxArray *new_bucket, *old_bucket;
     gnxptr *new_bucket_array;
     unsigned int i, idx, j, *key, new_a, new_c, new_d, new_k, new_capacity;
-    const unsigned int bucket_capacity = 2;
+    const unsigned int bucket_capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     new_k = set->k + 1;
@@ -392,7 +392,7 @@ gnx_set_add(GnxSet *set,
     GnxArray *bucket;
     int created_bucket = FALSE;  /* Whether a new bucket has been created. */
     unsigned int i;
-    const unsigned int capacity = 2;
+    const unsigned int capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
     gnx_i_check_set(set);
