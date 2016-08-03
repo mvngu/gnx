@@ -49,7 +49,7 @@
  */
 typedef struct {
     unsigned int *key;  /* The key of a bucket entry. */
-    double *value;      /* The value of a bucket entry. */
+    gnxptr value;       /* The value of a bucket entry. */
 } GnxNode;
 /* @endcond */
 
@@ -59,7 +59,7 @@ typedef struct {
 
 static int gnx_i_append_node(GnxArray *bucket,
                              unsigned int *key,
-                             double *value);
+                             gnxptr value);
 static GnxNode* gnx_i_has(const GnxDict *dict,
                           const unsigned int *key,
                           unsigned int *i,
@@ -90,7 +90,7 @@ static int gnx_i_resize_dict(GnxDict *dict);
 static int
 gnx_i_append_node(GnxArray *bucket,
                   unsigned int *key,
-                  double *value)
+                  gnxptr value)
 {
     GnxNode *node;
 
@@ -399,7 +399,7 @@ gnx_destroy_dict(GnxDict *dict)
 int
 gnx_dict_add(GnxDict *dict,
              unsigned int *key,
-             double *value)
+             gnxptr value)
 {
     GnxArray *bucket;            /* A bucket of entries. */
     GnxNode *node;               /* An entry of a bucket. */
@@ -546,7 +546,7 @@ gnx_dict_delete(GnxDict *dict,
  *         value that is associated with the key.  Otherwise we return @c NULL.
  *         We also return @c NULL if the dictionary is empty.
  */
-double*
+gnxptr
 gnx_dict_has(const GnxDict *dict,
              const unsigned int *key)
 {
@@ -601,7 +601,7 @@ gnx_dict_iter_init(GnxDictIter *iter,
 int
 gnx_dict_iter_next(GnxDictIter *iter,
                    unsigned int *key,
-                   double *value)
+                   gnxptr *value)
 {
     GnxArray *bucket;
     GnxNode *node;
@@ -633,7 +633,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *(node->value);
+            *value = node->value;
 
         iter->bootstrap = FALSE;
         return GNX_SUCCESS;
@@ -649,7 +649,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *(node->value);
+            *value = node->value;
         return GNX_SUCCESS;
     }
 
@@ -670,7 +670,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
         if (key)
             *key = *(node->key);
         if (value)
-            *value = *(node->value);
+            *value = node->value;
         return GNX_SUCCESS;
     }
 

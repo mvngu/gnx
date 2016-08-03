@@ -1224,9 +1224,10 @@ iter_one(void)
 static void
 iter_random(void)
 {
-    double *listv, *v, value;
+    double *listv, *v;
     GnxDict *dict;
     GnxDictIter iter;
+    gnxptr value;
     unsigned int i, *k, key, *listk;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
@@ -1263,8 +1264,10 @@ iter_random(void)
     gnx_dict_iter_init(&iter, dict);
     while (gnx_dict_iter_next(&iter, &key, &value)) {
         for (i = 0; i < size; i++) {
-            if (key == listk[i])
+            if (key == listk[i]) {
+                assert(gnx_double_cmp_eq(&(listv[i]), (double *)value));
                 break;
+            }
         }
         assert(i < size);
     }
@@ -1311,8 +1314,10 @@ iter_random(void)
     gnx_dict_iter_init(&iter, dict);
     while (gnx_dict_iter_next(&iter, &key, &value)) {
         for (i = 0; i < size; i++) {
-            if (key == listk[i])
+            if (key == listk[i]) {
+                assert(gnx_double_cmp_eq(&(listv[i]), (double *)value));
                 break;
+            }
         }
         assert(i < size);
     }
