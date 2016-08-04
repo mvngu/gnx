@@ -143,6 +143,8 @@ static int gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
                                          unsigned int *v);
 static int gnx_i_maybe_allocate_node(GnxGraph *graph,
                                      const unsigned int *v);
+static inline int gnx_i_next_directed_edge(GnxEdgeIter *iter,
+                                           unsigned int *w);
 static void gnx_i_next_undirected_edge(GnxEdgeIter *iter,
                                        int *has_head,
                                        unsigned int *w);
@@ -690,7 +692,6 @@ gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
                               unsigned int *v)
 {
     GnxNodeDirected *node;
-    int retval;
     unsigned int i, w;
 
     /* Are we bootstrapping the process? */
@@ -719,11 +720,8 @@ gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
         else
             gnx_set_iter_init(&(iter->set), (GnxSet *)(node->outneighbor));
 
-        /* Retrieve a directed edge. */
-        if (iter->weighted)
-            assert(gnx_dict_iter_next(&(iter->dict), &w, NULL));
-        else
-            assert(gnx_set_iter_next(&(iter->set), &w));
+        assert(gnx_i_next_directed_edge(iter, &w));
+
         if (u)
             *u = iter->i;
         if (v)
@@ -732,16 +730,8 @@ gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
         return GNX_SUCCESS;
     }
 
-    /* We have iterated over a directed edge of the graph.  Now step to the
-     * next directed edge.
-     */
-    if (iter->weighted)
-        retval = gnx_dict_iter_next(&(iter->dict), &w, NULL);
-    else
-        retval = gnx_set_iter_next(&(iter->set), &w);
-
     /* We have successfully retrieved another directed edge. */
-    if (retval) {
+    if (gnx_i_next_directed_edge(iter, &w)) {
         if (u)
             *u = iter->i;
         if (v)
@@ -753,7 +743,6 @@ gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
     /* We have exhausted all out-neighbors of node i.  Find the next node that
      * has at least one out-neighbor.
      */
-    g_assert(!retval);
     (iter->i)++;
     for (i = iter->i; i < iter->graph->capacity; i++) {
         if (iter->graph->graph[i]) {
@@ -774,11 +763,8 @@ gnx_i_directed_edge_iter_next(GnxEdgeIter *iter,
         else
             gnx_set_iter_init(&(iter->set), (GnxSet *)(node->outneighbor));
 
-        /* Retrieve a directed edge. */
-        if (iter->weighted)
-            assert(gnx_dict_iter_next(&(iter->dict), &w, NULL));
-        else
-            assert(gnx_set_iter_next(&(iter->set), &w));
+        assert(gnx_i_next_directed_edge(iter, &w));
+
         if (u)
             *u = iter->i;
         if (v)
@@ -820,6 +806,27 @@ gnx_i_maybe_allocate_node(GnxGraph *graph,
     }
 
     return GNX_SUCCESS;
+}
+
+/**
+ * @brief Retrieve a directed edge
+ *
+ * Find a directed edge that emanates from node i.
+ *
+ * @param iter An edge iterator that has been initialized via the function
+ *        gnx_edge_iter_init().
+ * @param w This will hold an out-neighbor of i.
+ *
+ * @return Nonzero if a directed edge is found; zero otherwise.
+ */
+static inline int
+gnx_i_next_directed_edge(GnxEdgeIter *iter,
+                         unsigned int *w)
+{
+    if (iter->weighted)
+        return gnx_dict_iter_next(&(iter->dict), w, NULL);
+
+    return gnx_set_iter_next(&(iter->set), w);
 }
 
 /**
