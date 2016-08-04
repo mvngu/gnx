@@ -33,6 +33,17 @@
  * constants
  *************************************************************************/
 
+#define GNX_BASE_10 (10)  /**< @hideinitializer
+                           * The common base for numeric values.
+                           */
+
+#define GNX_COMMENT ('#')  /**< @hideinitializer
+                            * Within a file, this delimits that a line
+                            * represents a comment.  If a line represents a
+                            * comment, the comment delimiter must be the first
+                            * character on that line.
+                            */
+
 #define GNX_DEFAULT_EXPONENT (7)  /**< @hideinitializer
                                    * The exponent that is used to compute the
                                    * default allocation size.
@@ -53,6 +64,12 @@
                                   * would need to resize.  The default
                                   * capacity of a bucket must be a power of 2.
                                   */
+
+#define GNX_EDGE_DELIMITER (",")  /**< @hideinitializer
+                                   * In a string representation of an edge,
+                                   * this specifies how the component nodes
+                                   * are delimited.
+                                   */
 
 #define GNX_FAILURE (0)  /**< @hideinitializer
                           * Signifies that an operation has failed.
@@ -155,11 +172,19 @@ typedef enum {
                                 * for practical purposes we ignore the unit
                                 * weights.
                                 */
-    GNX_WEIGHTED = 1 << 11     /**< @hideinitializer
+    GNX_WEIGHTED = 1 << 11,    /**< @hideinitializer
                                 * A graph is weighted.  In a weighted graph,
                                 * each edge is assigned a numeric value, also
                                 * called an edge weight.
                                 */
+    GNX_COMMENT_LINE = 1 << 12,  /**< @hideinitializer
+                                  * Within a file, this specifies that a line
+                                  * is a comment and should be ignored.
+                                  */
+    GNX_NODE_LINE = 1 << 13      /**< @hideinitializer
+                                  * Within a file, this specifies that a line
+                                  * represents a node.
+                                  */
 } GnxBool;
 
 /**************************************************************************

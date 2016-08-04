@@ -45,6 +45,7 @@ void random_edge(const int *low,
                  unsigned int *u,
                  unsigned int *v);
 unsigned int random_node_id(void);
+char* random_template(void);
 void test_properties(const GnxGraph *graph,
                      const GnxBool directed,
                      const GnxBool selfloop,
@@ -174,6 +175,42 @@ unsigned int
 random_node_id(void)
 {
     return (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+}
+
+/**
+ * @brief A random template string.
+ *
+ * A template string has the pattern
+ *
+ * ssssssXXXXXX
+ *
+ * where ssssss is a sequence of random characters and XXXXXX is the string
+ * 'XXXXXX'.
+ */
+char*
+random_template(void)
+{
+    char *s;
+    unsigned int i, k;
+    const char table[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+    const int high = 63;
+    const int low = 0;
+    const unsigned int length = 6;
+    const unsigned int pad_length = 6;
+
+    s = (char *)malloc(sizeof(char) * (length + pad_length + 1));
+    for (i = 0; i < length; i++) {
+        k = (unsigned int)g_random_int_range(low, high);
+        s[i] = table[k];
+    }
+
+    k = length + pad_length;
+    for (i = length; i < k; i++)
+        s[i] = 'X';
+
+    s[k] = '\0';
+
+    return s;
 }
 
 /**
