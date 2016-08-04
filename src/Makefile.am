@@ -7,6 +7,7 @@ GNX_HEADERFILES =                                                          \
 	base.h                                                             \
 	dict.h                                                             \
 	heap.h                                                             \
+	io.h                                                               \
 	queue.h                                                            \
 	set.h                                                              \
 	stack.h                                                            \
@@ -24,6 +25,7 @@ GNX_SRC =                                                                  \
 	base.c                                                             \
 	dict.c                                                             \
 	heap.c                                                             \
+	io.c                                                               \
 	queue.c                                                            \
 	sanity.c                                                           \
 	set.c                                                              \

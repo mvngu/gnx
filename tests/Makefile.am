@@ -25,6 +25,7 @@ test_programs =                                                            \
 	base                                                               \
 	dict                                                               \
 	heap                                                               \
+	io                                                                 \
 	queue                                                              \
 	set                                                                \
 	stack                                                              \

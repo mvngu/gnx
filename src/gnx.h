@@ -24,6 +24,7 @@
 #include "base.h"
 #include "dict.h"
 #include "heap.h"
+#include "io.h"
 #include "queue.h"
 #include "set.h"
 #include "stack.h"
