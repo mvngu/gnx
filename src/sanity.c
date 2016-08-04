@@ -39,9 +39,9 @@ gnx_i_check(const GnxGraph *graph)
 }
 
 /**
- * @brief Some sanity checks on an array.
+ * @brief Some sanity checks on an array of pointers.
  *
- * @param array The array to check.
+ * @param array Check this array of pointers.
  */
 void
 gnx_i_check_array(const GnxArray *array)
