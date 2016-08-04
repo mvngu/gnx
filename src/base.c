@@ -277,6 +277,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
         x = gnx_set_has(graph->node, v);
+        g_assert(x);
         if (!gnx_dict_add((GnxDict *)(noded->outneighbor), x, weight))
             goto cleanup;
         (noded->outdegree)++;
@@ -285,6 +286,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
         noded = (GnxNodeDirected *)(graph->graph[*v]);
         g_assert(noded);
         x = gnx_set_has(graph->node, u);
+        g_assert(x);
         if (!gnx_set_add((GnxSet *)(noded->inneighbor), x))
             return GNX_FAILURE;
         (noded->indegree)++;
@@ -303,6 +305,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
     x = gnx_set_has(graph->node, u);
+    g_assert(x);
     if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight))
         goto cleanup;
     (nodeu->degree)++;
@@ -318,6 +321,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
         nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
         g_assert(nodeu);
         x = gnx_set_has(graph->node, v);
+        g_assert(x);
         if (!gnx_dict_add((GnxDict *)(nodeu->neighbor), x, weight))
             goto cleanup;
         (nodeu->degree)++;
