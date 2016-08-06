@@ -44,7 +44,8 @@ void random_edge(const int *low,
                  const int *high,
                  unsigned int *u,
                  unsigned int *v);
-unsigned int random_node_id(void);
+unsigned int random_node_id(const int *low,
+                            const int *high);
 char* random_template(void);
 void test_properties(const GnxGraph *graph,
                      const GnxBool directed,
@@ -169,12 +170,21 @@ random_edge(const int *low,
 /**
  * @brief Generates a random node ID.
  *
+ * @param low The minimum node ID.
+ * @param high Bound on the maximum node ID.  Note that the maximum node ID
+ *        that can be generated is high - 1.
  * @return A random node ID.
  */
 unsigned int
-random_node_id(void)
+random_node_id(const int *low,
+               const int *high)
 {
-    return (unsigned int)g_random_int_range(0, (int)GNX_MAXIMUM_NODE_ID);
+    assert(low);
+    assert(*low >= 0);
+    assert(high);
+    assert(*high > *low);
+
+    return (unsigned int)g_random_int_range(*low, *high);
 }
 
 /**

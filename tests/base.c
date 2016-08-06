@@ -1983,7 +1983,9 @@ static void
 delete_node_empty(void)
 {
     GnxGraph *graph;
-    const unsigned int v = random_node_id();
+    const int low = 0;
+    const int high = 64;
+    const unsigned int v = random_node_id(&low, &high);
 
     /* Directed and weighted. */
     graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
@@ -3345,7 +3347,9 @@ static void
 has_node_empty(void)
 {
     GnxGraph *graph;
-    const unsigned int v = random_node_id();
+    const int low = 0;
+    const int high = 64;
+    const unsigned int v = random_node_id(&low, &high);
 
     graph = gnx_new();
     is_empty_graph(graph);
