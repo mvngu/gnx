@@ -40,6 +40,9 @@ void add_nodes(GnxGraph *graph,
                const unsigned int node[],
                const unsigned int *size);
 void is_empty_graph(const GnxGraph *graph);
+unsigned int non_member_node(const GnxGraph *graph,
+                             const int *low,
+                             const int *high);
 void random_edge(const int *low,
                  const int *high,
                  unsigned int *u,
@@ -135,6 +138,26 @@ is_empty_graph(const GnxGraph *graph)
 {
     assert(0 == graph->total_nodes);
     assert(0 == graph->total_edges);
+}
+
+/**
+ * @brief Generates a node that is not in a graph.
+ *
+ * @param graph The graph to query.
+ * @param A node that is not in the given graph.
+ */
+unsigned int
+non_member_node(const GnxGraph *graph,
+                const int *low,
+                const int *high)
+{
+    unsigned int v;
+
+    do {
+        v = random_node_id(low, high);
+    } while (gnx_has_node(graph, &v));
+
+    return v;
 }
 
 /**
