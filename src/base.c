@@ -383,6 +383,7 @@ gnx_i_add_node_unweighted(GnxGraph *graph,
         return GNX_SUCCESS;
     }
 
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
     if (!nodeu)
         goto cleanup;
@@ -458,6 +459,7 @@ gnx_i_add_node_weighted(GnxGraph *graph,
         return GNX_SUCCESS;
     }
 
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)malloc(sizeof(GnxNodeUndirected));
     if (!nodeu)
         goto cleanup;
@@ -1529,6 +1531,7 @@ gnx_edge_weight(const GnxGraph *graph,
     }
 
     /* Undirected graph. */
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
     g_assert(nodeu);
     neighbor = (GnxDict *)(nodeu->neighbor);
