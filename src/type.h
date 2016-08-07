@@ -396,7 +396,7 @@ typedef struct {
                                 * points to the collection of all nodes that
                                 * are adjacent to i.
                                 */
-    GnxBool directed;          /**< Is the graph directed? */
+    int directed;              /**< Is the graph directed? */
     GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
     GnxBool weighted;          /**< Is the graph weighted? */
     unsigned int capacity;     /**< The maximum number of nodes that the graph

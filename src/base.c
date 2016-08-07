@@ -177,7 +177,6 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
     unsigned int *x;
-    const int directed = GNX_DIRECTED & graph->directed;
 
     if (!gnx_i_maybe_allocate_node(graph, u))
         return GNX_FAILURE;
@@ -185,7 +184,7 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
         return GNX_FAILURE;
 
     /* A digraph. */
-    if (directed) {
+    if (graph->directed) {
         /* Add v to the set of out-neighbors of u. */
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
@@ -208,7 +207,7 @@ gnx_i_add_edge_unweighted(GnxGraph *graph,
     }
 
     /* An undirected graph. */
-    g_assert(!directed);
+    g_assert(!graph->directed);
 
     /* Add u to the collection of neighbors of v.  If (u,v) is a self-loop,
      * then we would add u to its collection of neighbors.
@@ -261,7 +260,6 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
     unsigned int *x;
-    const int directed = GNX_DIRECTED & graph->directed;
 
     if (!gnx_i_maybe_allocate_node(graph, u))
         return GNX_FAILURE;
@@ -274,7 +272,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     *weight = *w;
 
     /* A digraph. */
-    if (directed) {
+    if (graph->directed) {
         /* Add v to the dictionary of out-neighbors of u. */
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
@@ -299,7 +297,7 @@ gnx_i_add_edge_weighted(GnxGraph *graph,
     }
 
     /* An undirected graph. */
-    g_assert(!directed);
+    g_assert(!graph->directed);
 
     /* Add u to the dictionary of neighbors of v.  If (u,v) is a self-loop,
      * then we would add u to its collection of neighbors.
@@ -365,7 +363,7 @@ gnx_i_add_node_unweighted(GnxGraph *graph,
     if (!adjacency)
         goto cleanup;
 
-    if (GNX_DIRECTED & graph->directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
         if (!noded)
             goto cleanup;
@@ -440,7 +438,7 @@ gnx_i_add_node_weighted(GnxGraph *graph,
     if (!adjacency)
         goto cleanup;
 
-    if (GNX_DIRECTED & graph->directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)malloc(sizeof(GnxNodeDirected));
         if (!noded)
             goto cleanup;
@@ -492,7 +490,6 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
     GnxNodeDirected *noded, *noded_w;
     GnxNodeUndirected *nodeu, *nodeu_w;
     unsigned int degree, w;
-    const int directed = GNX_DIRECTED & graph->directed;
 
     /* Removing a node from a graph requires that we also delete every edge
      * that is incident on the node.  First, we delete the incident edges.
@@ -500,7 +497,7 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
      */
     degree = 0;
 
-    if (directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)(graph->graph[*v]);
         g_assert(noded);
 
@@ -543,7 +540,7 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
         return;
     }
 
-    g_assert(!directed);
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
 
@@ -589,7 +586,6 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
     GnxSet *neighbor_in;
     GnxSetIter iters;
     unsigned int degree, w;
-    const int directed = GNX_DIRECTED & graph->directed;
 
     /* Removing a node from a graph requires that we also delete every edge
      * that is incident on the node.  First, we delete the incident edges.
@@ -597,7 +593,7 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
      */
     degree = 0;
 
-    if (directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)(graph->graph[*v]);
         g_assert(noded);
 
@@ -640,7 +636,7 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
         return;
     }
 
-    g_assert(!directed);
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(nodeu);
 
@@ -1246,7 +1242,7 @@ gnx_degree(const GnxGraph *graph,
     GnxNodeUndirected *node;
 
     g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
-    g_return_val_if_fail(GNX_UNDIRECTED & graph->directed, GNX_FAILURE);
+    g_return_val_if_fail(!graph->directed, GNX_FAILURE);
 
     node = (GnxNodeUndirected *)(graph->graph[*v]);
     g_assert(node);
@@ -1270,17 +1266,16 @@ gnx_delete_edge(GnxGraph *graph,
 {
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
-    int directed, weighted;
+    int weighted;
 
     if (!gnx_has_edge(graph, u, v))
         return GNX_FAILURE;
 
-    directed = GNX_DIRECTED & graph->directed;
     weighted = GNX_WEIGHTED & graph->weighted;
 
     /* Weighted graph. */
     if (weighted) {
-        if (directed) {
+        if (graph->directed) {
             /* Remove v from the out-neighbors of u. */
             noded = (GnxNodeDirected *)(graph->graph[*u]);
             g_assert(noded);
@@ -1316,7 +1311,7 @@ gnx_delete_edge(GnxGraph *graph,
 
     /* Unweighted graph. */
     g_assert(!weighted);
-    if (directed) {
+    if (graph->directed) {
         /* Remove v from the out-neighbors of u. */
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
@@ -1385,18 +1380,15 @@ gnx_destroy(GnxGraph *graph)
 {
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
-    int directed;
     unsigned int i;
 
     if (!graph)
         return;
     gnx_destroy_set(graph->node);
     if (graph->graph) {
-        directed = GNX_DIRECTED & graph->directed;
-
         if (GNX_WEIGHTED & graph->weighted) {
             /* A weighted graph. */
-            if (directed) {
+            if (graph->directed) {
                 for (i = 0; i < graph->capacity; i++) {
                     noded = (GnxNodeDirected *)(graph->graph[i]);
                     if (noded) {
@@ -1418,7 +1410,7 @@ gnx_destroy(GnxGraph *graph)
             }
         } else {
             /* An unweighted graph. */
-            if (directed) {
+            if (graph->directed) {
                 for (i = 0; i < graph->capacity; i++) {
                     noded = (GnxNodeDirected *)(graph->graph[i]);
                     if (noded) {
@@ -1466,7 +1458,7 @@ gnx_edge_iter_init(GnxEdgeIter *iter,
     gnx_i_check(graph);
 
     iter->bootstrap = TRUE;
-    iter->directed = GNX_DIRECTED & graph->directed;
+    iter->directed = graph->directed;
     iter->weighted = GNX_WEIGHTED & graph->weighted;
     iter->graph = graph;
     iter->i = 0;
@@ -1527,7 +1519,7 @@ gnx_edge_weight(const GnxGraph *graph,
     g_return_val_if_fail(GNX_WEIGHTED & graph->weighted, GNX_FAILURE);
 
     /* Directed graph. */
-    if (GNX_DIRECTED & graph->directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         g_assert(noded);
         neighbor = (GnxDict *)(noded->outneighbor);
@@ -1565,7 +1557,6 @@ gnx_has_edge(const GnxGraph *graph,
 {
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
-    int directed;
     unsigned int a, b;
 
     if (!gnx_has_node(graph, u) || !gnx_has_node(graph, v))
@@ -1573,11 +1564,9 @@ gnx_has_edge(const GnxGraph *graph,
     if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
         return GNX_FAILURE;
 
-    directed = GNX_DIRECTED & graph->directed;
-
     /* Weighted graphs. */
     if (GNX_WEIGHTED & graph->weighted) {
-        if (directed) {
+        if (graph->directed) {
             noded = (GnxNodeDirected *)(graph->graph[*u]);
             if (gnx_dict_has((GnxDict *)(noded->outneighbor), v))
                 return GNX_SUCCESS;
@@ -1595,7 +1584,7 @@ gnx_has_edge(const GnxGraph *graph,
 
     /* Unweighted graphs. */
     g_assert(GNX_UNWEIGHTED & graph->weighted);
-    if (directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)(graph->graph[*u]);
         if (gnx_set_has((GnxSet *)(noded->outneighbor), v))
             return GNX_SUCCESS;
@@ -1634,7 +1623,7 @@ gnx_has_node(const GnxGraph *graph,
     if (*v >= graph->capacity)
         return GNX_FAILURE;
 
-    if (GNX_DIRECTED & graph->directed) {
+    if (graph->directed) {
         noded = (GnxNodeDirected *)(graph->graph[*v]);
         if (!noded)
             return GNX_FAILURE;
@@ -1642,7 +1631,7 @@ gnx_has_node(const GnxGraph *graph,
         return GNX_SUCCESS;
     }
 
-    g_assert(GNX_UNDIRECTED & graph->directed);
+    g_assert(!graph->directed);
     nodeu = (GnxNodeUndirected *)(graph->graph[*v]);
     if (!nodeu)
         return GNX_FAILURE;
@@ -1669,7 +1658,7 @@ gnx_indegree(const GnxGraph *graph,
     GnxNodeDirected *node;
 
     g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
-    g_return_val_if_fail(GNX_DIRECTED & graph->directed, GNX_FAILURE);
+    g_return_val_if_fail(graph->directed, GNX_FAILURE);
 
     node = (GnxNodeDirected *)(graph->graph[*v]);
     g_assert(node);
@@ -1687,7 +1676,7 @@ gnx_is_directed(const GnxGraph *graph)
 {
     gnx_i_check(graph);
 
-    return graph->directed & GNX_DIRECTED;
+    return graph->directed;
 }
 
 /**
@@ -1725,7 +1714,7 @@ gnx_neighbor_iter_init(GnxNeighborIter *iter,
     gnx_i_check(graph);
 
     iter->bootstrap = TRUE;
-    iter->directed = GNX_DIRECTED & graph->directed;
+    iter->directed = graph->directed;
     iter->weighted = GNX_WEIGHTED & graph->weighted;
     iter->graph = graph;
     iter->v = *v;
@@ -1887,7 +1876,7 @@ gnx_new_full(const GnxBool directed,
     if (!graph->graph)
         goto cleanup;
 
-    graph->directed = directed;
+    graph->directed = GNX_DIRECTED & directed;
     graph->selfloop = selfloop;
     graph->weighted = weighted;
     graph->capacity = reserved_nodes;
@@ -2003,7 +1992,7 @@ gnx_outdegree(const GnxGraph *graph,
     GnxNodeDirected *node;
 
     g_return_val_if_fail(gnx_has_node(graph, v), GNX_FAILURE);
-    g_return_val_if_fail(GNX_DIRECTED & graph->directed, GNX_FAILURE);
+    g_return_val_if_fail(graph->directed, GNX_FAILURE);
 
     node = (GnxNodeDirected *)(graph->graph[*v]);
     g_assert(node);
