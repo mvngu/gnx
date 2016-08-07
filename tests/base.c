@@ -133,6 +133,20 @@ static void indegree_weighted(void);
 static void indegree_selfloop_unweighted(void);
 static void indegree_selfloop_weighted(void);
 
+/* neighbor iterator */
+static void neighbor_iterator_count_neighbors(void);
+static void neighbor_iterator_empty_graph(void);
+static void neighbor_iterator_non_member(void);
+static void neighbor_iterator_zero_neighbors(void);
+static void neighbor_iterator_directed_unweighted(void);
+static void neighbor_iterator_directed_weighted(void);
+static void neighbor_iterator_undirected_unweighted(void);
+static void neighbor_iterator_undirected_weighted(void);
+static void neighbor_iterator_selfloop_directed_unweighted(void);
+static void neighbor_iterator_selfloop_directed_weighted(void);
+static void neighbor_iterator_selfloop_undirected_unweighted(void);
+static void neighbor_iterator_selfloop_undirected_weighted(void);
+
 /* new: create and destroy */
 static void new_empty(void);
 static void new_no_memory(void);
@@ -3587,6 +3601,1026 @@ indegree_selfloop_weighted(void)
 }
 
 /**************************************************************************
+ * neighbor iterator
+ *************************************************************************/
+
+static void
+neighbor_iterator(void)
+{
+    neighbor_iterator_count_neighbors();
+    neighbor_iterator_empty_graph();
+    neighbor_iterator_non_member();
+    neighbor_iterator_zero_neighbors();
+    neighbor_iterator_directed_unweighted();
+    neighbor_iterator_directed_weighted();
+    neighbor_iterator_undirected_unweighted();
+    neighbor_iterator_undirected_weighted();
+    neighbor_iterator_selfloop_directed_unweighted();
+    neighbor_iterator_selfloop_directed_weighted();
+    neighbor_iterator_selfloop_undirected_unweighted();
+    neighbor_iterator_selfloop_undirected_weighted();
+}
+
+/* Count how many neighbors that a node has.
+ */
+static void
+neighbor_iterator_count_neighbors(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v;
+    const unsigned int degree[15] = {10, 11, 12,  8, 12,
+                                      9, 10,  9, 11,  8,
+                                     11,  6, 10,  7,  0};
+    const unsigned int degree_selfloop[15] = {11, 11, 12,  9, 12,
+                                               9, 10,  9, 11,  8,
+                                              12,  6, 10,  7,  0};
+    const unsigned int outdegree[15] = {10, 10, 10, 6, 8,
+                                         5,  5,  4, 4, 3,
+                                         1,  0,  1, 0, 0};
+    const unsigned int outdegree_selfloop[15] = {11, 10, 10, 7, 8,
+                                                  5,  5,  4, 4, 3,
+                                                  2,  0,  1, 0, 0};
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+    const unsigned int nselfloop = 3;
+
+    /* Directed, allows self-loops, unweighted. */
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == outdegree_selfloop[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, allows self-loops, weighted. */
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == outdegree_selfloop[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, unweighted. */
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == outdegree[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, weighted. */
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == outdegree[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, unweighted. */
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == degree_selfloop[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, weighted. */
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == degree_selfloop[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert((nedge + nselfloop) == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == degree[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    for (v = 0; v < nnode; v++) {
+        i = 0;
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, NULL, NULL))
+            i++;
+
+        assert(i == degree[v]);
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* Trying to iterate over a node's neighbors in an empty graph.
+ */
+static void
+neighbor_iterator_empty_graph(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    const unsigned int v = (unsigned int)g_random_int();
+
+    /* Directed, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Directed, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    gnx_destroy(graph);
+}
+
+/* Cannot iterate over a node's neighbors if the node is not in the graph.
+ */
+static void
+neighbor_iterator_non_member(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int w;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int size = 1;
+    const unsigned int v = random_node_id(&low, &high);
+
+    /* Directed, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    w = non_member_node(graph, &low, &high);
+    assert(!gnx_has_node(graph, &w));
+    gnx_neighbor_iter_init(&iter, graph, &w);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(!gnx_has_node(graph, &w));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+}
+
+/* Iterate over a node that has zero neighbors.
+ */
+static void
+neighbor_iterator_zero_neighbors(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int size = 1;
+    const unsigned int v = random_node_id(&low, &high);
+
+    /* Directed, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_outdegree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, allows self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(size == graph->total_nodes);
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    gnx_neighbor_iter_init(&iter, graph, &v);
+    assert(!gnx_neighbor_iter_next(&iter, NULL, NULL));
+    assert(gnx_has_node(graph, &v));
+    assert(0 == gnx_degree(graph, &v));
+    assert(size == graph->total_nodes);
+    gnx_destroy(graph);
+}
+
+/* Verify the out-neighbors of a node.  The graph is directed, unweighted,
+ * and does not allow self-loops.
+ */
+static void
+neighbor_iterator_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
+     * do not have out-neighbors.  The first zero (0) in a list specifies the
+     * end of the list.
+     */
+    const unsigned int neighbor[15][10] = {
+        { 1,  2,  4,  7,  8,  9, 10, 11, 12, 13}, /* node 0 */
+        { 2,  3,  4,  5,  6,  8,  9, 10, 11, 13}, /* node 1 */
+        { 3,  4,  5,  6,  7,  8, 10, 11, 12, 13}, /* node 2 */
+        { 4,  5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 5,  6,  7,  8,  9, 10, 11, 12,  0,  0}, /* node 4 */
+        { 6,  7,  8, 10, 12,  0,  0,  0,  0,  0}, /* node 5 */
+        { 7,  8, 10, 12, 13,  0,  0,  0,  0,  0}, /* node 6 */
+        { 8,  9, 10, 12,  0,  0,  0,  0,  0,  0}, /* node 7 */
+        { 9, 10, 12, 13,  0,  0,  0,  0,  0,  0}, /* node 8 */
+        {10, 11, 13,  0,  0,  0,  0,  0,  0,  0}, /* node 9 */
+        {12,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 10 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {13,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 12 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+    const unsigned int max_neighbors = 10;
+
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the out-neighbor of each node. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w)
+                    break;
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the out-neighbors of a node.  The graph is directed, weighted,
+ * and does not allow self-loops.  As the graph is weighted, we also verify
+ * each edge weight.
+ */
+static void
+neighbor_iterator_directed_weighted(void)
+{
+    double wgt;
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
+     * do not have out-neighbors.  The first zero (0) in a list specifies the
+     * end of the list.
+     */
+    const unsigned int neighbor[15][10] = {
+        { 1,  2,  4,  7,  8,  9, 10, 11, 12, 13}, /* node 0 */
+        { 2,  3,  4,  5,  6,  8,  9, 10, 11, 13}, /* node 1 */
+        { 3,  4,  5,  6,  7,  8, 10, 11, 12, 13}, /* node 2 */
+        { 4,  5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 5,  6,  7,  8,  9, 10, 11, 12,  0,  0}, /* node 4 */
+        { 6,  7,  8, 10, 12,  0,  0,  0,  0,  0}, /* node 5 */
+        { 7,  8, 10, 12, 13,  0,  0,  0,  0,  0}, /* node 6 */
+        { 8,  9, 10, 12,  0,  0,  0,  0,  0,  0}, /* node 7 */
+        { 9, 10, 12, 13,  0,  0,  0,  0,  0,  0}, /* node 8 */
+        {10, 11, 13,  0,  0,  0,  0,  0,  0,  0}, /* node 9 */
+        {12,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 10 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {13,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 12 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const double weight[15][10] = {
+        {2, 1, 2, 2, 2, 2, 2, 1, 1, 1}, /* node 0 */
+        {3, 3, 1, 4, 2, 2, 1, 1, 2, 2}, /* node 1 */
+        {6, 1, 2, 2, 1, 2, 2, 2, 1, 1}, /* node 2 */
+        {2, 2, 1, 4, 3, 1, 0, 0, 0, 0}, /* node 3 */
+        {1, 1, 2, 1, 1, 2, 1, 1, 0, 0}, /* node 4 */
+        {1, 2, 2, 2, 1, 0, 0, 0, 0, 0}, /* node 5 */
+        {1, 1, 1, 2, 1, 0, 0, 0, 0, 0}, /* node 6 */
+        {2, 1, 2, 2, 0, 0, 0, 0, 0, 0}, /* node 7 */
+        {3, 3, 1, 1, 0, 0, 0, 0, 0, 0}, /* node 8 */
+        {3, 1, 1, 0, 0, 0, 0, 0, 0, 0}, /* node 9 */
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 10 */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 11 */
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 12 */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 13 */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+    const unsigned int max_neighbors = 10;
+
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the out-neighbor of each node.  Also verify each edge weight. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w) {
+                    assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
+                    break;
+                }
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is undirected, unweighted,
+ * and does not allow self-loops.
+ */
+static void
+neighbor_iterator_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that node 14 is isolated, hence
+     * has degree zero.  The first or second zero (0) in a list specifies the
+     * end of the list.
+     */
+    const unsigned int neighbor[15][12] = {
+        {1, 2, 4, 7, 8,  9, 10, 11, 12, 13,  0,  0}, /* node 0 */
+        {0, 2, 3, 4, 5,  6,  8,  9, 10, 11, 13,  0}, /* node 1 */
+        {0, 1, 3, 4, 5,  6,  7,  8, 10, 11, 12, 13}, /* node 2 */
+        {1, 2, 4, 5, 6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        {0, 1, 2, 3, 5,  6,  7,  8,  9, 10, 11, 12}, /* node 4 */
+        {1, 2, 3, 4, 6,  7,  8, 10, 12,  0,  0,  0}, /* node 5 */
+        {1, 2, 3, 4, 5,  7,  8, 10, 12, 13,  0,  0}, /* node 6 */
+        {0, 2, 4, 5, 6,  8,  9, 10, 12,  0,  0,  0}, /* node 7 */
+        {0, 1, 2, 4, 5,  6,  7,  9, 10, 12, 13,  0}, /* node 8 */
+        {0, 1, 4, 7, 8, 10, 11, 13,  0,  0,  0,  0}, /* node 9 */
+        {0, 1, 2, 3, 4,  5,  6,  7,  8,  9, 12,  0}, /* node 10 */
+        {0, 1, 2, 3, 4,  9,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {0, 2, 3, 4, 5,  6,  7,  8, 10, 13,  0,  0}, /* node 12 */
+        {0, 1, 2, 6, 8,  9, 12,  0,  0,  0,  0,  0}, /* node 13 */
+        {0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+    const unsigned int max_neighbors = 12;
+
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the neighbor of each node. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w)
+                    break;
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is undirected, weighted,
+ * and does not allow self-loops.
+ */
+static void
+neighbor_iterator_undirected_weighted(void)
+{
+    double wgt;
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that node 14 is isolated, hence
+     * has degree zero.  The first or second zero (0) in a list specifies the
+     * end of the list.
+     */
+    const unsigned int neighbor[15][12] = {
+        {1, 2, 4, 7, 8,  9, 10, 11, 12, 13,  0,  0}, /* node 0 */
+        {0, 2, 3, 4, 5,  6,  8,  9, 10, 11, 13,  0}, /* node 1 */
+        {0, 1, 3, 4, 5,  6,  7,  8, 10, 11, 12, 13}, /* node 2 */
+        {1, 2, 4, 5, 6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        {0, 1, 2, 3, 5,  6,  7,  8,  9, 10, 11, 12}, /* node 4 */
+        {1, 2, 3, 4, 6,  7,  8, 10, 12,  0,  0,  0}, /* node 5 */
+        {1, 2, 3, 4, 5,  7,  8, 10, 12, 13,  0,  0}, /* node 6 */
+        {0, 2, 4, 5, 6,  8,  9, 10, 12,  0,  0,  0}, /* node 7 */
+        {0, 1, 2, 4, 5,  6,  7,  9, 10, 12, 13,  0}, /* node 8 */
+        {0, 1, 4, 7, 8, 10, 11, 13,  0,  0,  0,  0}, /* node 9 */
+        {0, 1, 2, 3, 4,  5,  6,  7,  8,  9, 12,  0}, /* node 10 */
+        {0, 1, 2, 3, 4,  9,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {0, 2, 3, 4, 5,  6,  7,  8, 10, 13,  0,  0}, /* node 12 */
+        {0, 1, 2, 6, 8,  9, 12,  0,  0,  0,  0,  0}, /* node 13 */
+        {0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const double weight[15][12] = {
+        {2, 1, 2, 2, 2, 2, 2, 1, 1, 1, 0, 0}, /* node 0 */
+        {2, 3, 3, 1, 4, 2, 2, 1, 1, 2, 2, 0}, /* node 1 */
+        {1, 3, 6, 1, 2, 2, 1, 2, 2, 2, 1, 1}, /* node 2 */
+        {3, 6, 2, 2, 1, 4, 3, 1, 0, 0, 0, 0}, /* node 3 */
+        {2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1}, /* node 4 */
+        {4, 2, 2, 1, 1, 2, 2, 2, 1, 0, 0, 0}, /* node 5 */
+        {2, 2, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0}, /* node 6 */
+        {2, 1, 2, 2, 1, 2, 1, 2, 2, 0, 0, 0}, /* node 7 */
+        {2, 2, 2, 1, 2, 1, 2, 3, 3, 1, 1, 0}, /* node 8 */
+        {2, 1, 1, 1, 3, 3, 1, 1, 0, 0, 0, 0}, /* node 9 */
+        {2, 1, 2, 4, 2, 2, 1, 2, 3, 3, 1, 0}, /* node 10 */
+        {1, 2, 2, 3, 1, 1, 0, 0, 0, 0, 0, 0}, /* node 11 */
+        {1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 0, 0}, /* node 12 */
+        {1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0}, /* node 13 */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+    const unsigned int max_neighbors = 12;
+
+    graph = gnx_read("data/network/corporate-interlocks.csv",
+                     GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the neighbor of each node.  Also verify each edge weight. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w) {
+                    assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
+                    break;
+                }
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is directed, unweighted,
+ * and allows self-loops.
+ */
+static void
+neighbor_iterator_selfloop_directed_unweighted(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
+     * do not have out-neighbors.  The first zero (0) in a list specifies the
+     * end of the list.  Each of nodes 0, 3, and 10 has a self-loop.
+     */
+    const unsigned int neighbor[15][11] = {
+        { 0,  1,  2,  4,  7,  8,  9, 10, 11, 12, 13}, /* node 0 */
+        { 2,  3,  4,  5,  6,  8,  9, 10, 11, 13,  0}, /* node 1 */
+        { 3,  4,  5,  6,  7,  8, 10, 11, 12, 13,  0}, /* node 2 */
+        { 3,  4,  5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 5,  6,  7,  8,  9, 10, 11, 12,  0,  0,  0}, /* node 4 */
+        { 6,  7,  8, 10, 12,  0,  0,  0,  0,  0,  0}, /* node 5 */
+        { 7,  8, 10, 12, 13,  0,  0,  0,  0,  0,  0}, /* node 6 */
+        { 8,  9, 10, 12,  0,  0,  0,  0,  0,  0,  0}, /* node 7 */
+        { 9, 10, 12, 13,  0,  0,  0,  0,  0,  0,  0}, /* node 8 */
+        {10, 11, 13,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 9 */
+        {10, 12,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 10 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {13,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 12 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 70;
+    const unsigned int max_neighbors = 11;
+
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the out-neighbor of each node. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w)
+                    break;
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is directed, weighted,
+ * and allows self-loops.
+ */
+static void
+neighbor_iterator_selfloop_directed_weighted(void)
+{
+    double wgt;
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
+     * do not have out-neighbors.  The first zero (0) in a list specifies the
+     * end of the list.  Each of nodes 0, 3, and 10 has a self-loop.
+     */
+    const unsigned int neighbor[15][11] = {
+        { 0,  1,  2,  4,  7,  8,  9, 10, 11, 12, 13}, /* node 0 */
+        { 2,  3,  4,  5,  6,  8,  9, 10, 11, 13,  0}, /* node 1 */
+        { 3,  4,  5,  6,  7,  8, 10, 11, 12, 13,  0}, /* node 2 */
+        { 3,  4,  5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 5,  6,  7,  8,  9, 10, 11, 12,  0,  0,  0}, /* node 4 */
+        { 6,  7,  8, 10, 12,  0,  0,  0,  0,  0,  0}, /* node 5 */
+        { 7,  8, 10, 12, 13,  0,  0,  0,  0,  0,  0}, /* node 6 */
+        { 8,  9, 10, 12,  0,  0,  0,  0,  0,  0,  0}, /* node 7 */
+        { 9, 10, 12, 13,  0,  0,  0,  0,  0,  0,  0}, /* node 8 */
+        {10, 11, 13,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 9 */
+        {10, 12,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 10 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        {13,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 12 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const double weight[15][11] = {
+        { 0, 2, 1, 2, 2, 2, 2, 2, 1, 1, 1}, /* node 0 */
+        { 3, 3, 1, 4, 2, 2, 1, 1, 2, 2, 0}, /* node 1 */
+        { 6, 1, 2, 2, 1, 2, 2, 2, 1, 1, 0}, /* node 2 */
+        { 3, 2, 2, 1, 4, 3, 1, 0, 0, 0, 0}, /* node 3 */
+        { 1, 1, 2, 1, 1, 2, 1, 1, 0, 0, 0}, /* node 4 */
+        { 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0}, /* node 5 */
+        { 1, 1, 1, 2, 1, 0, 0, 0, 0, 0, 0}, /* node 6 */
+        { 2, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0}, /* node 7 */
+        { 3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0}, /* node 8 */
+        { 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 9 */
+        {10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 10 */
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 11 */
+        { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 12 */
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, /* node 13 */
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 70;
+    const unsigned int max_neighbors = 11;
+
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the out-neighbor of each node.  Also verify each edge weight. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w) {
+                    assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
+                    break;
+                }
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is undirected, unweighted,
+ * and allows self-loops.
+ */
+static void
+neighbor_iterator_selfloop_undirected_unweighted(void)
+{
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that node 14 is isolated, hence
+     * has degree zero.  The first or second zero (0) in a list specifies the
+     * end of the list.  Each of nodes 0, 3, and 10 has a self-loop.
+     */
+    const unsigned int neighbor[15][13] = {
+        { 0, 1, 2, 4, 7,  8,  9, 10, 11, 12, 13,  0,  0}, /* node 0 */
+        { 0, 2, 3, 4, 5,  6,  8,  9, 10, 11, 13,  0,  0}, /* node 1 */
+        { 0, 1, 3, 4, 5,  6,  7,  8, 10, 11, 12, 13,  0}, /* node 2 */
+        { 3, 1, 2, 4, 5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 0, 1, 2, 3, 5,  6,  7,  8,  9, 10, 11, 12,  0}, /* node 4 */
+        { 1, 2, 3, 4, 6,  7,  8, 10, 12,  0,  0,  0,  0}, /* node 5 */
+        { 1, 2, 3, 4, 5,  7,  8, 10, 12, 13,  0,  0,  0}, /* node 6 */
+        { 0, 2, 4, 5, 6,  8,  9, 10, 12,  0,  0,  0,  0}, /* node 7 */
+        { 0, 1, 2, 4, 5,  6,  7,  9, 10, 12, 13,  0,  0}, /* node 8 */
+        { 0, 1, 4, 7, 8, 10, 11, 13,  0,  0,  0,  0,  0}, /* node 9 */
+        {10, 0, 1, 2, 3,  4,  5,  6,  7,  8,  9, 12,  0}, /* node 10 */
+        { 0, 1, 2, 3, 4,  9,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        { 0, 2, 3, 4, 5,  6,  7,  8, 10, 13,  0,  0,  0}, /* node 12 */
+        { 0, 1, 2, 6, 8,  9, 12,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 70;
+    const unsigned int max_neighbors = 13;
+
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the neighbor of each node. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w)
+                    break;
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Verify the neighbors of a node.  The graph is undirected, weighted,
+ * and allows self-loops.
+ */
+static void
+neighbor_iterator_selfloop_undirected_weighted(void)
+{
+    double wgt;
+    GnxGraph *graph;
+    GnxNeighborIter iter;
+    unsigned int i, v, w;
+    /* The adjacency list of each node.  Note that node 14 is isolated, hence
+     * has degree zero.  The first or second zero (0) in a list specifies the
+     * end of the list.  Each of nodes 0, 3, and 10 has a self-loop.
+     */
+    const unsigned int neighbor[15][13] = {
+        { 0, 1, 2, 4, 7,  8,  9, 10, 11, 12, 13,  0,  0}, /* node 0 */
+        { 0, 2, 3, 4, 5,  6,  8,  9, 10, 11, 13,  0,  0}, /* node 1 */
+        { 0, 1, 3, 4, 5,  6,  7,  8, 10, 11, 12, 13,  0}, /* node 2 */
+        { 3, 1, 2, 4, 5,  6, 10, 11, 12,  0,  0,  0,  0}, /* node 3 */
+        { 0, 1, 2, 3, 5,  6,  7,  8,  9, 10, 11, 12,  0}, /* node 4 */
+        { 1, 2, 3, 4, 6,  7,  8, 10, 12,  0,  0,  0,  0}, /* node 5 */
+        { 1, 2, 3, 4, 5,  7,  8, 10, 12, 13,  0,  0,  0}, /* node 6 */
+        { 0, 2, 4, 5, 6,  8,  9, 10, 12,  0,  0,  0,  0}, /* node 7 */
+        { 0, 1, 2, 4, 5,  6,  7,  9, 10, 12, 13,  0,  0}, /* node 8 */
+        { 0, 1, 4, 7, 8, 10, 11, 13,  0,  0,  0,  0,  0}, /* node 9 */
+        {10, 0, 1, 2, 3,  4,  5,  6,  7,  8,  9, 12,  0}, /* node 10 */
+        { 0, 1, 2, 3, 4,  9,  0,  0,  0,  0,  0,  0,  0}, /* node 11 */
+        { 0, 2, 3, 4, 5,  6,  7,  8, 10, 13,  0,  0,  0}, /* node 12 */
+        { 0, 1, 2, 6, 8,  9, 12,  0,  0,  0,  0,  0,  0}, /* node 13 */
+        { 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0}  /* node 14 */
+    };
+    const double weight[15][13] = {
+        { 0, 2, 1, 2, 2, 2, 2, 2, 1, 1, 1, 0, 0}, /* node 0 */
+        { 2, 3, 3, 1, 4, 2, 2, 1, 1, 2, 2, 0, 0}, /* node 1 */
+        { 1, 3, 6, 1, 2, 2, 1, 2, 2, 2, 1, 1, 0}, /* node 2 */
+        { 3, 3, 6, 2, 2, 1, 4, 3, 1, 0, 0, 0, 0}, /* node 3 */
+        { 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 0}, /* node 4 */
+        { 4, 2, 2, 1, 1, 2, 2, 2, 1, 0, 0, 0, 0}, /* node 5 */
+        { 2, 2, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0}, /* node 6 */
+        { 2, 1, 2, 2, 1, 2, 1, 2, 2, 0, 0, 0, 0}, /* node 7 */
+        { 2, 2, 2, 1, 2, 1, 2, 3, 3, 1, 1, 0, 0}, /* node 8 */
+        { 2, 1, 1, 1, 3, 3, 1, 1, 0, 0, 0, 0, 0}, /* node 9 */
+        {10, 2, 1, 2, 4, 2, 2, 1, 2, 3, 3, 1, 0}, /* node 10 */
+        { 1, 2, 2, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0}, /* node 11 */
+        { 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 0, 0, 0}, /* node 12 */
+        { 1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, /* node 13 */
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}  /* node 14 */
+    };
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 70;
+    const unsigned int max_neighbors = 13;
+
+    graph = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                     GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    /* Verify the neighbor of each node. */
+    for (v = 0; v < nnode; v++) {
+        assert(gnx_has_node(graph, &v));
+        gnx_neighbor_iter_init(&iter, graph, &v);
+        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+            for (i = 0; i < max_neighbors; i++) {
+                if (neighbor[v][i] == w) {
+                    assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
+                    break;
+                }
+            }
+            assert(i < max_neighbors);
+        }
+    }
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/**************************************************************************
  * new: create and destroy
  *************************************************************************/
 
@@ -4673,6 +5707,7 @@ main(int argc,
     g_test_add_func("/base/has-edge", has_edge);
     g_test_add_func("/base/has-node", has_node);
     g_test_add_func("/base/indegree", indegree);
+    g_test_add_func("/base/neighbor-iterator", neighbor_iterator);
     g_test_add_func("/base/new", new);
     g_test_add_func("/base/node-iterator", node_iterator);
     g_test_add_func("/base/outdegree", outdegree);

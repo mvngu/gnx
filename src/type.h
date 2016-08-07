@@ -430,6 +430,23 @@ typedef struct {
 } GnxEdgeIter;
 
 /**
+ * @brief Iterator over the neighbors of a node.
+ */
+typedef struct {
+    int bootstrap;      /**< Are we bootstrapping the process? */
+    int directed;       /**< Is the graph directed? */
+    int weighted;       /**< Is the graph weighted? */
+    GnxDictIter iterd;  /**< Iterator over neighbors in a weighted graph. */
+    GnxSetIter iters;   /**< Iterator over neighbors in an unweighted graph. */
+    GnxGraph *graph;    /**< Iterate over some nodes of this graph. */
+    unsigned int v;     /**< Iterate over the neighbors of this node.  If the
+                         * graph is undirected, then we will iterate over all
+                         * the neighbors of v.  If the graph is directed, then
+                         * we only iterate over the out-neighbors of v.
+                         */
+} GnxNeighborIter;
+
+/**
  * @brief Iterator over the nodes of a graph.
  */
 typedef struct {

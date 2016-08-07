@@ -1705,6 +1705,117 @@ gnx_is_weighted(const GnxGraph *graph)
 }
 
 /**
+ * @brief Initializes an iterator over the neighbors of a node.
+ *
+ * @param iter An uninitialized neighbor iterator.  Note that a neighbor
+ *        iterator is typically allocated on the runtime stack.
+ * @param graph We want to iterate over some nodes of this graph.
+ * @param v Iterate over the neighbors of this node.  If the graph is
+ *        undirected, then we will iterate over all the neighbors of v.  If the
+ *        graph is directed, then we only iterate over the out-neighbors of v.
+ * @return Nonzero if the initialization was successful; zero otherwise.
+ */
+void
+gnx_neighbor_iter_init(GnxNeighborIter *iter,
+                       GnxGraph *graph,
+                       const unsigned int *v)
+{
+    g_return_if_fail(iter);
+    g_return_if_fail(v);
+    gnx_i_check(graph);
+
+    iter->bootstrap = TRUE;
+    iter->directed = GNX_DIRECTED & graph->directed;
+    iter->weighted = GNX_WEIGHTED & graph->weighted;
+    iter->graph = graph;
+    iter->v = *v;
+}
+
+/**
+ * @brief Retrieves the next neighbor of a node.
+ *
+ * Note that if the graph is undirected, then we will iterate over all
+ * neighbors of a node.  For a digraph, we only iterate over the out-neighbors
+ * of a node.
+ *
+ * @param iter An iterator over the neighbors of node @f$v@f$.  This must have
+ *        been initialized by the function gnx_neighbor_iter_init().
+ * @param w This will store a neighbor of @f$v@f$.  Pass @c NULL if you want to
+ *        ignore a neighbor.
+ * @param weight If the graph is weighted, then this will store the weight of
+ *        the edge @f$(v,w)@f$.  Pass in @c NULL if you want to ignore an edge
+ *        weight.  If the graph is unweighted, then we will ignore this
+ *        parameter.
+ * @return Nonzero if we have not yet exhausted all neighbors of @f$v@f$;
+ *         zero otherwise.  If nonzero, then there is a neighbor of @f$v@f$
+ *         that we have not visited.  We return zero if the graph has zero
+ *         nodes or the given node @f$v@f$ is not in the graph.  If zero, then
+ *         the iterator is now invalid.
+ */
+int
+gnx_neighbor_iter_next(GnxNeighborIter *iter,
+                       unsigned int *w,
+                       double *weight)
+{
+    GnxNodeDirected *noded;
+    GnxNodeUndirected *nodeu;
+    gnxptr value;
+    int has_more;
+
+    g_return_val_if_fail(iter, GNX_FAILURE);
+
+    /* We are bootstrapping the process. */
+    if (iter->bootstrap) {
+        iter->bootstrap = FALSE;
+
+        if (!(iter->graph->total_nodes))
+            return GNX_FAILURE;
+        if (!gnx_has_node(iter->graph, &(iter->v)))
+            return GNX_FAILURE;
+
+        /* Initialize an iterator over the neighbors of v. */
+        if (iter->directed) {
+            noded = (GnxNodeDirected *)(iter->graph->graph[iter->v]);
+            g_assert(noded);
+
+            if (iter->weighted) {
+                gnx_dict_iter_init(&(iter->iterd),
+                                   (GnxDict *)(noded->outneighbor));
+            } else {
+                gnx_set_iter_init(&(iter->iters),
+                                  (GnxSet *)(noded->outneighbor));
+            }
+        } else {
+            nodeu = (GnxNodeUndirected *)(iter->graph->graph[iter->v]);
+            g_assert(nodeu);
+
+            if (iter->weighted) {
+                gnx_dict_iter_init(&(iter->iterd),
+                                   (GnxDict *)(nodeu->neighbor));
+            } else {
+                gnx_set_iter_init(&(iter->iters),
+                                  (GnxSet *)(nodeu->neighbor));
+            }
+        }
+    }
+
+    /* Retrieve a neighbor of v. */
+    if (iter->weighted)
+        has_more = gnx_dict_iter_next(&(iter->iterd), w, &value);
+    else
+        has_more = gnx_set_iter_next(&(iter->iters), w);
+
+    if (has_more) {
+        if (iter->weighted && weight)
+            *weight = *((double *)value);
+
+        return GNX_SUCCESS;
+    }
+
+    return GNX_FAILURE;
+}
+
+/**
  * @brief Initializes a new graph with default properties.
  *
  * This is a convenience function for when you require a graph that is

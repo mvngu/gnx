@@ -37,6 +37,12 @@ void gnx_edge_iter_init(GnxEdgeIter *iter,
 int gnx_edge_iter_next(GnxEdgeIter *iter,
                        unsigned int *u,
                        unsigned int *v);
+void gnx_neighbor_iter_init(GnxNeighborIter *iter,
+                            GnxGraph *graph,
+                            const unsigned int *v);
+int gnx_neighbor_iter_next(GnxNeighborIter *iter,
+                           unsigned int *w,
+                           double *weight);
 void gnx_node_iter_init(GnxNodeIter *iter,
                         GnxGraph *graph);
 int gnx_node_iter_next(GnxNodeIter *iter,
