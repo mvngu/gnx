@@ -97,6 +97,16 @@ static int gnx_i_weight_str2d(gchar *weight,
                               double *w,
                               const gchar *filename,
                               const unsigned int *line);
+static int gnx_i_write_directed(GnxGraph *graph,
+                                const char *filename);
+static int gnx_i_write_edge(GIOChannel *file,
+                            const unsigned int *u,
+                            const unsigned int *v,
+                            const double *weight);
+static int gnx_i_write_node(GIOChannel *file,
+                            const unsigned int *v);
+static int gnx_i_write_undirected(GnxGraph *graph,
+                                  const char *filename);
 
 /**************************************************************************
  * internal helper functions
@@ -494,6 +504,233 @@ gnx_i_weight_str2d(gchar *weight,
     return GNX_SUCCESS;
 }
 
+/**
+ * @brief Writes a directed graph to file.
+ *
+ * @param graph The directed graph to output to file.
+ * @param filename Write the graph to this file.  This file must not already
+ *        exist.
+ * @return Nonzero if the graph was successfully written to file; zero
+ *         otherwise.  If we cannot write to file, then @c errno is set to
+ *         @c EIO and we return zero.
+ */
+static int
+gnx_i_write_directed(GnxGraph *graph,
+                     const char *filename)
+{
+    double weight;
+    GError *error = NULL;
+    GnxNeighborIter iternei;
+    GnxNodeIter iter;
+    int valid;
+    GIOChannel *file;
+    unsigned int u, v;
+
+    errno = 0;
+    file = g_io_channel_new_file((const gchar *)filename, "w", &error);
+    if (!file) {
+        errno = EIO;
+        if (error)
+            g_error_free(error);
+
+        return GNX_FAILURE;
+    }
+
+    /* Iterate over each node. */
+    gnx_node_iter_init(&iter, graph);
+    while (gnx_node_iter_next(&iter, &u)) {
+        /* Node u is isolated.  It has zero out-neighbors and zero
+         * in-neighbors.
+         */
+        if (!gnx_outdegree(graph, &u) && !gnx_indegree(graph, &u)) {
+            if (!gnx_i_write_node(file, &u))
+                goto cleanup;
+
+            continue;
+        }
+
+        /* Iterate over each out-neighbor v of u. */
+        gnx_neighbor_iter_init(&iternei, graph, &u);
+        while (gnx_neighbor_iter_next(&iternei, &v, &weight)) {
+            if (graph->weighted)
+                valid = gnx_i_write_edge(file, &u, &v, &weight);
+            else
+                valid = gnx_i_write_edge(file, &u, &v, NULL);
+
+            if (!valid)
+                goto cleanup;
+        }
+    }
+
+    (void)g_io_channel_flush(file, &error);
+    gnx_i_io_cleanup(file, NULL, error, NULL);
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = EIO;
+    gnx_i_io_cleanup(file, NULL, NULL, NULL);
+    return GNX_FAILURE;
+}
+
+/**
+ * @brief Writes an edge to a file.
+ *
+ * @param file Write the edge to this file.  The file must already be opened.
+ * @param u The tail of the edge.
+ * @param v The head of the edge.
+ * @param weight If the graph is weighted, this must be the weight of the
+ *        edge @f$(u,v)@f$.  If the graph is unweighted, pass in NULL.
+ * @return Nonzero if the edge @f$(u,v)@f$ was successfully written to file;
+ *         zero otherwise.  If we cannot write an edge to file, then @c errno
+ *         is set to @c EIO and we return zero.
+ */
+static int
+gnx_i_write_edge(GIOChannel *file,
+                 const unsigned int *u,
+                 const unsigned int *v,
+                 const double *weight)
+{
+    char buffer[G_ASCII_DTOSTR_BUF_SIZE];
+    gchar *line;
+    GError *error = NULL;
+    GIOStatus status;
+    gsize bytes_written;
+    const gssize null_term_str = -1;
+
+    errno = 0;
+    if (weight) {
+        line = g_strdup_printf("%d,%d,%s%s", *u, *v,
+                               g_ascii_dtostr(buffer, sizeof(buffer), *weight),
+                               GNX_NEWLINE);
+    } else {
+        line = g_strdup_printf("%d,%d%s", *u, *v, GNX_NEWLINE);
+    }
+
+    status = g_io_channel_write_chars(file, line, null_term_str,
+                                      &bytes_written, &error);
+    if ((status == G_IO_STATUS_ERROR)
+        || (status == G_IO_STATUS_AGAIN)) {
+        errno = EIO;
+        gnx_i_io_cleanup(NULL, line, error, NULL);
+        return GNX_FAILURE;
+    }
+
+    g_assert(status == G_IO_STATUS_NORMAL);
+    g_free(line);
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Writes a node to a file.
+ *
+ * @param file Write the node to this file.  This file must already be opened.
+ * @param v Write this node to file.
+ * @return Nonzero if the node was successfully written to file;
+ *         zero otherwise.  If we cannot write the node to file, then we set
+ *         @c errno to @c EIO and return zero.
+ */
+static int
+gnx_i_write_node(GIOChannel *file,
+                 const unsigned int *v)
+{
+    gchar *line;
+    GError *error = NULL;
+    GIOStatus status;
+    gsize bytes_written;
+    const gssize null_term_str = -1;
+
+    errno = 0;
+    line = g_strdup_printf("%d%s", *v, GNX_NEWLINE);
+    status = g_io_channel_write_chars(file, line, null_term_str,
+                                      &bytes_written, &error);
+    if ((status == G_IO_STATUS_ERROR)
+        || (status == G_IO_STATUS_AGAIN)) {
+        errno = EIO;
+        gnx_i_io_cleanup(NULL, line, error, NULL);
+        return GNX_FAILURE;
+    }
+
+    g_assert(status == G_IO_STATUS_NORMAL);
+    g_free(line);
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Writes an undirected graph to file.
+ *
+ * @param graph The undirected graph to output to file.
+ * @param filename Write the graph to this file.  This file must not already
+ *        exist.
+ * @return Nonzero if the graph was successfully written to file; zero
+ *         otherwise.  If we cannot write to file, then we set @c errno to
+ *         @c EIO and return zero.
+ */
+static int
+gnx_i_write_undirected(GnxGraph *graph,
+                       const char *filename)
+{
+    double weight;
+    GError *error = NULL;
+    GnxNeighborIter iternei;
+    GnxNodeIter iter;
+    GIOChannel *file;
+    int valid;
+    unsigned int u, v;
+
+    errno = 0;
+    file = g_io_channel_new_file((const gchar *)filename, "w", &error);
+    if (!file) {
+        errno = EIO;
+        if (error)
+            g_error_free(error);
+
+        return GNX_FAILURE;
+    }
+
+    /* Iterate over each node u. */
+    gnx_node_iter_init(&iter, graph);
+    while (gnx_node_iter_next(&iter, &u)) {
+        /* Node u is isolated.  It does not link to any other node. */
+        if (!gnx_degree(graph, &u)) {
+            if (!gnx_i_write_node(file, &u))
+                goto cleanup;
+
+            continue;
+        }
+
+        /* Iterate over each neighbor v of u.  Since the graph is undirected,
+         * both of the edges (u,v) and (v,u) are the same.  We only write the
+         * edge (u,v) to file provided that u <= v.
+         */
+        gnx_neighbor_iter_init(&iternei, graph, &u);
+        while (gnx_neighbor_iter_next(&iternei, &v, &weight)) {
+            if (u > v)
+                continue;
+
+            if (graph->weighted)
+                valid = gnx_i_write_edge(file, &u, &v, &weight);
+            else
+                valid = gnx_i_write_edge(file, &u, &v, NULL);
+
+            if (!valid)
+                goto cleanup;
+        }
+    }
+
+    (void)g_io_channel_flush(file, &error);
+    gnx_i_io_cleanup(file, NULL, error, NULL);
+
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = EIO;
+    gnx_i_io_cleanup(file, NULL, NULL, NULL);
+    return GNX_FAILURE;
+}
+
 /**************************************************************************
  * public interface
  *************************************************************************/
@@ -643,4 +880,41 @@ gnx_read(const char *filename,
     }
 
     return graph;
+}
+
+/**
+ * @brief Writes a graph to file.
+ *
+ * You must ensure that the file does not exist before you write to it.
+ * The function gnx_write() will refuse to write to an existing file.
+ *
+ * @param graph The graph to output to file.
+ * @param filename Write the graph to this file.  This file must not already
+ *        exist.  The file will specify the graph as per the gnx format.
+ *        See the section <em>Detailed Description</em> for an explanation of
+ *        the gnx format.
+ * @return Nonzero if the graph was successfully written to file; zero
+ *         otherwise.  We also return zero if the graph does not contain any
+ *         node.  If @a filename is an existing file, we set @c errno to
+ *         @c EEXIST and return zero.  If we cannot write to file, then
+ *         @c errno is set to @c EIO and we return zero.
+ */
+int
+gnx_write(GnxGraph *graph,
+          const char *filename)
+{
+    errno = 0;
+    gnx_i_check(graph);
+    g_return_val_if_fail(filename, GNX_FAILURE);
+
+    if (!graph->total_nodes)
+        return GNX_FAILURE;
+    if (g_file_test((const gchar *)filename, G_FILE_TEST_EXISTS)) {
+        errno = EEXIST;
+        return GNX_FAILURE;
+    }
+
+    if (graph->directed)
+        return gnx_i_write_directed(graph, filename);
+    return gnx_i_write_undirected(graph, filename);
 }

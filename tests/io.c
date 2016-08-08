@@ -43,6 +43,14 @@ static void read_non_existing_file(void);
 static void read_not_available(void);
 static void read_valid_graphs(void);
 
+/* write graph */
+static void write_directed_graph(void);
+static void write_empty_graph(void);
+static void write_to_directory(void);
+static void write_to_existing_file(void);
+static void write_undirected_graph(void);
+static void write_weighted_graph(void);
+
 /**************************************************************************
  * read graph from file
  *************************************************************************/
@@ -363,6 +371,240 @@ read_valid_graphs(void)
 }
 
 /**************************************************************************
+ * write graph to file
+ *************************************************************************/
+
+static void
+write(void)
+{
+    write_directed_graph();
+    write_empty_graph();
+    write_to_directory();
+    write_to_existing_file();
+    write_undirected_graph();
+    write_weighted_graph();
+}
+
+/* Write a digraph to file.
+ */
+static void
+write_directed_graph()
+{
+    GnxGraph *graph;
+    unsigned int nedge, nnode, u, v;
+    const char myfile[] = "mygraph.csv";
+
+    /* First, write the graph to file. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(graph);
+    u = 0;
+    v = 1;
+    assert(gnx_add_edge(graph, &u, &v));
+    u = 2;
+    assert(gnx_add_node(graph, &u));
+    nnode = graph->total_nodes;
+    nedge = graph->total_edges;
+    assert(gnx_write(graph, myfile));
+    gnx_destroy(graph);
+
+    /* Next, read in the graph from file and verify. */
+    graph = gnx_read(myfile, GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(graph);
+    u = 0;
+    v = 1;
+    assert(gnx_has_edge(graph, &u, &v));
+    u = 2;
+    assert(gnx_has_node(graph, &u));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    gnx_destroy(graph);
+    g_remove(myfile);
+}
+
+/* Cannot write an empty graph to file.
+ */
+static void
+write_empty_graph()
+{
+    GnxGraph *graph;
+    const char myfile[] = "mygraph.csv";
+
+    /* Cannot write to file if graph has zero nodes. */
+    graph = gnx_new();
+    assert(0 == graph->total_nodes);
+    assert(!gnx_write(graph, myfile));
+
+    gnx_destroy(graph);
+}
+
+/* Cannot write to a directory.
+ */
+static void
+write_to_directory(void)
+{
+    char *dirname;
+    GnxGraph *graph;
+    const unsigned int u = 0;
+    const unsigned int v = 1;
+    const unsigned int nnode = 2;
+    const unsigned int nedge = 1;
+
+    dirname = random_template();
+    dirname = g_mkdtemp_full(dirname, S_IRWXU);
+    assert(dirname);
+
+    graph = gnx_new();
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(nnode == graph->total_nodes);
+    assert(nedge == graph->total_edges);
+    assert(!gnx_write(graph, dirname));
+    assert(EEXIST == errno);
+
+    assert(0 == g_rmdir(dirname));
+    free(dirname);
+    gnx_destroy(graph);
+}
+
+/* Cannot write to an existing file.
+ */
+static void
+write_to_existing_file()
+{
+    GnxGraph *graph;
+    const char myfile[] = "mygraph.csv";
+    const unsigned int u = 2;
+    const unsigned int v = 1;
+    const unsigned int nnode = 1;
+
+    graph = gnx_new();
+    assert(gnx_add_node(graph, &u));
+    assert(nnode == graph->total_nodes);
+    assert(gnx_write(graph, myfile));
+    gnx_destroy(graph);
+
+    /* Cannot overwrite an existing file. */
+    graph = gnx_new();
+    assert(gnx_add_node(graph, &v));
+    assert(nnode == graph->total_nodes);
+    assert(!gnx_write(graph, myfile));
+    assert(EEXIST == errno);
+    gnx_destroy(graph);
+
+    g_remove(myfile);
+}
+
+/* Write an undirected graph to file.
+ */
+static void
+write_undirected_graph()
+{
+    GnxGraph *graph;
+    unsigned int u, v;
+    const char myfile[] = "mygraph.csv";
+
+    /* First, write the graph to file. */
+    graph = gnx_new();
+    u = 0;
+    v = 1;
+    assert(gnx_add_edge(graph, &u, &v));
+    u = 3;
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_write(graph, myfile));
+    gnx_destroy(graph);
+
+    /* Next, read the graph from file and verify. */
+    graph = gnx_read(myfile, GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(graph);
+    u = 0;
+    v = 1;
+    assert(gnx_has_edge(graph, &u, &v));
+    u = 3;
+    v = 0;
+    assert(!gnx_has_edge(graph, &u, &v));
+    v = 1;
+    assert(!gnx_has_edge(graph, &u, &v));
+    gnx_destroy(graph);
+    g_remove(myfile);
+}
+
+/* Write a weighted graph to file.
+ */
+static void
+write_weighted_graph(void)
+{
+    double weight;
+    GnxGraph *graph;
+    unsigned int u, v;
+    const char myfile[] = "mygraph.csv";
+
+    /**********************************************************************
+     * undirected graph
+     *********************************************************************/
+
+    /* First, we write the graph to file. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(!gnx_is_directed(graph));
+    assert(gnx_is_weighted(graph));
+    u = 0;
+    v = 1;
+    weight = 3.14159;
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    u = 3;
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_write(graph, myfile));
+    gnx_destroy(graph);
+
+    /* Next, read the graph from file and verify. */
+    graph = gnx_read(myfile, GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(graph);
+    assert(!gnx_is_directed(graph));
+    assert(gnx_is_weighted(graph));
+    u = 0;
+    v = 1;
+    assert(gnx_has_edge(graph, &u, &v));
+    u = 3;
+    v = 0;
+    assert(!gnx_has_edge(graph, &u, &v));
+    v = 1;
+    assert(!gnx_has_edge(graph, &u, &v));
+    gnx_destroy(graph);
+    g_remove(myfile);
+
+    /**********************************************************************
+     * digraph
+     *********************************************************************/
+
+    /* First, write the graph to file. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_is_directed(graph));
+    assert(gnx_is_weighted(graph));
+    u = 0;
+    v = 1;
+    weight = 3.14159;
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    u = 3;
+    assert(gnx_add_node(graph, &u));
+    assert(gnx_write(graph, myfile));
+    gnx_destroy(graph);
+
+    /* Next, read the graph from file and verify. */
+    graph = gnx_read(myfile, GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(graph);
+    assert(gnx_is_directed(graph));
+    assert(gnx_is_weighted(graph));
+    u = 0;
+    v = 1;
+    assert(gnx_has_edge(graph, &u, &v));
+    u = 3;
+    v = 0;
+    assert(!gnx_has_edge(graph, &u, &v));
+    v = 1;
+    assert(!gnx_has_edge(graph, &u, &v));
+    gnx_destroy(graph);
+    g_remove(myfile);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -373,6 +615,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/io/read", read);
+    g_test_add_func("/io/write", write);
 
     return g_test_run();
 }

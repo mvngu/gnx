@@ -28,5 +28,7 @@ GnxGraph* gnx_read(const char *filename,
                    const GnxBool directed,
                    const GnxBool selfloop,
                    const GnxBool weighted);
+int gnx_write(GnxGraph *graph,
+              const char *filename);
 
 #endif  /* GNX_IO_H */
