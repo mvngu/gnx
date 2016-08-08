@@ -108,6 +108,10 @@
                                    * that is represented in MPFR.
                                    */
 
+#define GNX_NEWLINE ("\n")  /**< @hideinitializer
+                             * The new line character.
+                             */
+
 #define GNX_SUCCESS (!GNX_FAILURE)  /**< @hideinitializer
                                      * Signifies that an operation was
                                      * successful.
