@@ -398,7 +398,7 @@ typedef struct {
                                 */
     int directed;              /**< Is the graph directed? */
     int selfloop;              /**< Do we allow self-loops in the graph? */
-    GnxBool weighted;          /**< Is the graph weighted? */
+    int weighted;              /**< Is the graph weighted? */
     unsigned int capacity;     /**< The maximum number of nodes that the graph
                                 * can hold.  If adding another node would
                                 * exceed the capacity, then we need to resize
