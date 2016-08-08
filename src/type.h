@@ -397,7 +397,7 @@ typedef struct {
                                 * are adjacent to i.
                                 */
     int directed;              /**< Is the graph directed? */
-    GnxBool selfloop;          /**< Do we allow self-loops in the graph? */
+    int selfloop;              /**< Do we allow self-loops in the graph? */
     GnxBool weighted;          /**< Is the graph weighted? */
     unsigned int capacity;     /**< The maximum number of nodes that the graph
                                 * can hold.  If adding another node would

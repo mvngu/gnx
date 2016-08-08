@@ -1033,7 +1033,7 @@ gnx_add_edge(GnxGraph *graph,
     g_return_val_if_fail(!gnx_is_weighted(graph), GNX_FAILURE);
     if (gnx_has_edge(graph, u, v))
         return GNX_FAILURE;
-    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+    if ((!graph->selfloop) && (*u == *v))
         return GNX_FAILURE;
 
     /* Add the nodes to the graph as appropriate. */
@@ -1095,7 +1095,7 @@ gnx_add_edgew(GnxGraph *graph,
     g_return_val_if_fail(w, GNX_FAILURE);
     if (gnx_has_edge(graph, u, v))
         return GNX_FAILURE;
-    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+    if ((!graph->selfloop) && (*u == *v))
         return GNX_FAILURE;
 
     /* Add the nodes to the graph as appropriate. */
@@ -1222,7 +1222,7 @@ gnx_allows_selfloop(const GnxGraph *graph)
 {
     gnx_i_check(graph);
 
-    return graph->selfloop & GNX_SELFLOOP;
+    return graph->selfloop;
 }
 
 /**
@@ -1564,7 +1564,7 @@ gnx_has_edge(const GnxGraph *graph,
 
     if (!gnx_has_node(graph, u) || !gnx_has_node(graph, v))
         return GNX_FAILURE;
-    if ((GNX_NO_SELFLOOP & graph->selfloop) && (*u == *v))
+    if ((!graph->selfloop) && (*u == *v))
         return GNX_FAILURE;
 
     /* Weighted graphs. */
@@ -1880,7 +1880,7 @@ gnx_new_full(const GnxBool directed,
         goto cleanup;
 
     graph->directed = GNX_DIRECTED & directed;
-    graph->selfloop = selfloop;
+    graph->selfloop = GNX_SELFLOOP & selfloop;
     graph->weighted = weighted;
     graph->capacity = reserved_nodes;
     graph->total_edges = 0;
