@@ -1,0 +1,92 @@
+# Network of relationships among common grape cultivars.  This network
+# is adapted from (Myles et al. 2011).
+#
+# Type: undirected
+# Nodes: 54
+# Edges: 80
+#
+#
+# S. Myles, A. R. Boyko, C. L. Owens, P. J. Brown, F. Grassi,
+#     M. K. Aradhya, B. Prins, A. Reynolds, J.-M. Chia, D. Ware,
+#     C. D. Bustamante, and E. S. Buckler.  Genetic structure and
+#     domestication history of the grape.  PNAS, 108:3530--3535, 2011.
+0,1
+0,31
+1,31
+2,11
+2,12
+2,48
+3,17
+3,4
+6,13
+6,14
+6,20
+7,18
+7,2
+7,40
+7,48
+7,51
+7,8
+8,18
+12,11
+12,42
+12,48
+13,20
+14,13
+14,20
+16,34
+16,53
+19,10
+19,23
+19,24
+19,27
+19,33
+20,32
+21,22
+27,23
+27,48
+29,28
+32,13
+32,14
+32,41
+32,48
+32,6
+34,10
+34,23
+34,25
+34,29
+34,53
+35,16
+35,34
+35,53
+37,36
+37,48
+39,4
+39,5
+40,12
+40,2
+40,4
+40,48
+40,51
+43,24
+43,48
+44,25
+44,48
+46,31
+46,32
+46,52
+47,26
+47,48
+48,15
+48,30
+48,45
+48,52
+48,9
+50,16
+50,21
+50,35
+50,53
+51,12
+51,38
+51,48
+51,49
