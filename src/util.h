@@ -24,6 +24,9 @@
 
 #include "type.h"
 
+int gnx_cmp(GnxGraph *g,
+            GnxGraph *h);
+
 /* comparing floating-point numbers */
 int gnx_double_cmp_eq(const double *a,
                       const double *b);

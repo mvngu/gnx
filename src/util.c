@@ -20,6 +20,8 @@
 #include <glib.h>
 #include <mpfr.h>
 
+#include "base.h"
+#include "sanity.h"
 #include "util.h"
 
 /**
@@ -71,6 +73,76 @@ gnx_i_double_cmp(const double *a,
 /**************************************************************************
  * public interface
  *************************************************************************/
+
+/**
+ * @brief Determines whether two graphs are the same.
+ *
+ * The function gnx_cmp() does not check whether two graphs are
+ * structurally the same.  That is, it does not check for graph isomorphism.
+ *
+ * Rather, the function simply checks that the graphs have the same basic
+ * properties such as directedness, allowance for self-loops, weightedness,
+ * and the numbers of edges and nodes.  The function also checks that the
+ * graphs have the same nodes and edges.
+ *
+ * @param g A graph to compare.
+ * @param h Compare this graph with @a g.
+ * @return Nonzero if both graphs are the same; zero otherwise.
+ */
+int
+gnx_cmp(GnxGraph *g,
+        GnxGraph *h)
+{
+    double weight_a, weight_b;
+    GnxNeighborIter iternei;
+    GnxNodeIter iter;
+    unsigned int u, v;
+
+    gnx_i_check(g);
+    gnx_i_check(h);
+
+    if (g->total_nodes != h->total_nodes)
+        return GNX_FAILURE;
+    if (g->total_edges != h->total_edges)
+        return GNX_FAILURE;
+    if (g->directed != h->directed)
+        return GNX_FAILURE;
+    if (g->selfloop != h->selfloop)
+        return GNX_FAILURE;
+    if (g->weighted != h->weighted)
+        return GNX_FAILURE;
+
+    /* Iterate over each node u of G. */
+    gnx_node_iter_init(&iter, g);
+    while (gnx_node_iter_next(&iter, &u)) {
+        if (!gnx_has_node(h, &u))
+            return GNX_FAILURE;
+
+        if (g->directed) {
+            if (gnx_outdegree(g, &u) != gnx_outdegree(h, &u))
+                return GNX_FAILURE;
+            if (gnx_indegree(g, &u) != gnx_indegree(h, &u))
+                return GNX_FAILURE;
+        } else {
+            if (gnx_degree(g, &u) != gnx_degree(h, &u))
+                return GNX_FAILURE;
+        }
+
+        /* Compare the neighbors of u in G with the neighbors of u in H. */
+        gnx_neighbor_iter_init(&iternei, g, &u);
+        while (gnx_neighbor_iter_next(&iternei, &v, &weight_a)) {
+            if (!gnx_has_edge(h, &u, &v))
+                return GNX_FAILURE;
+            if (g->weighted) {
+                weight_b = gnx_edge_weight(h, &u, &v);
+                if (!gnx_double_cmp_eq(&weight_a, &weight_b))
+                    return GNX_FAILURE;
+            }
+        }
+    }
+
+    return GNX_SUCCESS;
+}
 
 /**
  * @brief Determines whether two floating-point numbers are equal.
