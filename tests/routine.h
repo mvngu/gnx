@@ -19,6 +19,7 @@
 #define GNX_ROUTINE_H
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <glib.h>
 #include <gnx.h>
