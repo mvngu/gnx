@@ -55,6 +55,8 @@ void test_properties(const GnxGraph *graph,
                      const GnxBool directed,
                      const GnxBool selfloop,
                      const GnxBool weighted);
+unsigned int verify_edges(GnxGraph *graph,
+                          GnxGraph *g);
 
 /**************************************************************************
  * helper functions
@@ -280,6 +282,31 @@ test_properties(const GnxGraph *graph,
         assert(gnx_is_weighted(graph));
     else
         assert(!gnx_is_weighted(graph));
+}
+
+/**
+ * @brief Verify that two graphs have the same edges.
+ *
+ * @param graph A graph to verify.
+ * @param g Another graph to verify.
+ * @return The number of edges in @c g.
+ */
+unsigned int
+verify_edges(GnxGraph *graph,
+             GnxGraph *g)
+{
+    GnxEdgeIter iter;
+    unsigned int n, u, v;
+
+    n = 0;
+    gnx_edge_iter_init(&iter, g);
+    while (gnx_edge_iter_next(&iter, &u, &v)) {
+        assert(gnx_has_edge(graph, &u, &v));
+        n++;
+    }
+    assert(n == g->total_edges);
+
+    return n;
 }
 
 #endif  /* GNX_ROUTINE_H */
