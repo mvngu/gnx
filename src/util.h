@@ -30,10 +30,4 @@ int gnx_double_cmp_eq(const double *a,
 int gnx_double_cmp_le(const double *a,
                       const double *b);
 
-/* graph functions */
-void gnx_undirected_edge_order(const unsigned int *u,
-                               const unsigned int *v,
-                               unsigned int *a,
-                               unsigned int *b);
-
 #endif  /* GNX_UTIL_H */

@@ -1557,7 +1557,6 @@ gnx_has_edge(const GnxGraph *graph,
 {
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
-    unsigned int a, b;
 
     if (!gnx_has_node(graph, u) || !gnx_has_node(graph, v))
         return GNX_FAILURE;
@@ -1574,9 +1573,8 @@ gnx_has_edge(const GnxGraph *graph,
             return GNX_FAILURE;
         }
 
-        gnx_undirected_edge_order(u, v, &a, &b);
-        nodeu = (GnxNodeUndirected *)(graph->graph[a]);
-        if (gnx_dict_has((GnxDict *)(nodeu->neighbor), &b))
+        nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+        if (gnx_dict_has((GnxDict *)(nodeu->neighbor), v))
             return GNX_SUCCESS;
 
         return GNX_FAILURE;
@@ -1592,9 +1590,8 @@ gnx_has_edge(const GnxGraph *graph,
         return GNX_FAILURE;
     }
 
-    gnx_undirected_edge_order(u, v, &a, &b);
-    nodeu = (GnxNodeUndirected *)(graph->graph[a]);
-    if (gnx_set_has((GnxSet *)(nodeu->neighbor), &b))
+    nodeu = (GnxNodeUndirected *)(graph->graph[*u]);
+    if (gnx_set_has((GnxSet *)(nodeu->neighbor), v))
         return GNX_SUCCESS;
 
     return GNX_FAILURE;
