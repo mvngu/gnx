@@ -92,4 +92,10 @@
 #define GNX_ALLOC_NODE_DIRECTED_WEIGHTED_SIZE                              \
     (GNX_ALLOC_DICT_SIZE + GNX_ALLOC_SET_SIZE + 1)
 
+/* The number of allocations that is required to initialize a graph.  Any
+ * non-negative integer below this number would result in an out-of-memory
+ * error.
+ */
+#define GNX_ALLOC_SIZE (2 + GNX_ALLOC_SET_SIZE)
+
 #endif  /* GNX_CONSTANT_H */
