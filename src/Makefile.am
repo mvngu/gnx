@@ -12,7 +12,8 @@ GNX_HEADERFILES =                                                          \
 	set.h                                                              \
 	stack.h                                                            \
 	type.h                                                             \
-	util.h
+	util.h                                                             \
+	visit.h
 ### GNX_HOOK:ALLOC_H
 
 noinst_HEADERS =                                                           \
@@ -30,7 +31,8 @@ GNX_SRC =                                                                  \
 	sanity.c                                                           \
 	set.c                                                              \
 	stack.c                                                            \
-	util.c
+	util.c                                                             \
+	visit.c
 ### GNX_HOOK:ALLOC_C
 
 libgnx_la_SOURCES =                                                        \

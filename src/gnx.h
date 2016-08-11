@@ -30,6 +30,7 @@
 #include "stack.h"
 #include "type.h"
 #include "util.h"
+#include "visit.h"
 /* GNX_HOOK:ALLOC_H */
 
 #undef GNX_H_INSIDE

@@ -29,4 +29,5 @@ test_programs =                                                            \
 	queue                                                              \
 	set                                                                \
 	stack                                                              \
-	util
+	util                                                               \
+	visit
