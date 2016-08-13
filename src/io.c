@@ -246,7 +246,10 @@ gnx_i_node_str2int(gchar *node,
  * @param u The tail component of the edge will be stored here.
  * @param v The head component of the edge will be stored here.
  * @param weighted Whether we are reading a weighted graph.  Possible values
- *        are: #GNX_WEIGHTED or #GNX_UNWEIGHTED.
+ *        are: #GNX_WEIGHTED or #GNX_UNWEIGHTED.  It is possible to pass in
+ *        #GNX_UNWEIGHTED even though the graph to read is weighted.  In this
+ *        case, we will ignore all edge weights and obtain an unweighted
+ *        version of the graph.
  * @param weight The weight (if any) of the edge will be stored here.
  * @return Nonzero if @a line represents a valid edge or a node;
  *         #GNX_COMMENT_LINE if @a line represents a comment;
