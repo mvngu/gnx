@@ -22,6 +22,8 @@
 #error "Only <gnx.h> can be included directly."
 #endif
 
+#include <stddef.h>
+
 /* wrappers for library functions */
 void* __real_calloc(size_t nobject,
                     size_t size);
