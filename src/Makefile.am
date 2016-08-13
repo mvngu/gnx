@@ -5,6 +5,7 @@ MAIN_HEADERFILE = gnx.h
 GNX_HEADERFILES =                                                          \
 	array.h                                                            \
 	base.h                                                             \
+	convert.h                                                          \
 	dict.h                                                             \
 	heap.h                                                             \
 	io.h                                                               \
@@ -24,6 +25,7 @@ noinst_HEADERS += alloc.h
 GNX_SRC =                                                                  \
 	array.c                                                            \
 	base.c                                                             \
+	convert.c                                                          \
 	dict.c                                                             \
 	heap.c                                                             \
 	io.c                                                               \

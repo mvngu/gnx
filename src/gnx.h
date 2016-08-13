@@ -22,6 +22,7 @@
 
 #include "array.h"
 #include "base.h"
+#include "convert.h"
 #include "dict.h"
 #include "heap.h"
 #include "io.h"

@@ -23,6 +23,7 @@ AM_CPPFLAGS =                                                              \
 test_programs =                                                            \
 	array                                                              \
 	base                                                               \
+	convert                                                            \
 	dict                                                               \
 	heap                                                               \
 	io                                                                 \
