@@ -104,14 +104,14 @@ bfs_directed_weighted(void)
 {
     GnxGraph *g, *graph;
     unsigned int start;
-    const unsigned int nnode = 14018;
-    const unsigned int nedge = 51482;
+    const unsigned int nnode = 7419;
+    const unsigned int nedge = 56446;
     const int low = 0;
     const int high = (int)nnode;
 
     /* Read in the graph from file. */
     graph = gnx_read("data/network/advogato.csv",
-                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
     assert(gnx_is_directed(graph));
     assert(gnx_is_weighted(graph));
     assert(nnode == graph->total_nodes);

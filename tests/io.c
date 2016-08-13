@@ -76,11 +76,11 @@ read_advogato(void)
     GnxGraph *graph;
 
     graph = gnx_read("data/network/advogato.csv",
-                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
     assert(graph);
     assert(gnx_is_weighted(graph));
-    assert(14018 == graph->total_nodes);
-    assert(51482 == graph->total_edges);
+    assert(7419 == graph->total_nodes);
+    assert(56446 == graph->total_edges);
 
     gnx_destroy(graph);
 }
@@ -94,11 +94,11 @@ read_advogato_ignore_weight(void)
     GnxGraph *graph;
 
     graph = gnx_read("data/network/advogato.csv",
-                     GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+                     GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
     assert(graph);
     assert(!gnx_is_weighted(graph));
-    assert(14018 == graph->total_nodes);
-    assert(51482 == graph->total_edges);
+    assert(7419 == graph->total_nodes);
+    assert(56446 == graph->total_edges);
 
     gnx_destroy(graph);
 }
