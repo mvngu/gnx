@@ -117,10 +117,12 @@ bfs_directed_weighted(void)
     assert(nnode == graph->total_nodes);
     assert(nedge == graph->total_edges);
 
-    /* Choose a node with at least one out-degree. */
+    /* Choose a node that is not isolated.  Refer to the internal function
+     * is_isolated() for the definition of isolated node in a directed graph.
+     */
     do {
-        start = (unsigned int)g_random_int_range(low, high);
-    } while (gnx_outdegree(graph, &start) < 1);
+        start = random_node_id(&low, &high);
+    } while (is_isolated(graph, &start));
 
     g = gnx_breadth_first_search(graph, &start);
     assert(gnx_is_directed(g));

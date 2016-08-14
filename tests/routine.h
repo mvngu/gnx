@@ -41,6 +41,8 @@ void add_nodes(GnxGraph *graph,
                const unsigned int node[],
                const unsigned int *size);
 void is_empty_graph(const GnxGraph *graph);
+int is_isolated(const GnxGraph *graph,
+                const unsigned int *v);
 unsigned int non_member_node(const GnxGraph *graph,
                              const int *low,
                              const int *high);
@@ -141,6 +143,37 @@ is_empty_graph(const GnxGraph *graph)
 {
     assert(0 == graph->total_nodes);
     assert(0 == graph->total_edges);
+}
+
+/**
+ * @brief Whether a node is isolated.
+ *
+ * @param graph Query this graph.
+ * @param v Test this node in the given graph.
+ * @return Nonzero if the node is isolated; zero otherwise.
+ */
+int
+is_isolated(const GnxGraph *graph,
+            const unsigned int *v)
+{
+    /* A node is also isolated even though it has zero out-degree and it has
+     * in-degree > 0.
+     */
+    if (graph->directed) {
+        if (!gnx_outdegree(graph, v))
+            return GNX_SUCCESS;
+        if ((1 == gnx_outdegree(graph, v)) && gnx_has_edge(graph, v, v))
+            return GNX_SUCCESS;
+
+        return GNX_FAILURE;
+    }
+
+    if (!gnx_degree(graph, v))
+        return GNX_SUCCESS;
+    if ((1 == gnx_degree(graph, v)) && gnx_has_edge(graph, v, v))
+        return GNX_SUCCESS;
+
+    return GNX_FAILURE;
 }
 
 /**
