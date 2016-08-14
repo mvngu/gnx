@@ -1174,7 +1174,8 @@ iter_one(void)
     double *value;
     GnxDict *dict;
     GnxDictIter iter;
-    unsigned int k, *key;
+    gnxptr k;
+    unsigned int *key;
 
     /**********************************************************************
      * Do not release the memory of elements.
@@ -1191,7 +1192,7 @@ iter_one(void)
 
     gnx_dict_iter_init(&iter, dict);
     assert(gnx_dict_iter_next(&iter, &k, NULL));
-    assert(*key == k);
+    assert(*key == *((unsigned int *)k));
     assert(!gnx_dict_iter_next(&iter, NULL, NULL));
 
     free(key);
@@ -1213,7 +1214,7 @@ iter_one(void)
 
     gnx_dict_iter_init(&iter, dict);
     assert(gnx_dict_iter_next(&iter, &k, NULL));
-    assert(*key == k);
+    assert(*key == *((unsigned int *)k));
     assert(!gnx_dict_iter_next(&iter, NULL, NULL));
 
     gnx_destroy_dict(dict);
@@ -1227,7 +1228,7 @@ iter_random(void)
     double *listv, *v;
     GnxDict *dict;
     GnxDictIter iter;
-    gnxptr value;
+    gnxptr kptr, vptr;
     unsigned int i, *k, key, *listk;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
@@ -1262,10 +1263,10 @@ iter_random(void)
      * the elements of the list.
      */
     gnx_dict_iter_init(&iter, dict);
-    while (gnx_dict_iter_next(&iter, &key, &value)) {
+    while (gnx_dict_iter_next(&iter, &kptr, &vptr)) {
         for (i = 0; i < size; i++) {
-            if (key == listk[i]) {
-                assert(gnx_double_cmp_eq(&(listv[i]), (double *)value));
+            if (*((unsigned int *)kptr) == listk[i]) {
+                assert(gnx_double_cmp_eq(&(listv[i]), (double *)vptr));
                 break;
             }
         }
@@ -1312,10 +1313,10 @@ iter_random(void)
      * the elements of the list.
      */
     gnx_dict_iter_init(&iter, dict);
-    while (gnx_dict_iter_next(&iter, &key, &value)) {
+    while (gnx_dict_iter_next(&iter, &kptr, &vptr)) {
         for (i = 0; i < size; i++) {
-            if (key == listk[i]) {
-                assert(gnx_double_cmp_eq(&(listv[i]), (double *)value));
+            if (*((unsigned int *)kptr) == listk[i]) {
+                assert(gnx_double_cmp_eq(&(listv[i]), (double *)vptr));
                 break;
             }
         }

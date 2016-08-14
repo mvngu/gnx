@@ -600,7 +600,7 @@ gnx_dict_iter_init(GnxDictIter *iter,
  */
 int
 gnx_dict_iter_next(GnxDictIter *iter,
-                   unsigned int *key,
+                   gnxptr *key,
                    gnxptr *value)
 {
     GnxArray *bucket;
@@ -631,7 +631,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
         iter->j = 0;
         node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
-            *key = *(node->key);
+            *key = node->key;
         if (value)
             *value = node->value;
 
@@ -647,7 +647,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
     for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
         node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
-            *key = *(node->key);
+            *key = node->key;
         if (value)
             *value = node->value;
         return GNX_SUCCESS;
@@ -668,7 +668,7 @@ gnx_dict_iter_next(GnxDictIter *iter,
         iter->j = 0;
         node = (GnxNode *)(bucket->cell[iter->j]);
         if (key)
-            *key = *(node->key);
+            *key = node->key;
         if (value)
             *value = node->value;
         return GNX_SUCCESS;
