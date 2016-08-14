@@ -135,8 +135,12 @@ gnx_breadth_first_search(GnxGraph *graph,
     if (graph->directed) {
         if (!gnx_outdegree(graph, s))
             return NULL;
+        if ((1 == gnx_outdegree(graph, s)) && gnx_has_edge(graph, s, s))
+            return NULL;
     } else {
         if (!gnx_degree(graph, s))
+            return NULL;
+        if ((1 == gnx_degree(graph, s)) && gnx_has_edge(graph, s, s))
             return NULL;
     }
 

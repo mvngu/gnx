@@ -37,6 +37,7 @@
 static void bfs_directed(void);
 static void bfs_directed_weighted(void);
 static void bfs_graph(void);
+static void bfs_isolated(void);
 static void bfs_no_memory(void);
 static void bfs_one_directed_edge(void);
 static void bfs_one_node(void);
@@ -57,6 +58,7 @@ bfs(void)
     bfs_directed();
     bfs_directed_weighted();
     bfs_graph();
+    bfs_isolated();
     bfs_no_memory();
     bfs_one_directed_edge();
     bfs_one_node();
@@ -168,6 +170,114 @@ bfs_graph(void)
     assert(2 == n);
     gnx_destroy(graph);
     gnx_destroy(g);
+}
+
+/* Breadth-first search starting from a node that is isolated.
+ */
+static void
+bfs_isolated(void)
+{
+    GnxGraph *graph;
+    const double weight = (double)g_random_double();
+    const unsigned int u = 0;
+    const unsigned int v = 1;
+    const unsigned int w = 2;
+
+    /* Directed, self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_edge(graph, &v, &v));
+    assert(gnx_add_edge(graph, &w, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &v));
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_add_edgew(graph, &v, &v, &weight));
+    assert(gnx_add_edgew(graph, &w, &w, &weight));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &v));
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_node(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &v));
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Directed, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_DIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_add_node(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &v));
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_edge(graph, &v, &v));
+    assert(gnx_add_edge(graph, &w, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_add_edgew(graph, &v, &v, &weight));
+    assert(gnx_add_edgew(graph, &w, &w, &weight));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(3 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(gnx_add_node(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(gnx_add_node(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_breadth_first_search(graph, &w));
+    assert(3 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
 }
 
 /* Test the function gnx_breadth_first_search() under low-memory scenarios.
