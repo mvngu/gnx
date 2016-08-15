@@ -912,6 +912,7 @@ iter_one(void)
 {
     GnxSet *set;
     GnxSetIter iter;
+    gnxptr eptr;
     unsigned int a = (unsigned int)g_random_int();
     unsigned int *e, elem;
 
@@ -924,7 +925,8 @@ iter_one(void)
     assert(1 == set->size);
 
     gnx_set_iter_init(&iter, set);
-    assert(gnx_set_iter_next(&iter, &elem));
+    assert(gnx_set_iter_next(&iter, &eptr));
+    elem = *((unsigned int *)eptr);
     assert(elem == a);
     assert(!gnx_set_iter_next(&iter, NULL));
 
@@ -941,7 +943,8 @@ iter_one(void)
     assert(1 == set->size);
 
     gnx_set_iter_init(&iter, set);
-    assert(gnx_set_iter_next(&iter, &elem));
+    assert(gnx_set_iter_next(&iter, &eptr));
+    elem = *((unsigned int *)eptr);
     assert(elem == a);
     assert(!gnx_set_iter_next(&iter, NULL));
 
@@ -956,6 +959,7 @@ iter_random_dont_free_elements(void)
 {
     GnxSet *set;
     GnxSetIter iter;
+    gnxptr eptr;
     unsigned int elem, i, j, *list, unique;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
@@ -991,7 +995,8 @@ iter_random_dont_free_elements(void)
      * elements of the list.
      */
     gnx_set_iter_init(&iter, set);
-    while (gnx_set_iter_next(&iter, &elem)) {
+    while (gnx_set_iter_next(&iter, &eptr)) {
+        elem = *((unsigned int *)eptr);
         for (i = 0; i < size; i++) {
             if (elem == list[i])
                 break;
@@ -1011,6 +1016,7 @@ iter_random_free_elements(void)
 {
     GnxSet *set;
     GnxSetIter iter;
+    gnxptr eptr;
     unsigned int *e, elem, i, j, *list, unique;
     const unsigned int size = (3u << (GNX_DEFAULT_EXPONENT - 2)) - 1;
 
@@ -1047,7 +1053,8 @@ iter_random_free_elements(void)
      * elements of the list.
      */
     gnx_set_iter_init(&iter, set);
-    while (gnx_set_iter_next(&iter, &elem)) {
+    while (gnx_set_iter_next(&iter, &eptr)) {
+        elem = *((unsigned int *)eptr);
         for (i = 0; i < size; i++) {
             if (elem == list[i])
                 break;

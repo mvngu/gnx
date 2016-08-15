@@ -468,7 +468,7 @@ unsigned int
 gnx_set_any(GnxSet *set)
 {
     GnxSetIter iter;
-    unsigned int elem;
+    gnxptr elem;
 
     gnx_i_check_set(set);
     g_return_val_if_fail(set->size, GNX_FAILURE);
@@ -476,7 +476,7 @@ gnx_set_any(GnxSet *set)
     gnx_set_iter_init(&iter, set);
     assert(gnx_set_iter_next(&iter, &elem));
 
-    return elem;
+    return *((unsigned int *)elem);
 }
 
 /**
@@ -564,7 +564,7 @@ gnx_set_iter_init(GnxSetIter *iter,
  */
 int
 gnx_set_iter_next(GnxSetIter *iter,
-                  unsigned int *elem)
+                  gnxptr *elem)
 {
     GnxArray *bucket;
     unsigned int i;
@@ -592,7 +592,7 @@ gnx_set_iter_next(GnxSetIter *iter,
         g_assert(bucket->size);
         iter->j = 0;
         if (elem)
-            *elem = *((unsigned int *)(bucket->cell[iter->j]));
+            *elem = (unsigned int *)(bucket->cell[iter->j]);
 
         iter->bootstrap = FALSE;
         return GNX_SUCCESS;
@@ -604,7 +604,7 @@ gnx_set_iter_next(GnxSetIter *iter,
     bucket = (GnxArray *)(iter->set->bucket[iter->i]);
     for ((iter->j)++; iter->j < bucket->size; (iter->j)++) {
         if (elem)
-            *elem = *((unsigned int *)(bucket->cell[iter->j]));
+            *elem = (unsigned int *)(bucket->cell[iter->j]);
         return GNX_SUCCESS;
     }
 
@@ -622,7 +622,7 @@ gnx_set_iter_next(GnxSetIter *iter,
         g_assert(bucket->size);
         iter->j = 0;
         if (elem)
-            *elem = *((unsigned int *)(bucket->cell[iter->j]));
+            *elem = (unsigned int *)(bucket->cell[iter->j]);
         return GNX_SUCCESS;
     }
 

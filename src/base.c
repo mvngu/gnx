@@ -491,6 +491,7 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
     GnxSetIter iter;
     GnxNodeDirected *noded, *noded_w;
     GnxNodeUndirected *nodeu, *nodeu_w;
+    gnxptr wptr;
     unsigned int degree, w;
 
     /* Removing a node from a graph requires that we also delete every edge
@@ -510,7 +511,8 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
         neighbor = (GnxSet *)(noded->outneighbor);
         degree = neighbor->size;
         gnx_set_iter_init(&iter, neighbor);
-        while (gnx_set_iter_next(&iter, &w)) {
+        while (gnx_set_iter_next(&iter, &wptr)) {
+            w = *((unsigned int *)wptr);
             noded_w = (GnxNodeDirected *)(graph->graph[w]);
             g_assert(noded_w);
             assert(gnx_set_delete((GnxSet *)(noded_w->inneighbor), v));
@@ -524,7 +526,8 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
         neighbor_in = (GnxSet *)(noded->inneighbor);
         degree += neighbor_in->size;
         gnx_set_iter_init(&iter, neighbor_in);
-        while (gnx_set_iter_next(&iter, &w)) {
+        while (gnx_set_iter_next(&iter, &wptr)) {
+            w = *((unsigned int *)wptr);
             noded_w = (GnxNodeDirected *)(graph->graph[w]);
             g_assert(noded_w);
             assert(gnx_set_delete((GnxSet *)(noded_w->outneighbor), v));
@@ -552,7 +555,9 @@ gnx_i_delete_node_unweighted(GnxGraph *graph,
     neighbor = (GnxSet *)(nodeu->neighbor);
     degree = neighbor->size;
     gnx_set_iter_init(&iter, neighbor);
-    while (gnx_set_iter_next(&iter, &w)) {
+    while (gnx_set_iter_next(&iter, &wptr)) {
+        w = *((unsigned int *)wptr);
+
         /* Skip over any self-loop. */
         if (*v == w)
             continue;
@@ -622,7 +627,8 @@ gnx_i_delete_node_weighted(GnxGraph *graph,
         neighbor_in = (GnxSet *)(noded->inneighbor);
         degree += neighbor_in->size;
         gnx_set_iter_init(&iters, neighbor_in);
-        while (gnx_set_iter_next(&iters, &w)) {
+        while (gnx_set_iter_next(&iters, &wptr)) {
+            w = *((unsigned int *)wptr);
             noded_w = (GnxNodeDirected *)(graph->graph[w]);
             g_assert(noded_w);
             assert(gnx_dict_delete((GnxDict *)(noded_w->outneighbor), v));
@@ -828,17 +834,17 @@ gnx_i_next_directed_edge(GnxEdgeIter *iter,
     gnxptr wptr;
     int success;
 
-    if (iter->weighted) {
+    if (iter->weighted)
         success = gnx_dict_iter_next(&(iter->dict), &wptr, NULL);
-        if (success) {
-            *w = *((unsigned int *)wptr);
-            return GNX_SUCCESS;
-        }
+    else
+        success = gnx_set_iter_next(&(iter->set), &wptr);
 
-        return GNX_FAILURE;
+    if (success) {
+        *w = *((unsigned int *)wptr);
+        return GNX_SUCCESS;
     }
 
-    return gnx_set_iter_next(&(iter->set), w);
+    return GNX_FAILURE;
 }
 
 /**
@@ -868,7 +874,8 @@ gnx_i_next_undirected_edge(GnxEdgeIter *iter,
             }
         }
     } else {
-        while (gnx_set_iter_next(&(iter->set), w)) {
+        while (gnx_set_iter_next(&(iter->set), &wptr)) {
+            *w = *((unsigned int *)wptr);
             if (iter->i <= *w) {
                 *has_head = TRUE;
                 break;
@@ -1806,10 +1813,10 @@ gnx_neighbor_iter_next(GnxNeighborIter *iter,
     if (iter->weighted)
         has_more = gnx_dict_iter_next(&(iter->iterd), &wptr, &value);
     else
-        has_more = gnx_set_iter_next(&(iter->iters), w);
+        has_more = gnx_set_iter_next(&(iter->iters), &wptr);
 
     if (has_more) {
-        if (iter->weighted && w)
+        if (w)
             *w = *((unsigned int *)wptr);
         if (iter->weighted && weight)
             *weight = *((double *)value);

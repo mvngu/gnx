@@ -44,6 +44,6 @@ unsigned int* gnx_set_has(const GnxSet *set,
 void gnx_set_iter_init(GnxSetIter *iter,
                        GnxSet *set);
 int gnx_set_iter_next(GnxSetIter *iter,
-                      unsigned int *elem);
+                      gnxptr *elem);
 
 #endif  /* GNX_SET_H */
