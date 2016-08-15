@@ -41,8 +41,8 @@ void gnx_neighbor_iter_init(GnxNeighborIter *iter,
                             GnxGraph *graph,
                             const unsigned int *v);
 int gnx_neighbor_iter_next(GnxNeighborIter *iter,
-                           unsigned int *w,
-                           double *weight);
+                           gnxptr *w,
+                           gnxptr *weight);
 void gnx_node_iter_init(GnxNodeIter *iter,
                         GnxGraph *graph);
 int gnx_node_iter_next(GnxNodeIter *iter,

@@ -4091,6 +4091,7 @@ neighbor_iterator_directed_unweighted(void)
 {
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
      * do not have out-neighbors.  The first zero (0) in a list specifies the
@@ -4126,7 +4127,8 @@ neighbor_iterator_directed_unweighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, NULL)) {
+            w = *((unsigned int *)wptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w)
                     break;
@@ -4150,6 +4152,7 @@ neighbor_iterator_directed_weighted(void)
     double wgt;
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr, wgtptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
      * do not have out-neighbors.  The first zero (0) in a list specifies the
@@ -4202,7 +4205,9 @@ neighbor_iterator_directed_weighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, &wgtptr)) {
+            w = *((unsigned int *)wptr);
+            wgt = *((double *)wgtptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w) {
                     assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
@@ -4226,6 +4231,7 @@ neighbor_iterator_undirected_unweighted(void)
 {
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that node 14 is isolated, hence
      * has degree zero.  The first or second zero (0) in a list specifies the
@@ -4261,7 +4267,8 @@ neighbor_iterator_undirected_unweighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, NULL)) {
+            w = *((unsigned int *)wptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w)
                     break;
@@ -4284,6 +4291,7 @@ neighbor_iterator_undirected_weighted(void)
     double wgt;
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr, wgtptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that node 14 is isolated, hence
      * has degree zero.  The first or second zero (0) in a list specifies the
@@ -4336,7 +4344,9 @@ neighbor_iterator_undirected_weighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, &wgtptr)) {
+            w = *((unsigned int *)wptr);
+            wgt = *((double *)wgtptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w) {
                     assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
@@ -4360,6 +4370,7 @@ neighbor_iterator_selfloop_directed_unweighted(void)
 {
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
      * do not have out-neighbors.  The first zero (0) in a list specifies the
@@ -4395,7 +4406,8 @@ neighbor_iterator_selfloop_directed_unweighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, NULL)) {
+            w = *((unsigned int *)wptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w)
                     break;
@@ -4418,6 +4430,7 @@ neighbor_iterator_selfloop_directed_weighted(void)
     double wgt;
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr, wgtptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that nodes 11, 13, and 14 each
      * do not have out-neighbors.  The first zero (0) in a list specifies the
@@ -4470,7 +4483,9 @@ neighbor_iterator_selfloop_directed_weighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, &wgtptr)) {
+            w = *((unsigned int *)wptr);
+            wgt = *((double *)wgtptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w) {
                     assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));
@@ -4494,6 +4509,7 @@ neighbor_iterator_selfloop_undirected_unweighted(void)
 {
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that node 14 is isolated, hence
      * has degree zero.  The first or second zero (0) in a list specifies the
@@ -4529,7 +4545,8 @@ neighbor_iterator_selfloop_undirected_unweighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, NULL)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, NULL)) {
+            w = *((unsigned int *)wptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w)
                     break;
@@ -4552,6 +4569,7 @@ neighbor_iterator_selfloop_undirected_weighted(void)
     double wgt;
     GnxGraph *graph;
     GnxNeighborIter iter;
+    gnxptr wptr, wgtptr;
     unsigned int i, v, w;
     /* The adjacency list of each node.  Note that node 14 is isolated, hence
      * has degree zero.  The first or second zero (0) in a list specifies the
@@ -4604,7 +4622,9 @@ neighbor_iterator_selfloop_undirected_weighted(void)
     for (v = 0; v < nnode; v++) {
         assert(gnx_has_node(graph, &v));
         gnx_neighbor_iter_init(&iter, graph, &v);
-        while (gnx_neighbor_iter_next(&iter, &w, &wgt)) {
+        while (gnx_neighbor_iter_next(&iter, &wptr, &wgtptr)) {
+            w = *((unsigned int *)wptr);
+            wgt = *((double *)wgtptr);
             for (i = 0; i < max_neighbors; i++) {
                 if (neighbor[v][i] == w) {
                     assert(gnx_double_cmp_eq(&(weight[v][i]), &wgt));

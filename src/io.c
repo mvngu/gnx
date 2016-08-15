@@ -525,6 +525,7 @@ gnx_i_write_directed(GnxGraph *graph,
     GError *error = NULL;
     GnxNeighborIter iternei;
     GnxNodeIter iter;
+    gnxptr vptr, wptr;
     int valid;
     GIOChannel *file;
     unsigned int u, v;
@@ -554,11 +555,15 @@ gnx_i_write_directed(GnxGraph *graph,
 
         /* Iterate over each out-neighbor v of u. */
         gnx_neighbor_iter_init(&iternei, graph, &u);
-        while (gnx_neighbor_iter_next(&iternei, &v, &weight)) {
-            if (graph->weighted)
+        while (gnx_neighbor_iter_next(&iternei, &vptr, &wptr)) {
+            v = *((unsigned int *)vptr);
+
+            if (graph->weighted) {
+                weight = *((double *)wptr);
                 valid = gnx_i_write_edge(file, &u, &v, &weight);
-            else
+            } else {
                 valid = gnx_i_write_edge(file, &u, &v, NULL);
+            }
 
             if (!valid)
                 goto cleanup;
@@ -680,6 +685,7 @@ gnx_i_write_undirected(GnxGraph *graph,
     GnxNeighborIter iternei;
     GnxNodeIter iter;
     GIOChannel *file;
+    gnxptr vptr, wptr;
     int valid;
     unsigned int u, v;
 
@@ -709,14 +715,18 @@ gnx_i_write_undirected(GnxGraph *graph,
          * edge (u,v) to file provided that u <= v.
          */
         gnx_neighbor_iter_init(&iternei, graph, &u);
-        while (gnx_neighbor_iter_next(&iternei, &v, &weight)) {
+        while (gnx_neighbor_iter_next(&iternei, &vptr, &wptr)) {
+            v = *((unsigned int *)vptr);
+
             if (u > v)
                 continue;
 
-            if (graph->weighted)
+            if (graph->weighted) {
+                weight = *((double *)wptr);
                 valid = gnx_i_write_edge(file, &u, &v, &weight);
-            else
+            } else {
                 valid = gnx_i_write_edge(file, &u, &v, NULL);
+            }
 
             if (!valid)
                 goto cleanup;

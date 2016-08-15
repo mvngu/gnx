@@ -59,6 +59,7 @@ gnx_i_bfs(GnxGraph *graph,
           GnxQueue *queue)
 {
     GnxNeighborIter iter;
+    gnxptr vptr;
     unsigned int *node, *u, v;
 
     errno = 0;
@@ -69,7 +70,9 @@ gnx_i_bfs(GnxGraph *graph,
 
         /* Iterate over each (out-)neighbor of u.  Ignore the edge weights. */
         gnx_neighbor_iter_init(&iter, graph, u);
-        while (gnx_neighbor_iter_next(&iter, &v, NULL)) {
+        while (gnx_neighbor_iter_next(&iter, &vptr, NULL)) {
+            v = *((unsigned int *)vptr);
+
             if (gnx_set_has(seen, &v))
                 continue;
 

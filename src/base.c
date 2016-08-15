@@ -1764,12 +1764,11 @@ gnx_neighbor_iter_init(GnxNeighborIter *iter,
  */
 int
 gnx_neighbor_iter_next(GnxNeighborIter *iter,
-                       unsigned int *w,
-                       double *weight)
+                       gnxptr *w,
+                       gnxptr *weight)
 {
     GnxNodeDirected *noded;
     GnxNodeUndirected *nodeu;
-    gnxptr value, wptr;
     int has_more;
 
     g_return_val_if_fail(iter, GNX_FAILURE);
@@ -1811,20 +1810,11 @@ gnx_neighbor_iter_next(GnxNeighborIter *iter,
 
     /* Retrieve a neighbor of v. */
     if (iter->weighted)
-        has_more = gnx_dict_iter_next(&(iter->iterd), &wptr, &value);
+        has_more = gnx_dict_iter_next(&(iter->iterd), w, weight);
     else
-        has_more = gnx_set_iter_next(&(iter->iters), &wptr);
+        has_more = gnx_set_iter_next(&(iter->iters), w);
 
-    if (has_more) {
-        if (w)
-            *w = *((unsigned int *)wptr);
-        if (iter->weighted && weight)
-            *weight = *((double *)value);
-
-        return GNX_SUCCESS;
-    }
-
-    return GNX_FAILURE;
+    return has_more;
 }
 
 /**

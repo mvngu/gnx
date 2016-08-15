@@ -96,6 +96,7 @@ gnx_cmp(GnxGraph *g,
     double weight_a, weight_b;
     GnxNeighborIter iternei;
     GnxNodeIter iter;
+    gnxptr vptr, wptr;
     unsigned int u, v;
 
     gnx_i_check(g);
@@ -130,10 +131,13 @@ gnx_cmp(GnxGraph *g,
 
         /* Compare the neighbors of u in G with the neighbors of u in H. */
         gnx_neighbor_iter_init(&iternei, g, &u);
-        while (gnx_neighbor_iter_next(&iternei, &v, &weight_a)) {
+        while (gnx_neighbor_iter_next(&iternei, &vptr, &wptr)) {
+            v = *((unsigned int *)vptr);
+
             if (!gnx_has_edge(h, &u, &v))
                 return GNX_FAILURE;
             if (g->weighted) {
+                weight_a = *((double *)wptr);
                 weight_b = gnx_edge_weight(h, &u, &v);
                 if (!gnx_double_cmp_eq(&weight_a, &weight_b))
                     return GNX_FAILURE;
