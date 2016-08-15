@@ -60,7 +60,7 @@ gnx_i_bfs(GnxGraph *graph,
 {
     GnxNeighborIter iter;
     gnxptr vptr;
-    unsigned int *node, *u, v;
+    unsigned int *u, *v;
 
     errno = 0;
 
@@ -71,24 +71,16 @@ gnx_i_bfs(GnxGraph *graph,
         /* Iterate over each (out-)neighbor of u.  Ignore the edge weights. */
         gnx_neighbor_iter_init(&iter, graph, u);
         while (gnx_neighbor_iter_next(&iter, &vptr, NULL)) {
-            v = *((unsigned int *)vptr);
+            v = (unsigned int *)vptr;
+            g_assert(v);
 
-            if (gnx_set_has(seen, &v))
+            if (gnx_set_has(seen, v))
                 continue;
-
-            node = (unsigned int *)malloc(sizeof(unsigned int));
-            if (!node)
+            if (!gnx_set_add(seen, v))
                 goto cleanup;
-            *node = v;
-
-            if (!gnx_set_add(seen, node)) {
-                free(node);
-                node = NULL;
+            if (!gnx_queue_append(queue, v))
                 goto cleanup;
-            }
-            if (!gnx_queue_append(queue, node))
-                goto cleanup;
-            if (!gnx_add_edge(g, u, node))
+            if (!gnx_add_edge(g, u, v))
                 goto cleanup;
         }
     }
@@ -130,8 +122,7 @@ gnx_breadth_first_search(GnxGraph *graph,
     GnxQueue *queue = NULL;
     GnxSet *seen = NULL;
     int success;
-    unsigned int directed;
-    unsigned int *node = NULL;
+    unsigned int directed, start;
 
     errno = 0;
     g_return_val_if_fail(gnx_has_node(graph, s), NULL);
@@ -154,7 +145,7 @@ gnx_breadth_first_search(GnxGraph *graph,
         goto cleanup;
 
     /* This will store the set of nodes that we have visited. */
-    seen = gnx_init_set_full(GNX_FREE_ELEMENTS);
+    seen = gnx_init_set();
     if (!seen)
         goto cleanup;
 
@@ -164,15 +155,12 @@ gnx_breadth_first_search(GnxGraph *graph,
         goto cleanup;
 
     /* Append the starting node to the queue. */
-    node = (unsigned int *)malloc(sizeof(unsigned int));
-    if (!node)
-        goto cleanup;
-    *node = *s;
-    if (!gnx_queue_append(queue, node))
+    start = *s;
+    if (!gnx_queue_append(queue, &start))
         goto cleanup;
 
     /* Start the traversal. */
-    if (!gnx_set_add(seen, node))
+    if (!gnx_set_add(seen, &start))
         goto cleanup;
 
     success = gnx_i_bfs(graph, g, seen, queue);
@@ -187,10 +175,6 @@ gnx_breadth_first_search(GnxGraph *graph,
 
 cleanup:
     errno = ENOMEM;
-    if (node) {
-        free(node);
-        node = NULL;
-    }
     gnx_destroy(g);
     gnx_destroy_queue(queue);
     gnx_destroy_set(seen);
