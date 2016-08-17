@@ -98,4 +98,10 @@
  */
 #define GNX_ALLOC_SIZE (2 + GNX_ALLOC_SET_SIZE)
 
+/* The number of allocations that is required to initialize a stack.  Any
+ * non-negative integer below this number would result in an out-of-memory
+ * error.
+ */
+#define GNX_ALLOC_STACK_SIZE (1 + GNX_ALLOC_ARRAY_SIZE)
+
 #endif  /* GNX_CONSTANT_H */
