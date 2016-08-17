@@ -26,5 +26,7 @@
 
 GnxGraph* gnx_breadth_first_search(GnxGraph *graph,
                                    const unsigned int *s);
+GnxGraph* gnx_depth_first_search(GnxGraph *graph,
+                                 const unsigned int *s);
 
 #endif  /* GNX_VISIT_H */
