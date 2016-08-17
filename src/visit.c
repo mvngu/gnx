@@ -226,7 +226,7 @@ cleanup:
  * If the given graph is directed, then we traverse the graph via out-neighbors
  * of nodes.
  *
- * @param graph Traverse this graph.
+ * @param graph Traverse this graph.  The graph must not contain self-loops.
  * @param s Start the traversal from this node.  The node is assumed to be in
  *        the graph.
  * @return A breadth-first search tree that is rooted at @f$s@f$.  To destroy
@@ -246,6 +246,7 @@ gnx_breadth_first_search(GnxGraph *graph,
 
     errno = 0;
     g_return_val_if_fail(gnx_has_node(graph, s), NULL);
+    g_return_val_if_fail(!graph->selfloop, NULL);
     if (graph->directed) {
         if (!gnx_outdegree(graph, s))
             return NULL;
