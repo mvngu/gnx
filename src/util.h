@@ -24,6 +24,7 @@
 
 #include "type.h"
 
+unsigned int gnx_any_node(GnxGraph *graph);
 int gnx_cmp(GnxGraph *g,
             GnxGraph *h);
 

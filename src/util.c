@@ -75,6 +75,32 @@ gnx_i_double_cmp(const double *a,
  *************************************************************************/
 
 /**
+ * @brief Chooses a node from a graph.
+ *
+ * Note that this function does not randomly choose a node of a graph.
+ * The function merely iterates over the set of nodes and returns as soon
+ * as a node is found.
+ *
+ * @param graph Choose a node from this graph.  The graph is assumed to have
+ *        at least one node.
+ * @return A node of the graph.
+ */
+unsigned int
+gnx_any_node(GnxGraph *graph)
+{
+    GnxNodeIter iter;
+    unsigned int v;
+
+    gnx_i_check(graph);
+    g_return_val_if_fail(graph->total_nodes, GNX_FAILURE);
+
+    gnx_node_iter_init(&iter, graph);
+    assert(gnx_node_iter_next(&iter, &v));
+
+    return v;
+}
+
+/**
  * @brief Determines whether two graphs are the same.
  *
  * The function gnx_cmp() does not check whether two graphs are
