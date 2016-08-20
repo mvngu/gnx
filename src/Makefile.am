@@ -9,6 +9,7 @@ GNX_HEADERFILES =                                                          \
 	dict.h                                                             \
 	heap.h                                                             \
 	io.h                                                               \
+	query.h                                                            \
 	queue.h                                                            \
 	set.h                                                              \
 	stack.h                                                            \
@@ -29,6 +30,7 @@ GNX_SRC =                                                                  \
 	dict.c                                                             \
 	heap.c                                                             \
 	io.c                                                               \
+	query.c                                                            \
 	queue.c                                                            \
 	sanity.c                                                           \
 	set.c                                                              \
