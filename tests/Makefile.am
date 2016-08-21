@@ -29,6 +29,7 @@ test_programs =                                                            \
 	io                                                                 \
 	query                                                              \
 	queue                                                              \
+	random                                                             \
 	set                                                                \
 	stack                                                              \
 	util                                                               \

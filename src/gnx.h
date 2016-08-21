@@ -28,6 +28,7 @@
 #include "io.h"
 #include "query.h"
 #include "queue.h"
+#include "random.h"
 #include "set.h"
 #include "stack.h"
 #include "type.h"

@@ -11,6 +11,7 @@ GNX_HEADERFILES =                                                          \
 	io.h                                                               \
 	query.h                                                            \
 	queue.h                                                            \
+	random.h                                                           \
 	set.h                                                              \
 	stack.h                                                            \
 	type.h                                                             \
@@ -32,6 +33,7 @@ GNX_SRC =                                                                  \
 	io.c                                                               \
 	query.c                                                            \
 	queue.c                                                            \
+	random.c                                                           \
 	sanity.c                                                           \
 	set.c                                                              \
 	stack.c                                                            \
