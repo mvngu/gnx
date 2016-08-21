@@ -86,8 +86,13 @@ gnx_i_bfs(GnxGraph *graph,
             v = (unsigned int *)vptr;
             g_assert(v);
 
+            /* This should take care of nodes that we have seen.  Furthermore,
+             * it should take care of the case where u has a self-loop.
+             */
             if (gnx_set_has(seen, v))
                 continue;
+
+            g_assert(*u != *v);
             if (!gnx_set_add(seen, v))
                 goto cleanup;
             if (!gnx_queue_append(queue, v))
@@ -226,7 +231,7 @@ cleanup:
  * If the given graph is directed, then we traverse the graph via out-neighbors
  * of nodes.
  *
- * @param graph Traverse this graph.  The graph must not contain self-loops.
+ * @param graph Traverse this graph.
  * @param s Start the traversal from this node.  The node is assumed to be in
  *        the graph.
  * @return A breadth-first search tree that is rooted at @f$s@f$.  To destroy
@@ -246,7 +251,6 @@ gnx_breadth_first_search(GnxGraph *graph,
 
     errno = 0;
     g_return_val_if_fail(gnx_has_node(graph, s), NULL);
-    g_return_val_if_fail(!graph->selfloop, NULL);
     if (graph->directed) {
         if (!gnx_outdegree(graph, s))
             return NULL;
