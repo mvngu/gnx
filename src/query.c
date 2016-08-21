@@ -127,3 +127,43 @@ cleanup:
     gnx_destroy_set(seen);
     return GNX_FAILURE;
 }
+
+/**
+ * @brief Determines whether an undirected graph is a tree.
+ *
+ * Let @f$T = (V, E)@f$ be an undirected graph with @f$n = |V|@f$ nodes.  If
+ * @f$T@f$ is connected and has @f$n - 1@f$ edges, then @f$T@f$ is a tree.
+ * Thus by definition, a graph with only one node is a tree, whereas a graph
+ * with zero nodes is not a tree.
+ *
+ * @param graph We want to check whether this undirected graph is a tree.
+ * @return Nonzero if the graph is a tree; zero otherwise.
+ */
+int
+gnx_is_tree(GnxGraph *graph)
+{
+    unsigned int nedge, nnode;
+
+    gnx_i_check(graph);
+    g_return_val_if_fail(!graph->directed, GNX_FAILURE);
+
+    nnode = graph->total_nodes;
+    nedge = graph->total_edges;
+
+    if (!nnode)
+        return GNX_FAILURE;
+    if (1 == nnode)
+        return GNX_SUCCESS;
+
+    g_assert(nnode >= 2);
+
+    if (!nedge)
+        return GNX_FAILURE;
+
+    if (nedge != (nnode - 1))
+        return GNX_FAILURE;
+
+    g_assert(nedge == (nnode - 1));
+
+    return gnx_is_connected(graph);
+}

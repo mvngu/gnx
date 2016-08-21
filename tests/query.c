@@ -40,6 +40,22 @@ static void connected_one_edge(void);
 static void connected_one_node(void);
 static void connected_Zachary1977(void);
 
+/* is tree */
+static void is_tree_bfs_noselfloop_unweighted(void);
+static void is_tree_bfs_noselfloop_weighted(void);
+static void is_tree_bfs_selfloop_unweighted(void);
+static void is_tree_bfs_selfloop_weighted(void);
+static void is_tree_dfs_noselfloop_unweighted(void);
+static void is_tree_dfs_noselfloop_weighted(void);
+static void is_tree_dfs_selfloop_unweighted(void);
+static void is_tree_dfs_selfloop_weighted(void);
+static void is_tree_empty(void);
+static void is_tree_one_edge(void);
+static void is_tree_one_node(void);
+static void is_tree_only_nodes(void);
+static void is_tree_remove_random_edge(void);
+static void is_tree_remove_random_node(void);
+
 /**************************************************************************
  * connected (undirected graph)
  *************************************************************************/
@@ -337,6 +353,607 @@ connected_Zachary1977(void)
 }
 
 /**************************************************************************
+ * is tree
+ *************************************************************************/
+
+static void
+is_tree(void)
+{
+    is_tree_bfs_noselfloop_unweighted();
+    is_tree_bfs_noselfloop_weighted();
+    is_tree_bfs_selfloop_unweighted();
+    is_tree_bfs_selfloop_weighted();
+    is_tree_dfs_noselfloop_unweighted();
+    is_tree_dfs_noselfloop_weighted();
+    is_tree_dfs_selfloop_unweighted();
+    is_tree_dfs_selfloop_weighted();
+    is_tree_empty();
+    is_tree_one_edge();
+    is_tree_one_node();
+    is_tree_only_nodes();
+    is_tree_remove_random_edge();
+    is_tree_remove_random_node();
+}
+
+/* A breadth-first search of a graph that is undirected, does not allow
+ * self-loops, and unweighted.  The BFS graph is a tree.
+ */
+static void
+is_tree_bfs_noselfloop_unweighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+
+    g = gnx_read("data/network/corporate-interlocks.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_breadth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A breadth-first search of a graph that is undirected, does not allow
+ * self-loops, and weighted.  The BFS graph is a tree.
+ */
+static void
+is_tree_bfs_noselfloop_weighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+
+    g = gnx_read("data/network/corporate-interlocks.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_breadth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A breadth-first search of a graph that is undirected, allows self-loops,
+ * and unweighted.  The BFS graph is a tree.
+ */
+static void
+is_tree_bfs_selfloop_unweighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nloop = 3;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67 + nloop;
+
+    g = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                 GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_breadth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A breadth-first search of a graph that is undirected, allows self-loops,
+ * and weighted.  The BFS graph is a tree.
+ */
+static void
+is_tree_bfs_selfloop_weighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nloop = 3;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67 + nloop;
+
+    g = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                 GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_breadth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A depth-first search of a graph that is undirected, does not allow
+ * self-loops, and unweighted.  The DFS graph is a tree.
+ */
+static void
+is_tree_dfs_noselfloop_unweighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+
+    g = gnx_read("data/network/corporate-interlocks.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_depth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A depth-first search of a graph that is undirected, does not allow
+ * self-loops, and weighted.  The DFS graph is a tree.
+ */
+static void
+is_tree_dfs_noselfloop_weighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67;
+
+    g = gnx_read("data/network/corporate-interlocks.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_depth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A depth-first search of a graph that is undirected, allows self-loops, and
+ * unweighted.  The DFS graph is a tree.
+ */
+static void
+is_tree_dfs_selfloop_unweighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nloop = 3;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67 + nloop;
+
+    g = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                 GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_depth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* A depth-first search of a graph that is undirected, allows self-loops, and
+ * weighted.  The DFS graph is a tree.
+ */
+static void
+is_tree_dfs_selfloop_weighted(void)
+{
+    GnxGraph *g, *h;
+    unsigned int start;
+    const unsigned int nloop = 3;
+    const unsigned int nnode = 15;
+    const unsigned int nedge = 67 + nloop;
+
+    g = gnx_read("data/network/corporate-interlocks-selfloops.csv",
+                 GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(nnode == g->total_nodes);
+    assert(nedge == g->total_edges);
+
+    start = gnx_random_node(g);
+    h = gnx_depth_first_search(g, &start);
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    assert(gnx_is_tree(h));
+    assert(!h->directed);
+    assert(!h->selfloop);
+    assert(!h->weighted);
+    assert(h->total_edges == (h->total_nodes - 1));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* An empty graph is not a tree.
+ */
+static void
+is_tree_empty(void)
+{
+    GnxGraph *graph;
+
+    /* Undirected, self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    assert(!gnx_is_tree(graph));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    assert(!gnx_is_tree(graph));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    is_empty_graph(graph);
+    assert(!gnx_is_tree(graph));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    is_empty_graph(graph);
+    assert(!gnx_is_tree(graph));
+    is_empty_graph(graph);
+    gnx_destroy(graph);
+}
+
+/* Whether a graph is a tree.  The graph has exactly one edge.
+ */
+static void
+is_tree_one_edge(void)
+{
+    GnxGraph *graph;
+    const double weight = 2.17828;
+    const unsigned int u = 0;
+    const unsigned int v = 1;
+
+    /* Undirected, self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &u));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_is_tree(graph));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &u, &weight));
+    assert(gnx_add_node(graph, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_is_tree(graph));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &u, &v));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &u, &v, &weight));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(2 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* A graph that has one node is trivially a tree.
+ */
+static void
+is_tree_one_node(void)
+{
+    GnxGraph *graph;
+    const unsigned int v = 1;
+
+    /* Undirected, self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, unweighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, no self-loops, weighted. */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_node(graph, &v));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    assert(gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+}
+
+/* A graph that has only nodes is not a tree.
+ */
+static void
+is_tree_only_nodes(void)
+{
+    GnxGraph *graph;
+    unsigned int v;
+    const int low = 2;
+    const int high = 20;
+    const int max = 11;
+    const unsigned int size = (unsigned int)g_random_int_range(low, max);
+
+    /**********************************************************************
+     * Undirected, self-loops, unweighted.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+
+    while (graph->total_nodes < size) {
+        do {
+            v = random_node_id(&low, &high);
+        } while (gnx_has_node(graph, &v));
+
+        assert(gnx_add_node(graph, &v));
+    }
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(!gnx_is_tree(graph));
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * Undirected, self-loops, weighted.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+
+    while (graph->total_nodes < size) {
+        do {
+            v = random_node_id(&low, &high);
+        } while (gnx_has_node(graph, &v));
+
+        assert(gnx_add_node(graph, &v));
+    }
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(!gnx_is_tree(graph));
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * Undirected, no self-loops, unweighted.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+
+    while (graph->total_nodes < size) {
+        do {
+            v = random_node_id(&low, &high);
+        } while (gnx_has_node(graph, &v));
+
+        assert(gnx_add_node(graph, &v));
+    }
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(!gnx_is_tree(graph));
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+
+    /**********************************************************************
+     * Undirected, no self-loops, weighted.
+     *********************************************************************/
+
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+
+    while (graph->total_nodes < size) {
+        do {
+            v = random_node_id(&low, &high);
+        } while (gnx_has_node(graph, &v));
+
+        assert(gnx_add_node(graph, &v));
+    }
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    assert(!gnx_is_tree(graph));
+    assert(size == graph->total_nodes);
+    assert(0 == graph->total_edges);
+
+    gnx_destroy(graph);
+}
+
+/* Remove some edges from a graph and test whether the resulting graph is
+ * a tree.
+ */
+static void
+is_tree_remove_random_edge(void)
+{
+    GnxGraph *g, *h;
+    int high;
+    unsigned int how_many, i, u, v;
+    const int low = 0;
+    const unsigned int start = 48;
+
+    /* Construct a breadth-first search tree. */
+    g = gnx_read("data/network/wine.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    h = gnx_breadth_first_search(g, &start);
+    assert(gnx_is_tree(h));
+
+    /* Randomly delete some edges from the tree. */
+    high = (int)(h->total_nodes);
+    how_many = (unsigned int)g_random_int_range(1, 8);
+    for (i = 0; i < how_many; i++) {
+        do {
+            u = random_node_id(&low, &high);
+            v = random_node_id(&low, &high);
+        } while (!gnx_has_edge(h, &u, &v));
+
+        assert(gnx_delete_edge(h, &u, &v));
+    }
+
+    assert(!gnx_is_tree(h));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/* Remove some nodes from a graph and test whether the resulting graph is
+ * a tree.
+ */
+static void
+is_tree_remove_random_node(void)
+{
+    GnxGraph *g, *h;
+    int high;
+    unsigned int how_many, i, v;
+    const int low = 0;
+    const unsigned int start = 48;
+
+    /* Construct a breadth-first search tree. */
+    g = gnx_read("data/network/wine.csv",
+                 GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    h = gnx_breadth_first_search(g, &start);
+    assert(gnx_is_tree(h));
+
+    /* Randomly delete some nodes from the tree. */
+    high = (int)(h->total_nodes);
+    how_many = (unsigned int)g_random_int_range(1, 8);
+    for (i = 0; i < how_many; i++) {
+        do {
+            v = random_node_id(&low, &high);
+        } while (!gnx_has_node(h, &v));
+
+        assert(gnx_delete_node(h, &v));
+    }
+
+    assert(!gnx_is_tree(h));
+
+    gnx_destroy(g);
+    gnx_destroy(h);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -347,6 +964,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/query/connected", connected);
+    g_test_add_func("/query/is-tree", is_tree);
 
     return g_test_run();
 }

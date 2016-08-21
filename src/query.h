@@ -25,5 +25,6 @@
 #include "type.h"
 
 int gnx_is_connected(GnxGraph *graph);
+int gnx_is_tree(GnxGraph *graph);
 
 #endif  /* GNX_QUERY_H */
