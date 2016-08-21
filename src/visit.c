@@ -145,6 +145,9 @@ gnx_i_dfs(GnxGraph *graph,
         u = gnx_stack_pop(stack);
         g_assert(u);
 
+        /* This should take care of nodes that we have seen.  Furthermore,
+         * it should take care of the case where u has a self-loop.
+         */
         if (gnx_set_has(seen, u))
             continue;
 
@@ -312,7 +315,7 @@ cleanup:
  * If the given graph is directed, then we traverse the graph via out-neighbors
  * of nodes.
  *
- * @param graph Traverse this graph.  The graph must not contain self-loops.
+ * @param graph Traverse this graph.
  * @param s Start the traversal from this node.  The node is assumed to be in
  *        the graph.
  * @return A depth-first search tree that is rooted at @f$s@f$.  To destroy
@@ -332,7 +335,6 @@ gnx_depth_first_search(GnxGraph *graph,
 
     errno = 0;
     g_return_val_if_fail(gnx_has_node(graph, s), NULL);
-    g_return_val_if_fail(!graph->selfloop, NULL);
     if (graph->directed) {
         if (!gnx_outdegree(graph, s))
             return NULL;
