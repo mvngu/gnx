@@ -732,15 +732,16 @@ is_tree_one_edge(void)
     gnx_destroy(graph);
 }
 
-/* A graph that has one node is trivially a tree.
+/* A graph that has one node may or may not be a tree.
  */
 static void
 is_tree_one_node(void)
 {
     GnxGraph *graph;
+    const double weight = 2.17828;
     const unsigned int v = 1;
 
-    /* Undirected, self-loops, unweighted. */
+    /* Undirected, self-loops, unweighted (1.1). */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
     assert(gnx_add_node(graph, &v));
     assert(1 == graph->total_nodes);
@@ -750,7 +751,17 @@ is_tree_one_node(void)
     assert(0 == graph->total_edges);
     gnx_destroy(graph);
 
-    /* Undirected, self-loops, weighted. */
+    /* Undirected, self-loops, unweighted (1.2). */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_UNWEIGHTED);
+    assert(gnx_add_edge(graph, &v, &v));
+    assert(1 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted (2.1). */
     graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
     assert(gnx_add_node(graph, &v));
     assert(1 == graph->total_nodes);
@@ -758,6 +769,16 @@ is_tree_one_node(void)
     assert(gnx_is_tree(graph));
     assert(1 == graph->total_nodes);
     assert(0 == graph->total_edges);
+    gnx_destroy(graph);
+
+    /* Undirected, self-loops, weighted (2.2). */
+    graph = gnx_new_full(GNX_UNDIRECTED, GNX_SELFLOOP, GNX_WEIGHTED);
+    assert(gnx_add_edgew(graph, &v, &v, &weight));
+    assert(1 == graph->total_nodes);
+    assert(1 == graph->total_edges);
+    assert(!gnx_is_tree(graph));
+    assert(1 == graph->total_nodes);
+    assert(1 == graph->total_edges);
     gnx_destroy(graph);
 
     /* Undirected, no self-loops, unweighted. */

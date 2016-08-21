@@ -152,8 +152,12 @@ gnx_is_tree(GnxGraph *graph)
 
     if (!nnode)
         return GNX_FAILURE;
-    if (1 == nnode)
-        return GNX_SUCCESS;
+    if (1 == nnode) {
+        if (!nedge)
+            return GNX_SUCCESS;
+
+        return GNX_FAILURE;
+    }
 
     g_assert(nnode >= 2);
 
