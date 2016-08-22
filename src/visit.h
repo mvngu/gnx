@@ -24,6 +24,7 @@
 
 #include "type.h"
 
+/* graph traversal */
 GnxGraph* gnx_breadth_first_search(GnxGraph *graph,
                                    const unsigned int *s);
 GnxGraph* gnx_depth_first_search(GnxGraph *graph,
