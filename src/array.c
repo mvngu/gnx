@@ -242,17 +242,20 @@ gnx_init_array(void)
  *        large initial capacity ensures that we do not need to constantly
  *        resize the array when we add a large number of elements.
  * @param destroy Whether to release the memory of each element as part of the
- *        destroy procedure.  Possible values are #GNX_FREE_ELEMENTS or
- *        #GNX_DONT_FREE_ELEMENTS.  If #GNX_FREE_ELEMENTS, then calling the
- *        function gnx_destroy_array() will release the memory of each element
- *        of the array, in addition to destroying the array itself.  This
- *        option should only be used if each element to be inserted has memory
- *        that is allocated on the heap, i.e. via @c calloc(), @c malloc(), or
- *        @c realloc().  Using this option with stack memory will result in
- *        undefined behavior. If #GNX_DONT_FREE_ELEMENTS, then it is your
- *        responsibility to release the memory of each element in the array.
- *        You can also use this option if each element of the array has memory
- *        that is allocated on the stack.
+ *        destroy procedure.  Possible values are:
+ *        <ul>
+ *        <li>#GNX_FREE_ELEMENTS: The memory of elements will be released by
+ *            the function gnx_destroy_array().  This option should only be
+ *            used if each element to be inserted has memory that is allocated
+ *            on the heap, i.e. memory was allocated via @c calloc(),
+ *            @c malloc(), or @c realloc().  Using this option with stack
+ *            memory will result in undefined behavior.</li>
+ *        <li>#GNX_DONT_FREE_ELEMENTS: The memory of elements will not be
+ *            released by the function gnx_destroy_array().  It is your
+ *            responsibility to release the memory of each element in the array.
+ *            You can also use this option if each element of the array has
+ *            memory that is allocated on the stack.</li>
+ *        </ul>
  * @return An initialized array of pointers with zero elements and the given
  *         capacity.  When you no longer need the array, you must destroy the
  *         array via the function gnx_destroy_array().  If we are unable to
