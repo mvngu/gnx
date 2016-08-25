@@ -264,7 +264,7 @@ gnx_i_resize_dict(GnxDict *dict)
             if (!(new_bucket_array[idx])) {
                 new_bucket
                     = gnx_init_array_full(&bucket_capacity,
-                                          GNX_DONT_FREE_ELEMENTS);
+                                          GNX_DONT_FREE_ELEMENTS, GNX_POINTER);
                 if (!new_bucket)
                     goto cleanup;
 
@@ -420,7 +420,8 @@ gnx_dict_add(GnxDict *dict,
      * function gnx_destroy_dict().
      */
     if (!(dict->bucket[i])) {
-        bucket = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+        bucket = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS,
+                                     GNX_POINTER);
         if (!bucket)
             goto cleanup;
 

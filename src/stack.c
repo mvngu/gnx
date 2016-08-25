@@ -117,7 +117,7 @@ gnx_init_stack_full(const unsigned int *capacity,
     /* The given parameters will be sanity checked when we initialize the
      * array.  Thus we do not need to sanity check the arguments here.
      */
-    stack->array = gnx_init_array_full(capacity, destroy);
+    stack->array = gnx_init_array_full(capacity, destroy, GNX_UINT);
     if (!stack->array)
         goto cleanup;
 

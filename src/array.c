@@ -38,9 +38,9 @@
  * gnx_destroy_array().
  *
  * We do not make assumptions about the data type that will be in the array of
- * pointers.  Thus we do not supply a function that queries whether a given
- * element is in the array.  It is your responsibility to write your own
- * function that queries whether an array of pointers has a given element.
+ * pointers.  You can use the function gnx_init_array_full() to explicitly set
+ * the data type of each array element.  Otherwise, the function
+ * gnx_init_array() will set each array element to the default of #GNX_POINTER.
  */
 
 /**
@@ -212,24 +212,25 @@ gnx_destroy_array(GnxArray *array)
  * @brief Initializes an array of pointers with default settings.
  *
  * The array is initialized with a default capacity.  Furthermore, the array is
- * set to not release the memory of each of its elements.  Thus, it is your
+ * set to not release the memory of each of its elements.  It is your
  * responsibility to ensure that the memory of each element inserted into the
- * array is released.
+ * array is released.  By default, each element is assumed to be of the general
+ * type #GNX_POINTER.
  *
  * @sa gnx_init_array_full() Initializes an array of pointers with full control
  *     over its settings.
  *
- * @return An initialized array of pointers with zero elements and a default
- *         capacity of #GNX_DEFAULT_ALLOC_SIZE.  When you no longer need the
- *         array, you must destroy the array via the function
- *         gnx_destroy_array().  See gnx_init_array_full() for further details
- *         on the return value.
+ * @return An initialized array of pointers with zero elements, a default
+ *         capacity of #GNX_DEFAULT_ALLOC_SIZE, and each element has the
+ *         general type #GNX_POINTER.  When you no longer need the array, you
+ *         must destroy the array via the function gnx_destroy_array().
+ *         See gnx_init_array_full() for further details on the return value.
  */
 GnxArray*
 gnx_init_array(void)
 {
     const unsigned int capacity = GNX_DEFAULT_ALLOC_SIZE;
-    return gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS);
+    return gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_POINTER);
 }
 
 /**
@@ -256,6 +257,16 @@ gnx_init_array(void)
  *            You can also use this option if each element of the array has
  *            memory that is allocated on the stack.</li>
  *        </ul>
+ * @param datatype The data type of each element in the array.  Each array
+ *        element should be of the same data type.  Possible values are:
+ *        <ul>
+ *        <li>#GNX_UINT: Each array element is a pointer to an
+ *            <tt>unsigned int</tt>.  Having this distinction is important
+ *            because it helps us to determine whether two elements can be
+ *            compared as integers.</li>
+ *        <li>#GNX_POINTER: Each array element is an untyped pointer.  Use
+ *            this option if you do not know the type of each element.</li>
+ *        </ul>
  * @return An initialized array of pointers with zero elements and the given
  *         capacity.  When you no longer need the array, you must destroy the
  *         array via the function gnx_destroy_array().  If we are unable to
@@ -264,7 +275,8 @@ gnx_init_array(void)
  */
 GnxArray*
 gnx_init_array_full(const unsigned int *capacity,
-                    const GnxBool destroy)
+                    const GnxBool destroy,
+                    const GnxBool datatype)
 {
     GnxArray *array;
 
@@ -286,11 +298,13 @@ gnx_init_array_full(const unsigned int *capacity,
     g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
                          || (GNX_DONT_FREE_ELEMENTS & destroy),
                          NULL);
+    gnx_i_check_data_type(datatype);
 
     array = (GnxArray *)malloc(sizeof(GnxArray));
     if (!array)
         goto cleanup;
 
+    array->datatype = datatype;
     array->free_elem = destroy;
     array->capacity = *capacity;
     array->size = 0;

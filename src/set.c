@@ -191,7 +191,8 @@ gnx_i_resize(GnxSet *set)
             idx = gnx_i_hash(key, &new_a, &new_c, &new_d);
             if (!(new_bucket_array[idx])) {
                 new_bucket
-                    = gnx_init_array_full(&bucket_capacity, set->free_elem);
+                    = gnx_init_array_full(&bucket_capacity, set->free_elem,
+                                          GNX_UINT);
                 if (!new_bucket)
                     goto cleanup;
                 new_bucket_array[idx] = new_bucket;
@@ -403,7 +404,7 @@ gnx_set_add(GnxSet *set,
 
     /* Initialize a new empty bucket, which is represented as an array. */
     if (!(set->bucket[i])) {
-        bucket = gnx_init_array_full(&capacity, set->free_elem);
+        bucket = gnx_init_array_full(&capacity, set->free_elem, GNX_UINT);
         if (!bucket)
             goto cleanup;
         set->bucket[i] = bucket;

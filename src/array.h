@@ -28,7 +28,8 @@
 void gnx_destroy_array(GnxArray *array);
 GnxArray* gnx_init_array(void);
 GnxArray* gnx_init_array_full(const unsigned int *capacity,
-                              const GnxBool destroy);
+                              const GnxBool destroy,
+                              const GnxBool datatype);
 
 /* insert and remove */
 int gnx_array_append(GnxArray *array,

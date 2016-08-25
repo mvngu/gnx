@@ -185,9 +185,17 @@ typedef enum {
                                   * Within a file, this specifies that a line
                                   * is a comment and should be ignored.
                                   */
-    GNX_NODE_LINE = 1 << 13      /**< @hideinitializer
+    GNX_NODE_LINE = 1 << 13,     /**< @hideinitializer
                                   * Within a file, this specifies that a line
                                   * represents a node.
+                                  */
+    GNX_UINT = 1 << 14,          /**< @hideinitializer
+                                  * In a collection, the data type of each
+                                  * element is <tt>unsigned int</tt>.
+                                  */
+    GNX_POINTER = 1 << 15        /**< @hideinitializer
+                                  * In a collection, the data type of each
+                                  * element is @c gnxptr.
                                   */
 } GnxBool;
 
@@ -207,6 +215,7 @@ typedef void* gnxptr;    /**< An untyped pointer. */
  * All pointers in the array must reference the same data type.
  */
 typedef struct {
+    GnxBool datatype;       /**< The data type of each element. */
     GnxBool free_elem;      /**< Whether to release the memory of each element
                              * in the array.
                              */
