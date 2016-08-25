@@ -52,6 +52,18 @@ gnx_i_check_array(const GnxArray *array)
 }
 
 /**
+ * @brief Some sanity checks on the data type.
+ *
+ * @param datatype Check this data type option.
+ */
+void
+gnx_i_check_data_type(const GnxBool datatype)
+{
+    g_return_if_fail((GNX_UINT & datatype)
+                     || (GNX_POINTER & datatype));
+}
+
+/**
  * @brief Some sanity checks for a dictionary.
  *
  * @param dict Perform some sanity checks on this dictionary.
