@@ -64,6 +64,18 @@ gnx_i_check_data_type(const GnxBool datatype)
 }
 
 /**
+ * @brief Some sanity checks on the option to destroy elements of a collection.
+ *
+ * @param destroy Check this destroy option.
+ */
+void
+gnx_i_check_destroy_type(const GnxBool destroy)
+{
+    g_return_if_fail((GNX_FREE_ELEMENTS & destroy)
+                     || (GNX_DONT_FREE_ELEMENTS & destroy));
+}
+
+/**
  * @brief Some sanity checks for a dictionary.
  *
  * @param dict Perform some sanity checks on this dictionary.

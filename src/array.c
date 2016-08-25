@@ -295,9 +295,7 @@ gnx_init_array_full(const unsigned int *capacity,
      * Thus the bit-wise AND of n and n - 1 must be zero.
      */
     g_return_val_if_fail(!((*capacity) & (*capacity - 1)), NULL);
-    g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
-                         || (GNX_DONT_FREE_ELEMENTS & destroy),
-                         NULL);
+    gnx_i_check_destroy_type(destroy);
     gnx_i_check_data_type(datatype);
 
     array = (GnxArray *)malloc(sizeof(GnxArray));

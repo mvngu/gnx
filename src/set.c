@@ -329,8 +329,7 @@ gnx_init_set_full(const GnxBool destroy)
     const unsigned int bits_per_byte = 8;
 
     errno = 0;
-    g_return_val_if_fail((GNX_FREE_ELEMENTS & destroy)
-                         || (GNX_DONT_FREE_ELEMENTS & destroy), NULL);
+    gnx_i_check_destroy_type(destroy);
 
     set = (GnxSet *)malloc(sizeof(GnxSet));
     if (!set)
