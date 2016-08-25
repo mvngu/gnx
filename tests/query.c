@@ -963,7 +963,7 @@ is_tree_remove_random_node(void)
     for (i = 0; i < how_many; i++) {
         do {
             v = random_node_id(&low, &high);
-        } while (!gnx_has_node(h, &v));
+        } while (!gnx_has_node(h, &v) || (gnx_degree(h, &v) < 2));
 
         assert(gnx_delete_node(h, &v));
     }
