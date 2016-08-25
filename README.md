@@ -7,8 +7,8 @@ gnx is a C library of algorithms for graphs and networks.
 gnx requires the following libraries:
 
 1. glib >= 2.44.1
-2. gmp >= 4.3.2
-3. mpfr >= 2.4.2
+2. gmp >= 6.1.0
+3. mpfr >= 3.1.0
 
 ## Build and test
 
