@@ -77,7 +77,7 @@ new_capacity_512(void)
     stack = gnx_init_stack_full(&capacity, GNX_DONT_FREE_ELEMENTS);
     assert(stack);
     assert(stack->array);
-    assert(GNX_DONT_FREE_ELEMENTS == stack->array->free_elem);
+    assert(!(stack->array->free_elem));
     assert(0 == stack->size);
     assert(capacity == stack->array->capacity);
 
@@ -94,7 +94,7 @@ new_default_capacity(void)
     stack = gnx_init_stack();
     assert(stack);
     assert(stack->array);
-    assert(GNX_DONT_FREE_ELEMENTS == stack->array->free_elem);
+    assert(!(stack->array->free_elem));
     assert(0 == stack->size);
     assert(GNX_DEFAULT_ALLOC_SIZE == stack->array->capacity);
 
@@ -112,7 +112,7 @@ new_free(void)
     stack = gnx_init_stack_full(&capacity, GNX_FREE_ELEMENTS);
     assert(stack);
     assert(stack->array);
-    assert(GNX_FREE_ELEMENTS == stack->array->free_elem);
+    assert(stack->array->free_elem);
     assert(0 == stack->size);
     assert(capacity == stack->array->capacity);
 
@@ -130,7 +130,7 @@ new_minimum_capacity(void)
     stack = gnx_init_stack_full(&capacity, GNX_DONT_FREE_ELEMENTS);
     assert(stack);
     assert(stack->array);
-    assert(GNX_DONT_FREE_ELEMENTS == stack->array->free_elem);
+    assert(!(stack->array->free_elem));
     assert(0 == stack->size);
     assert(capacity == stack->array->capacity);
 

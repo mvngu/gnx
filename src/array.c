@@ -137,7 +137,7 @@ gnx_array_delete(GnxArray *array,
      *
      * #cells to shift down = (index of last cell) - (index of target cell)
      */
-    if (GNX_FREE_ELEMENTS & array->free_elem)
+    if (array->free_elem)
         free(array->cell[*i]);
     ncell = size - 1 - (*i);
     (void)memmove(&(array->cell[*i]), &(array->cell[*i + 1]),
@@ -170,7 +170,7 @@ gnx_array_delete_tail(GnxArray *array)
         return GNX_FAILURE;
 
     (array->size)--;
-    if (GNX_FREE_ELEMENTS & array->free_elem)
+    if (array->free_elem)
         free(array->cell[array->size]);
     array->cell[array->size] = NULL;
 
@@ -186,16 +186,14 @@ gnx_array_delete_tail(GnxArray *array)
 void
 gnx_destroy_array(GnxArray *array)
 {
-    int free_element;
     unsigned int i;
 
     if (!array)
         return;
     if (array->cell) {
-        free_element = GNX_FREE_ELEMENTS & array->free_elem;
         for (i = 0; i < array->size; i++) {
             if (array->cell[i]) {
-                if (free_element)
+                if (array->free_elem)
                     free(array->cell[i]);
 
                 array->cell[i] = NULL;
@@ -303,7 +301,7 @@ gnx_init_array_full(const unsigned int *capacity,
         goto cleanup;
 
     array->datatype = datatype;
-    array->free_elem = destroy;
+    array->free_elem = GNX_FREE_ELEMENTS & destroy;
     array->capacity = *capacity;
     array->size = 0;
     array->cell = (gnxptr *)calloc(array->capacity, sizeof(gnxptr));

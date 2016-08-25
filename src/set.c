@@ -148,10 +148,13 @@ gnx_i_resize(GnxSet *set)
 {
     GnxArray *new_bucket, *old_bucket;
     gnxptr *new_bucket_array;
+    unsigned int free_elements;
     unsigned int i, idx, j, *key, new_a, new_c, new_d, new_k, new_capacity;
     const unsigned int bucket_capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
+    free_elements
+        = (set->free_elem) ? GNX_FREE_ELEMENTS : GNX_DONT_FREE_ELEMENTS;
     new_k = set->k + 1;
     new_capacity = set->capacity << 1;
     g_assert(new_k <= set->b);
@@ -191,7 +194,7 @@ gnx_i_resize(GnxSet *set)
             idx = gnx_i_hash(key, &new_a, &new_c, &new_d);
             if (!(new_bucket_array[idx])) {
                 new_bucket
-                    = gnx_init_array_full(&bucket_capacity, set->free_elem,
+                    = gnx_init_array_full(&bucket_capacity, free_elements,
                                           GNX_UINT);
                 if (!new_bucket)
                     goto cleanup;
@@ -212,7 +215,7 @@ gnx_i_resize(GnxSet *set)
          * free the memory of each element, regardless of whether we originally
          * configured the bucket to release the memory of its elements.
          */
-        old_bucket->free_elem = GNX_DONT_FREE_ELEMENTS;
+        old_bucket->free_elem = FALSE;
         gnx_destroy_array(old_bucket);
 
         set->bucket[i] = NULL;
@@ -238,7 +241,7 @@ cleanup:
             if (!new_bucket)
                 continue;
 
-            new_bucket->free_elem = GNX_DONT_FREE_ELEMENTS;
+            new_bucket->free_elem = FALSE;
             gnx_destroy_array(new_bucket);
             new_bucket_array[i] = NULL;
         }
@@ -335,7 +338,7 @@ gnx_init_set_full(const GnxBool destroy)
     if (!set)
         goto cleanup;
 
-    set->free_elem = destroy;
+    set->free_elem = GNX_FREE_ELEMENTS & destroy;
     set->k = GNX_DEFAULT_EXPONENT;           /* The default exponent in 2^k. */
     set->capacity = GNX_DEFAULT_ALLOC_SIZE;  /* Default number of buckets. */
     set->size = 0;                           /* The set is initially empty. */
@@ -391,7 +394,7 @@ gnx_set_add(GnxSet *set,
 {
     GnxArray *bucket;
     int created_bucket = FALSE;  /* Whether a new bucket has been created. */
-    unsigned int i;
+    unsigned int free_elements, i;
     const unsigned int capacity = GNX_DEFAULT_BUCKET_SIZE;
 
     errno = 0;
@@ -402,8 +405,10 @@ gnx_set_add(GnxSet *set,
         return GNX_FAILURE;
 
     /* Initialize a new empty bucket, which is represented as an array. */
+    free_elements
+        = (set->free_elem) ? GNX_FREE_ELEMENTS : GNX_DONT_FREE_ELEMENTS ;
     if (!(set->bucket[i])) {
-        bucket = gnx_init_array_full(&capacity, set->free_elem, GNX_UINT);
+        bucket = gnx_init_array_full(&capacity, free_elements, GNX_UINT);
         if (!bucket)
             goto cleanup;
         set->bucket[i] = bucket;

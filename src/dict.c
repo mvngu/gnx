@@ -286,7 +286,7 @@ gnx_i_resize_dict(GnxDict *dict)
         if (!old_bucket)
             continue;
 
-        g_assert(GNX_DONT_FREE_ELEMENTS & old_bucket->free_elem);
+        g_assert(!old_bucket->free_elem);
         gnx_destroy_array(old_bucket);
         dict->bucket[i] = NULL;
     }
@@ -310,7 +310,7 @@ cleanup:
             if (!new_bucket)
                 continue;
 
-            g_assert(GNX_DONT_FREE_ELEMENTS & new_bucket->free_elem);
+            g_assert(!new_bucket->free_elem);
             gnx_destroy_array(new_bucket);
             new_bucket_array[i] = NULL;
         }
@@ -362,7 +362,7 @@ gnx_destroy_dict(GnxDict *dict)
                 node->value = NULL;
                 free(node);
             }
-            g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+            g_assert(!bucket->free_elem);
             gnx_destroy_array(bucket);
             dict->bucket[i] = NULL;
         }
@@ -465,7 +465,7 @@ gnx_dict_add(GnxDict *dict,
             node->key = NULL;
             node->value = NULL;
             free(node);
-            g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+            g_assert(!bucket->free_elem);
             assert(gnx_array_delete_tail(bucket));
             goto cleanup;
         }
@@ -527,7 +527,7 @@ gnx_dict_delete(GnxDict *dict,
     /* Use the backend to shift all entries from index j upward down by one
      * position.
      */
-    g_assert(GNX_DONT_FREE_ELEMENTS & bucket->free_elem);
+    g_assert(!bucket->free_elem);
     assert(gnx_array_delete(bucket, &j));
     if (!bucket->size) {
         gnx_destroy_array(bucket);

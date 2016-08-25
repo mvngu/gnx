@@ -1087,7 +1087,7 @@ new_dont_free_elements(void)
 
     set = gnx_init_set();
     assert(set);
-    assert(GNX_DONT_FREE_ELEMENTS & set->free_elem);
+    assert(!set->free_elem);
     assert(GNX_DEFAULT_EXPONENT == set->k);
     assert(GNX_DEFAULT_ALLOC_SIZE == set->capacity);
     assert(1 << GNX_DEFAULT_EXPONENT == set->capacity);
@@ -1109,7 +1109,7 @@ new_free_elements(void)
 
     set = gnx_init_set_full(GNX_FREE_ELEMENTS);
     assert(set);
-    assert(GNX_FREE_ELEMENTS == set->free_elem);
+    assert(set->free_elem);
     assert(GNX_DEFAULT_EXPONENT == set->k);
     assert(GNX_DEFAULT_ALLOC_SIZE == set->capacity);
     assert(1 << GNX_DEFAULT_EXPONENT == set->capacity);

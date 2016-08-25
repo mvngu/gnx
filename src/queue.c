@@ -53,7 +53,7 @@ gnx_destroy_queue(GnxQueue *queue)
     if (!queue)
         return;
     if (queue->cell) {
-        if (GNX_FREE_ELEMENTS & queue->free_elem) {
+        if (queue->free_elem) {
             for (i = 0; i < queue->size; i++) {
                 if (queue->cell[i]) {
                     free(queue->cell[i]);
@@ -142,7 +142,7 @@ gnx_init_queue_full(const unsigned int *capacity,
     if (!queue)
         goto cleanup;
 
-    queue->free_elem = destroy;
+    queue->free_elem = GNX_FREE_ELEMENTS & destroy;
     queue->i = 0;
     queue->j = 0;
     queue->size = 0;

@@ -238,7 +238,7 @@ new_capacity_512(void)
 
     queue = gnx_init_queue_full(&capacity, GNX_DONT_FREE_ELEMENTS);
     assert(queue);
-    assert(GNX_DONT_FREE_ELEMENTS == queue->free_elem);
+    assert(!queue->free_elem);
     assert(0 == queue->size);
     assert(0 == queue->i);
     assert(0 == queue->j);
@@ -257,7 +257,7 @@ new_default_capacity(void)
 
     queue = gnx_init_queue();
     assert(queue);
-    assert(GNX_DONT_FREE_ELEMENTS == queue->free_elem);
+    assert(!queue->free_elem);
     assert(0 == queue->size);
     assert(0 == queue->i);
     assert(0 == queue->j);
@@ -277,7 +277,7 @@ new_free(void)
 
     queue = gnx_init_queue_full(&capacity, GNX_FREE_ELEMENTS);
     assert(queue);
-    assert(GNX_FREE_ELEMENTS == queue->free_elem);
+    assert(queue->free_elem);
     assert(0 == queue->size);
     assert(0 == queue->i);
     assert(0 == queue->j);
@@ -297,7 +297,7 @@ new_minimum_capacity(void)
 
     queue = gnx_init_queue_full(&capacity, GNX_DONT_FREE_ELEMENTS);
     assert(queue);
-    assert(GNX_DONT_FREE_ELEMENTS == queue->free_elem);
+    assert(!queue->free_elem);
     assert(0 == queue->size);
     assert(0 == queue->i);
     assert(0 == queue->j);

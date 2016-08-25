@@ -216,7 +216,7 @@ typedef void* gnxptr;    /**< An untyped pointer. */
  */
 typedef struct {
     GnxBool datatype;       /**< The data type of each element. */
-    GnxBool free_elem;      /**< Whether to release the memory of each element
+    int free_elem;          /**< Whether to release the memory of each element
                              * in the array.
                              */
     unsigned int capacity;  /**< The capacity of the array.  This is the
@@ -302,7 +302,7 @@ typedef struct {
  * @brief A queue of integers.
  */
 typedef struct {
-    GnxBool free_elem;      /**< Whether to release the memory of each element
+    int free_elem;          /**< Whether to release the memory of each element
                              * in the queue.
                              */
     unsigned int i;         /**< The index of the head of the queue. */
@@ -322,7 +322,7 @@ typedef struct {
  * <a href="https://en.wikipedia.org/wiki/Universal_hashing">Wikipedia article</a>.
  */
 typedef struct {
-    GnxBool free_elem;      /**< Whether the set can directly free its own
+    int free_elem;          /**< Whether the set can directly free its own
                              * elements as part of the destroy procedure.
                              */
     unsigned int k;         /**< The exponent that is used to compute the
