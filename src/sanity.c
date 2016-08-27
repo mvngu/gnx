@@ -48,7 +48,7 @@ gnx_i_check_array(const GnxArray *array)
 {
     g_return_if_fail(array);
     g_return_if_fail(array->cell);
-    g_return_if_fail(array->capacity > 1);
+    g_return_if_fail(array->capacity);
 }
 
 /**

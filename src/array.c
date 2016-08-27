@@ -398,7 +398,7 @@ gnx_init_array_full(const unsigned int *capacity,
 
     errno = 0;
     g_return_val_if_fail(capacity, NULL);
-    g_return_val_if_fail((*capacity > 1)
+    g_return_val_if_fail((*capacity >= 1)
                          && (*capacity <= GNX_MAXIMUM_ELEMENTS),
                          NULL);
     /* If n > 1 is an unsigned integer, then n is a power of two provided that
