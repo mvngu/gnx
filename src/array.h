@@ -38,4 +38,7 @@ int gnx_array_delete(GnxArray *array,
                      const unsigned int *i);
 int gnx_array_delete_tail(GnxArray *array);
 
+/* sort and search */
+int gnx_array_sort(GnxArray *array);
+
 #endif  /* GNX_ARRAY_H */

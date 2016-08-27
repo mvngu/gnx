@@ -43,6 +43,96 @@
  * gnx_init_array() will set each array element to the default of #GNX_POINTER.
  */
 
+/**************************************************************************
+ * prototypes for internal helper functions
+ *************************************************************************/
+
+static void gnx_i_quicksort(GnxArray *array,
+                            const unsigned int low,
+                            const unsigned int high);
+static unsigned int gnx_i_quicksort_partition(GnxArray *array,
+                                              const unsigned int low,
+                                              const unsigned int high);
+
+/**************************************************************************
+ * internal helper functions
+ *************************************************************************/
+
+/**
+ * @brief Sort the elements of an array via the algorithm of quicksort.
+ *
+ * @param array Sort the elements of this array in non-decreasing order.
+ *        Each array element must be a pointer to an <tt>unsigned int</tt>.
+ * @param low Begin the sort at the element that has this index.
+ * @param high End the sort at the element that has this index.  In effect, we
+ *        want to sort the elements that start from index @c low up to and
+ *        including the element at index @c high.
+ */
+static void
+gnx_i_quicksort(GnxArray *array,
+                const unsigned int low,
+                const unsigned int high)
+{
+    unsigned int mid;
+
+    g_assert(high < array->size);
+    if (low >= high)
+        return;
+
+    mid = gnx_i_quicksort_partition(array, low, high);
+    gnx_i_quicksort(array, low, mid);
+    gnx_i_quicksort(array, mid + 1, high);
+}
+
+/**
+ * @brief Partition the array that is to be sorted by quicksort.
+ *
+ * @param array Partition this array and sort the elements of a partition
+ *        in non-decreasing order.  Each array element must be a pointer to
+ *        an <tt>unsigned int</tt>.
+ * @param low Begin the sort at the element that has this index.
+ * @param high End the sort at the element that has this index.  In effect, we
+ *        want to sort the elements that start from index @c low up to and
+ *        including the element at index @c high.
+ */
+static unsigned int
+gnx_i_quicksort_partition(GnxArray *array,
+                          const unsigned int low,
+                          const unsigned int high)
+{
+    unsigned int elem, i, k, *tmp;
+    const unsigned int pivot = *((unsigned int *)(array->cell[low]));
+
+    /* Use two indices that start at both ends of the partition.  Then move
+     * the indices toward each other until we detect an inversion.
+     */
+    i = low - 1;
+    k = high + 1;
+    for (;;) {
+        do {
+            i++;
+            elem = *((unsigned int *)(array->cell[i]));
+        } while (elem < pivot);
+
+        do {
+            k--;
+            elem = *((unsigned int *)(array->cell[k]));
+        } while (elem > pivot);
+
+        if (i >= k)
+            return k;
+
+        /* Swap A[i] with A[k]. */
+        tmp = (unsigned int *)(array->cell[i]);
+        array->cell[i] = array->cell[k];
+        array->cell[k] = tmp;
+    }
+}
+
+/**************************************************************************
+ * public interface
+ *************************************************************************/
+
 /**
  * @brief Appends an element to an array of pointers.
  *
@@ -173,6 +263,34 @@ gnx_array_delete_tail(GnxArray *array)
     if (array->free_elem)
         free(array->cell[array->size]);
     array->cell[array->size] = NULL;
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Sort the array elements in non-decreasing order.
+ *
+ * We can only sort elements if there is a specific method to compare elements.
+ *
+ * @param array Sort the elements of this array.  The elements of the array
+ *        must have been configured to be of type #GNX_UINT.
+ * @return Nonzero if the sort was successful; zero otherwise.  We also return
+ *         zero if the array is empty.
+ */
+int
+gnx_array_sort(GnxArray *array)
+{
+    unsigned int low, high;
+
+    gnx_i_check_array(array);
+    if (!(GNX_UINT & array->datatype))
+        return GNX_FAILURE;
+    if (!array->size)
+        return GNX_FAILURE;
+
+    low = 0;
+    high = array->size - 1;
+    gnx_i_quicksort(array, low, high);
 
     return GNX_SUCCESS;
 }

@@ -56,6 +56,17 @@ static void new_capacity_minimum(void);
 static void new_free_elements(void);
 static void new_no_memory(void);
 
+/* sort the elements in non-decreasing order */
+static void sort_duplicate_dont_free_sorted(void);
+static void sort_duplicate_dont_free_unsorted(void);
+static void sort_duplicate_free_sorted(void);
+static void sort_duplicate_free_unsorted(void);
+static void sort_empty(void);
+static void sort_one(void);
+static void sort_random_free(void);
+static void sort_two_dont_free(void);
+static void sort_two_free(void);
+
 /**************************************************************************
  * append an element
  *************************************************************************/
@@ -505,6 +516,806 @@ new_no_memory(void)
 }
 
 /**************************************************************************
+ * sort the elements in non-decreasing order
+ *************************************************************************/
+
+static void
+sort(void)
+{
+    sort_duplicate_dont_free_sorted();
+    sort_duplicate_dont_free_unsorted();
+    sort_duplicate_free_sorted();
+    sort_duplicate_free_unsorted();
+    sort_empty();
+    sort_one();
+    sort_random_free();
+    sort_two_dont_free();
+    sort_two_free();
+}
+
+/* Sort an array that has duplicate elements.  The elements are already sorted.
+ * We do not release the memory of the elements.
+ */
+static void
+sort_duplicate_dont_free_sorted(void)
+{
+    GnxArray *array;
+    unsigned int a, b, c, tmp_a, tmp_b, tmp_c;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has duplicate elements.  The elements are yet to be
+ * sorted.  We do not release the memory of the elements.
+ */
+static void
+sort_duplicate_dont_free_unsorted(void)
+{
+    GnxArray *array;
+    unsigned int a, b, c, tmp_a, tmp_b, tmp_c;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     * Elements are appended as: b, c, a.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &c));
+    assert(gnx_array_append(array, &a));
+    assert(3 == array->size);
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_c = *((unsigned int *)(array->cell[1]));
+    tmp_a = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     * Elements are appended as: b, a, c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &c));
+    assert(3 == array->size);
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     * Elements are appended as: c, a, b.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    assert(gnx_array_append(array, &c));
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(3 == array->size);
+    tmp_c = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    tmp_b = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     * Elements are appended as: a, c, b.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &c));
+    assert(gnx_array_append(array, &b));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_c = *((unsigned int *)(array->cell[1]));
+    tmp_b = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has duplicate elements.  The elements are already sorted.
+ * We release the memory of the elements.
+ */
+static void
+sort_duplicate_free_sorted(void)
+{
+    GnxArray *array;
+    unsigned int a, b, c, *elem, tmp_a, tmp_b, tmp_c;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has duplicate elements.  The elements are yet to be
+ * sorted.  We release the memory of the elements.
+ */
+static void
+sort_duplicate_free_unsorted(void)
+{
+    GnxArray *array;
+    unsigned int a, b, c, *elem, tmp_a, tmp_b, tmp_c;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     * Elements are appended as: b, c, a.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_c = *((unsigned int *)(array->cell[1]));
+    tmp_a = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a < b == c.
+     * Elements are appended as: b, a, c.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+    c = b;
+    assert(a < b);
+    assert(b == c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     * Elements are appended as: c, a, b.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    tmp_c = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    tmp_b = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are ordered as: a == b < c.
+     * Elements are appended as: a, c, b.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    b = a;
+    do {
+        c = (unsigned int)g_random_int();
+    } while (c <= b);
+    assert(a == b);
+    assert(b < c);
+
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = c;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    assert(3 == array->size);
+
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_c = *((unsigned int *)(array->cell[1]));
+    tmp_b = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    assert(gnx_array_sort(array));
+    assert(3 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    tmp_c = *((unsigned int *)(array->cell[2]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+    assert(c == tmp_c);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has zero elements.
+ */
+static void
+sort_empty(void)
+{
+    GnxArray *array;
+    const unsigned int capacity = 16;
+
+    /**********************************************************************
+     * Elements are general pointers.
+     *********************************************************************/
+
+    /* Do not release memory of elements. */
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_POINTER);
+    assert(0 == array->size);
+    assert(!gnx_array_sort(array));
+    assert(0 == array->size);
+    gnx_destroy_array(array);
+
+    /* Release memory of elements. */
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_POINTER);
+    assert(0 == array->size);
+    assert(!gnx_array_sort(array));
+    assert(0 == array->size);
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are integer pointers.
+     *********************************************************************/
+
+    /* Do not release memory of elements. */
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+    assert(0 == array->size);
+    assert(!gnx_array_sort(array));
+    assert(0 == array->size);
+    gnx_destroy_array(array);
+
+    /* Release memory of elements. */
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+    assert(0 == array->size);
+    assert(!gnx_array_sort(array));
+    assert(0 == array->size);
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has exactly one element.
+ */
+static void
+sort_one(void)
+{
+    GnxArray *array;
+    unsigned int e, *elem, tmp;
+    const unsigned int capacity = 8;
+
+    /**********************************************************************
+     * Do not release memory of elements.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+    e = (unsigned int)g_random_int();
+    assert(gnx_array_append(array, &e));
+    assert(1 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(1 == array->size);
+    tmp = *((unsigned int *)(array->cell[0]));
+    assert(e == tmp);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Release memory of elements.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = (unsigned int)g_random_int();
+    assert(gnx_array_append(array, elem));
+    assert(1 == array->size);
+
+    assert(gnx_array_sort(array));
+    assert(1 == array->size);
+    tmp = *((unsigned int *)(array->cell[0]));
+    assert(*elem == tmp);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array whose elements were randomly appended.  We release the memory
+ * of the elements.
+ */
+static void
+sort_random_free(void)
+{
+    GnxArray *array;
+    unsigned int a, b, *elem, i;
+    const int low = 16;
+    const int high = 64;
+    const unsigned int capacity = (unsigned int)high;
+    const unsigned int size = (unsigned int)g_random_int_range(low, high);
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    /* Append elements to the array. */
+    for (i = 0; i < size; i++) {
+        elem = (unsigned int *)malloc(sizeof(unsigned int));
+        *elem = (unsigned int)g_random_int_range(0, high);
+        assert(gnx_array_append(array, elem));
+    }
+    assert(size == array->size);
+
+    /* Sort the array. */
+    assert(gnx_array_sort(array));
+    assert(size == array->size);
+
+    /* Verify that the elements are sorted. */
+    for (i = 0; i < (size - 1); i++) {
+        a = *((unsigned int *)(array->cell[i]));
+        b = *((unsigned int *)(array->cell[i + 1]));
+        assert(a <= b);
+    }
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has two elements.  We do not release the memory of the
+ * elements.
+ */
+static void
+sort_two_dont_free(void)
+{
+    GnxArray *array;
+    unsigned int a, b, tmp_a, tmp_b;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are already sorted.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+
+    assert(a < b);
+    assert(gnx_array_append(array, &a));
+    assert(gnx_array_append(array, &b));
+    assert(2 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    assert(gnx_array_sort(array));
+    assert(2 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are not yet sorted.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_DONT_FREE_ELEMENTS, GNX_UINT);
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+
+    assert(a < b);
+    assert(gnx_array_append(array, &b));
+    assert(gnx_array_append(array, &a));
+    assert(2 == array->size);
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    assert(gnx_array_sort(array));
+    assert(2 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    gnx_destroy_array(array);
+}
+
+/* Sort an array that has two elements.  We release the memory of the elements.
+ */
+static void
+sort_two_free(void)
+{
+    GnxArray *array;
+    unsigned int a, b, *elem, tmp_a, tmp_b;
+    const int low = 0;
+    const int high = 32;
+    const unsigned int capacity = 4;
+
+    /**********************************************************************
+     * Elements are already sorted.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+
+    assert(a < b);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    assert(2 == array->size);
+
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    assert(gnx_array_sort(array));
+    assert(2 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    gnx_destroy_array(array);
+
+    /**********************************************************************
+     * Elements are not yet sorted.
+     *********************************************************************/
+
+    array = gnx_init_array_full(&capacity, GNX_FREE_ELEMENTS, GNX_UINT);
+
+    a = (unsigned int)g_random_int_range(low, high);
+    do {
+        b = (unsigned int)g_random_int();
+    } while (a >= b);
+
+    assert(a < b);
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = b;
+    assert(gnx_array_append(array, elem));
+    elem = (unsigned int *)malloc(sizeof(unsigned int));
+    *elem = a;
+    assert(gnx_array_append(array, elem));
+    assert(2 == array->size);
+
+    tmp_b = *((unsigned int *)(array->cell[0]));
+    tmp_a = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    assert(gnx_array_sort(array));
+    assert(2 == array->size);
+    tmp_a = *((unsigned int *)(array->cell[0]));
+    tmp_b = *((unsigned int *)(array->cell[1]));
+    assert(a == tmp_a);
+    assert(b == tmp_b);
+
+    gnx_destroy_array(array);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -518,6 +1329,7 @@ main(int argc,
     g_test_add_func("/array/delete", delete);
     g_test_add_func("/array/delete-tail", delete_tail);
     g_test_add_func("/array/new", new);
+    g_test_add_func("/array/sort", sort);
 
     return g_test_run();
 }
