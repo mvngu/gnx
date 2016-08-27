@@ -90,6 +90,11 @@
                                   * @c int type.
                                   */
 
+#define GNX_MAXIMUM_EXPONENT (31)  /**< @hideinitializer
+                                    * The maximum exponent that is used to
+                                    * compute powers of two.
+                                    */
+
 #define GNX_MAXIMUM_NODES                                                  \
     ((unsigned int)INT_MAX + 1)  /**< @hideinitializer
                                   * The maximum number of nodes in a graph or
