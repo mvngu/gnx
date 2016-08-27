@@ -39,45 +39,6 @@
  * internal data structures
  *************************************************************************/
 
-#define GNX_MAX_EXPONENT (32)
-
-/* @cond */
-/* All powers of two 2^i for i = 0,...,31. */
-static unsigned int gnx_power2[GNX_MAX_EXPONENT] = {
-    1,            /* 2^0 */
-    2,            /* 2^1 */
-    4,            /* 2^2 */
-    8,            /* 2^3 */
-    16,           /* 2^4 */
-    32,           /* 2^5 */
-    64,           /* 2^6 */
-    128,          /* 2^7 */
-    256,          /* 2^8 */
-    512,          /* 2^9 */
-    1024,         /* 2^10 */
-    2048,         /* 2^11 */
-    4096,         /* 2^12 */
-    8192,         /* 2^13 */
-    16384,        /* 2^14 */
-    32768,        /* 2^15 */
-    65536,        /* 2^16 */
-    131072,       /* 2^17 */
-    262144,       /* 2^18 */
-    524288,       /* 2^19 */
-    1048576,      /* 2^20 */
-    2097152,      /* 2^21 */
-    4194304,      /* 2^22 */
-    8388608,      /* 2^23 */
-    16777216,     /* 2^24 */
-    33554432,     /* 2^25 */
-    67108864,     /* 2^26 */
-    134217728,    /* 2^27 */
-    268435456,    /* 2^28 */
-    536870912,    /* 2^29 */
-    1073741824,   /* 2^30 */
-    2147483648};  /* 2^31 */
-/* @endcond */
-
 /* @cond */
 /* A node in a digraph.  In a digraph, we keep track of all nodes that are
  * in-neighbors or out-neighbors of a given node.
@@ -1196,12 +1157,7 @@ gnx_add_node(GnxGraph *graph,
          * smallest power of 2 such that v < 2^i for some non-negative integer
          * i.
          */
-        i = GNX_DEFAULT_EXPONENT;
-        while (*v >= gnx_power2[i])
-            i++;
-
-        g_assert(i < GNX_MAX_EXPONENT);
-        new_capacity = gnx_power2[i];
+        new_capacity = gnx_least_power2_gt(v);
         g_assert(new_capacity <= GNX_MAXIMUM_NODES);
 
         new_graph

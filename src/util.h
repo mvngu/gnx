@@ -27,6 +27,7 @@
 unsigned int gnx_any_node(GnxGraph *graph);
 int gnx_cmp(GnxGraph *g,
             GnxGraph *h);
+unsigned int gnx_least_power2_gt(const unsigned int *n);
 
 /* comparing floating-point numbers */
 int gnx_double_cmp_eq(const double *a,

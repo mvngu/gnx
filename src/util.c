@@ -30,6 +30,53 @@
  */
 
 /**************************************************************************
+ * internal data structures
+ *************************************************************************/
+
+/* @cond */
+/* All powers of two 2^i for i = 0,...,31. */
+static unsigned int power2[GNX_MAXIMUM_EXPONENT + 1] = {
+    1,            /* 2^0 */
+    2,            /* 2^1 */
+    4,            /* 2^2 */
+    8,            /* 2^3 */
+    16,           /* 2^4 */
+    32,           /* 2^5 */
+    64,           /* 2^6 */
+    128,          /* 2^7 */
+    256,          /* 2^8 */
+    512,          /* 2^9 */
+    1024,         /* 2^10 */
+    2048,         /* 2^11 */
+    4096,         /* 2^12 */
+    8192,         /* 2^13 */
+    16384,        /* 2^14 */
+    32768,        /* 2^15 */
+    65536,        /* 2^16 */
+    131072,       /* 2^17 */
+    262144,       /* 2^18 */
+    524288,       /* 2^19 */
+    1048576,      /* 2^20 */
+    2097152,      /* 2^21 */
+    4194304,      /* 2^22 */
+    8388608,      /* 2^23 */
+    16777216,     /* 2^24 */
+    33554432,     /* 2^25 */
+    67108864,     /* 2^26 */
+    134217728,    /* 2^27 */
+    268435456,    /* 2^28 */
+    536870912,    /* 2^29 */
+    1073741824,   /* 2^30 */
+    2147483648};  /* 2^31 */
+/* @endcond */
+
+/* @cond */
+/* The maximum power of two that we work with. */
+static unsigned int max_power = 2147483648;  /* 2^31 */
+/* @endcond */
+
+
+/**************************************************************************
  * prototypes for internal helper functions
  *************************************************************************/
 
@@ -205,4 +252,30 @@ gnx_double_cmp_le(const double *a,
     int retval = gnx_i_double_cmp(a, b);
 
     return (retval <= 0) ? TRUE : FALSE;
+}
+
+/**
+ * @brief The least power of two that is greater than an integer.
+ *
+ * The maximum exponent @f$i@f$ in the power @f$2^i@f$ is defined as
+ * #GNX_MAXIMUM_EXPONENT.
+ *
+ * @param n An integer.
+ * @return The least power of two @f$k = 2^i@f$ such that @f$k > n@f$.
+ */
+unsigned int
+gnx_least_power2_gt(const unsigned int *n)
+{
+    unsigned int i;
+
+    g_return_val_if_fail(n, GNX_FAILURE);
+    g_assert(*n < max_power);
+
+    i = 0;
+    while (*n >= power2[i])
+        i++;
+
+    g_assert(*n < power2[i]);
+
+    return power2[i];
 }
