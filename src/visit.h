@@ -30,4 +30,9 @@ GnxGraph* gnx_breadth_first_search(GnxGraph *graph,
 GnxGraph* gnx_depth_first_search(GnxGraph *graph,
                                  const unsigned int *s);
 
+/* tree traversal */
+GnxArray* gnx_pre_order(GnxGraph *tree,
+                        const unsigned int *root,
+                        const GnxMethod order);
+
 #endif  /* GNX_VISIT_H */

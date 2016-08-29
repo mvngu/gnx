@@ -40,6 +40,9 @@ void add_edges_weighted(GnxGraph *graph,
 void add_nodes(GnxGraph *graph,
                const unsigned int node[],
                const unsigned int *size);
+int compare_arrays(const GnxArray *list,
+                   const unsigned int a[],
+                   const unsigned int *size);
 void is_empty_graph(const GnxGraph *graph);
 int is_isolated(const GnxGraph *graph,
                 const unsigned int *v);
@@ -129,6 +132,36 @@ add_nodes(GnxGraph *graph,
 
     for (i = 0; i < *size; i++)
         assert(gnx_add_node(graph, &(node[i])));
+}
+
+/**
+ * @brief Whether two arrays are exactly the same.
+ *
+ * Two arrays are exactly the same if they have the same number of elements
+ * and each element is in the same position.
+ *
+ * @param list An array to compare.
+ * @param a Compare the first array with this array.
+ * @param size How many elements are in array @c a.
+ * @return Nonzero if the two arrays are the same; zero otherwise.
+ */
+int
+compare_arrays(const GnxArray *list,
+               const unsigned int a[],
+               const unsigned int *size)
+{
+    unsigned int elem, i;
+
+    if (*size != list->size)
+        return GNX_FAILURE;
+
+    for (i = 0; i < *size; i++) {
+        elem = *((unsigned int *)(list->cell[i]));
+        if (a[i] != elem)
+            return GNX_FAILURE;
+    }
+
+    return GNX_SUCCESS;
 }
 
 /**

@@ -59,6 +59,13 @@ static void dfs_directed_weighted(void);
 static void dfs_undirected_unweighted(void);
 static void dfs_undirected_weighted(void);
 
+/* pre-order traversal */
+static void pre_order_flying_teams_bfs(void);
+static void pre_order_no_memory(void);
+static void pre_order_small_tree_unweighted(void);
+static void pre_order_small_tree_weighted(void);
+static void pre_order_traversal(void);
+
 /**************************************************************************
  * breadth-first search
  *************************************************************************/
@@ -1017,6 +1024,273 @@ dfs_undirected_weighted(void)
 }
 
 /**************************************************************************
+ * pre-order traversal
+ *************************************************************************/
+
+static void
+pre_order(void)
+{
+    pre_order_flying_teams_bfs();
+    pre_order_no_memory();
+    pre_order_small_tree_unweighted();
+    pre_order_small_tree_weighted();
+    pre_order_traversal();
+}
+
+/* A pre-order traversal of a breadth-first search tree of the flying teams
+ * network.
+ */
+static void
+pre_order_flying_teams_bfs(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    unsigned int i, v;
+    const unsigned int known[48] = {
+        1, 2, 3,
+        4, 14,
+        15,
+        5, 6, 7,
+        27,
+        18, 20, 22, 26,
+        28,
+        29, 30, 41,
+        34, 46,
+        8, 9,
+        11, 12,
+        10, 37,
+        13, 31,
+        16, 17,
+        21, 40, 42,
+        24, 23, 25,
+        19,
+        32, 36, 38, 39, 48,
+        33, 35,
+        47,
+        43, 44,
+        45};
+    const unsigned int root = 1;
+    const unsigned int nnode = 48;
+
+    tree = gnx_read("data/visit/flying-teams-bfs.csv",
+                    GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == tree->total_nodes);
+    list = gnx_pre_order(tree, &root, GNX_SORTED_ORDER);
+    assert(list);
+
+    /* Compare with the known result. */
+    for (i = 0; i < nnode; i++) {
+        v = *((unsigned int *)(list->cell[i]));
+        assert(known[i] == v);
+    }
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/* Test the function gnx_pre_order() under low-memory scenarios.
+ */
+static void
+pre_order_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxGraph *tree;
+    int alloc_size;
+    const unsigned int v = 1;
+
+    tree = gnx_new();
+    assert(gnx_add_node(tree, &v));
+
+    /* Cannot allocate memory to hold the nodes in pre-order. */
+    alloc_size = 0;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_pre_order(tree, &v, GNX_DEFAULT_ORDER));
+    assert(ENOMEM == errno);
+
+    /* Cannot allocate memory to hold the neighbors of a node. */
+    alloc_size = GNX_ALLOC_ARRAY_SIZE
+        + GNX_ALLOC_SET_SIZE
+        + GNX_ALLOC_STACK_SIZE
+        + 1
+        + GNX_ALLOC_BUCKET_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_pre_order(tree, &v, GNX_SORTED_ORDER));
+    assert(ENOMEM == errno);
+
+    gnx_destroy(tree);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* A pre-order traversal of a small tree.  The tree is unweighted.
+ */
+static void
+pre_order_small_tree_unweighted(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    const unsigned int nedge = 4;
+    const unsigned int nnode = 5;
+    const unsigned int tail[4] = {0, 1, 1, 3};
+    const unsigned int head[4] = {1, 2, 3, 4};
+    const unsigned int knownA[5] = {0, 1, 2, 3, 4};
+    const unsigned int knownB[5] = {0, 1, 3, 4, 2};
+    const unsigned int root = 0;
+    const unsigned int size = 5;
+
+    tree = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(tree, tail, head, &nedge);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /**********************************************************************
+     * Traverse the neighbors in default order.
+     *********************************************************************/
+
+    list = gnx_pre_order(tree, &root, GNX_DEFAULT_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &size)
+           || compare_arrays(list, knownB, &size));
+
+    gnx_destroy_array(list);
+
+    /**********************************************************************
+     * Traverse the neighbors in sorted order.
+     *********************************************************************/
+
+    list = gnx_pre_order(tree, &root, GNX_SORTED_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &size));
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/* A pre-order traversal of a small tree.  The tree is weighted.
+ */
+static void
+pre_order_small_tree_weighted(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    const unsigned int nedge = 4;
+    const unsigned int nnode = 5;
+    const double weight[4]     = {0, 1, 2, 3};
+    const unsigned int tail[4] = {0, 1, 1, 3};
+    const unsigned int head[4] = {1, 2, 3, 4};
+    const unsigned int knownA[5] = {0, 1, 2, 3, 4};
+    const unsigned int knownB[5] = {0, 1, 3, 4, 2};
+    const unsigned int root = 0;
+    const unsigned int size = 5;
+
+    tree = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(tree, tail, head, weight, &nedge);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /**********************************************************************
+     * Traverse the neighbors in default order.
+     *********************************************************************/
+
+    list = gnx_pre_order(tree, &root, GNX_DEFAULT_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &size)
+           || compare_arrays(list, knownB, &size));
+
+    gnx_destroy_array(list);
+
+    /**********************************************************************
+     * Traverse the neighbors in sorted order.
+     *********************************************************************/
+
+    list = gnx_pre_order(tree, &root, GNX_SORTED_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &size));
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/* A pre-order traversal of a tree.
+ */
+static void
+pre_order_traversal(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    unsigned int i, v;
+    const double weight[11]     = { 0,  1, 2, 3, 4,  5,  6,  7,  8,  9, 10};
+    const unsigned int tail[11] = {42, 42, 4, 4, 4, 15,  3,  3,  5,  5, 11};
+    const unsigned int head[11] = { 4, 15, 2, 3, 5,  7, 10, 11, 12, 13, 14};
+    const unsigned int root = 42;
+    const unsigned int known[12] = {42, 4, 2, 3, 10, 11, 14, 5, 12, 13, 15, 7};
+    const unsigned int nnode = 12;
+    const unsigned int nedge = 11;
+
+    /**********************************************************************
+     * Unweighted.
+     *********************************************************************/
+
+    tree = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    add_edges(tree, tail, head, &nedge);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    list = gnx_pre_order(tree, &root, GNX_SORTED_ORDER);
+    assert(nnode == list->size);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /* The known pre-order is given in the array 'known'. */
+    for (i = 0; i < nnode; i++) {
+        v = *((unsigned int *)(list->cell[i]));
+        assert(known[i] == v);
+        assert(gnx_has_node(tree, &v));
+    }
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+
+    /**********************************************************************
+     * Weighted.
+     *********************************************************************/
+
+    tree = gnx_new_full(GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_WEIGHTED);
+    add_edges_weighted(tree, tail, head, weight, &nedge);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    list = gnx_pre_order(tree, &root, GNX_SORTED_ORDER);
+    assert(nnode == list->size);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /* The known pre-order is given in the array 'known'. */
+    for (i = 0; i < nnode; i++) {
+        v = *((unsigned int *)(list->cell[i]));
+        assert(known[i] == v);
+        assert(gnx_has_node(tree, &v));
+    }
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/**************************************************************************
  * start here
  *************************************************************************/
 
@@ -1028,6 +1302,7 @@ main(int argc,
 
     g_test_add_func("/visit/bfs", bfs);
     g_test_add_func("/visit/dfs", dfs);
+    g_test_add_func("/visit/pre-order", pre_order);
 
     return g_test_run();
 }
