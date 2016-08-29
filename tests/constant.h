@@ -28,12 +28,6 @@
  */
 #define GNX_ALLOC_ARRAY_SIZE (2)
 
-/* The number of allocations that is required to initialize a bucket for a set
- * or dictionary.  Any non-negative integer below this number would result in
- * an out-of-memory error.
- */
-#define GNX_ALLOC_BUCKET_SIZE (2)
-
 /* The number of allocations that is required to add an entry to a bucket of a
  * dictionary.  This does not take into account the allocations to possibly
  * resize the bucket.  Any non-negative integer below this number would result
@@ -69,6 +63,12 @@
 /**************************************************************************
  * compound #define
  *************************************************************************/
+
+/* The number of allocations that is required to initialize a bucket for a set
+ * or dictionary.  Any non-negative integer below this number would result in
+ * an out-of-memory error.
+ */
+#define GNX_ALLOC_BUCKET_SIZE (GNX_ALLOC_ARRAY_SIZE)
 
 /* The number of allocations that is required to add a node to graph->node.
  * Any non-negative integer below this number would result in an out-of-memory
