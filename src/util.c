@@ -255,6 +255,32 @@ gnx_double_cmp_le(const double *a,
 }
 
 /**
+ * @brief The least power of two that is greater than or equal to an integer.
+ *
+ * The maximum exponent @f$i@f$ in the power @f$2^i@f$ is defined as
+ * #GNX_MAXIMUM_EXPONENT.
+ *
+ * @param n An integer.
+ * @return The least power of two @f$k = 2^i@f$ such that @f$k >= n@f$.
+ */
+unsigned int
+gnx_least_power2_ge(const unsigned int *n)
+{
+    unsigned int i;
+
+    g_return_val_if_fail(n, GNX_FAILURE);
+    g_assert(*n <= max_power);
+
+    i = 0;
+    while (*n > power2[i])
+        i++;
+
+    g_assert(*n <= power2[i]);
+
+    return power2[i];
+}
+
+/**
  * @brief The least power of two that is greater than an integer.
  *
  * The maximum exponent @f$i@f$ in the power @f$2^i@f$ is defined as
