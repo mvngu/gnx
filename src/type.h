@@ -204,6 +204,23 @@ typedef enum {
                                   */
 } GnxBool;
 
+/**
+ * @brief Flags for various algorithms.
+ */
+typedef enum {
+    GNX_DEFAULT_ORDER = 1 << 0,  /**< @hideinitializer
+                                  * Iterate over a collection in the default
+                                  * order.  This is usually the order in which
+                                  * we encounter elements of the collection as
+                                  * we iterate over them.
+                                  */
+    GNX_SORTED_ORDER = 1 << 1    /**< @hideinitializer
+                                  * Iterate over a collection in sorted order.
+                                  * The elements of the collection are visited
+                                  * in increasing order of element IDs.
+                                  */
+} GnxMethod;
+
 /**************************************************************************
  * data types
  *************************************************************************/
