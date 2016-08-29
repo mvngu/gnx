@@ -31,6 +31,7 @@ void gnx_i_check_destroy_type(const GnxBool destroy);
 void gnx_i_check_dict(const GnxDict *dict);
 void gnx_i_check_heap(const GnxHeap *heap);
 void gnx_i_check_node(const unsigned int *v);
+void gnx_i_check_order(const GnxMethod order);
 void gnx_i_check_properties(const GnxBool directed,
                             const GnxBool selfloop,
                             const GnxBool weighted);

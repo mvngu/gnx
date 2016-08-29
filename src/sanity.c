@@ -113,6 +113,19 @@ gnx_i_check_node(const unsigned int *v)
 }
 
 /**
+ * @brief Checks the order in which elements of a collection are to be visited.
+ *
+ * @param order How are we to visit the elements of a collection?  Possible
+ *        values are: #GNX_DEFAULT_ORDER or #GNX_SORTED_ORDER.
+ */
+void
+gnx_i_check_order(const GnxMethod order)
+{
+    g_return_if_fail((GNX_DEFAULT_ORDER & order)
+                     || (GNX_SORTED_ORDER & order));
+}
+
+/**
  * @brief Check the graph properties.
  *
  * @param directed The possible values are: #GNX_UNDIRECTED or #GNX_DIRECTED.
