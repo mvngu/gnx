@@ -393,14 +393,11 @@ gnx_i_weight_str2d(gchar *weight,
                    const gchar *filename,
                    const unsigned int *line)
 {
-    gchar **token;
     gdouble edge_weight;
-    gint64 u64;
     int valid;
     unsigned int i, nminus, nperiod;
     const char minus_sign = '-';
     const char period = '.';
-    const gint all_tokens = -1;
     const unsigned int max_minus_signs = 1;
     const unsigned int max_periods = 1;
 
@@ -476,22 +473,7 @@ gnx_i_weight_str2d(gchar *weight,
      *     library function ever does that for you.)
      */
 
-    /* First, we determine whether the integer part of the edge weight can
-     * fit in an int.
-     */
-    token = g_strsplit(weight, &period, all_tokens);
-    errno = 0;
-    u64 = g_ascii_strtoll(token[0], NULL, GNX_BASE_10);
-    g_strfreev(token);
-    if ((u64 > G_MAXINT) || (u64 < G_MININT)) {
-        w = NULL;
-        g_log(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE,
-              "edge weight overflow at line %u in %s: %s",
-              *line, filename, strerror(ERANGE));
-        return GNX_FAILURE;
-    }
-
-    /* Next, we determine whether the whole edge weight can overflow. */
+    /* Determine whether the whole edge weight can overflow. */
     errno = 0;
     edge_weight = g_ascii_strtod(weight, NULL);
     if (ERANGE == errno) {
