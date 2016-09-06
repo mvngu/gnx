@@ -219,6 +219,12 @@ add_no_memory(void)
     assert(!gnx_set_add(set, elem));
     assert(ENOMEM == errno);
 
+    /* Cannot allocate memory to create another bucket. */
+    alloc_size += GNX_ALLOC_ARRAY_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_set_add(set, elem));
+    assert(ENOMEM == errno);
+
     free(elem);
     gnx_destroy_set(set);
     gnx_alloc_reset_limit();
