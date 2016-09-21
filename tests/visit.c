@@ -33,6 +33,12 @@
  * prototypes for helper functions
  *************************************************************************/
 
+/* bottom-up traversal */
+static void bottom_up_advogato(void);
+static void bottom_up_flying_teams(void);
+static void bottom_up_no_memory(void);
+static void bottom_up_small_tree(void);
+
 /* breadth-first search */
 static void bfs_directed(void);
 static void bfs_directed_weighted(void);
@@ -65,6 +71,239 @@ static void pre_order_no_memory(void);
 static void pre_order_small_tree_unweighted(void);
 static void pre_order_small_tree_weighted(void);
 static void pre_order_traversal(void);
+
+/**************************************************************************
+ * bottom-up traversal
+ *************************************************************************/
+
+static void
+bottom_up(void)
+{
+    bottom_up_advogato();
+    bottom_up_flying_teams();
+    bottom_up_no_memory();
+    bottom_up_small_tree();
+}
+
+/* A bottom-up traversal of a breadth-first search tree of a snapshot of the
+ * Advogato trust network.
+ */
+static void
+bottom_up_advogato(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    GnxNodeIter iter;
+    GnxSet *leaf;
+    unsigned int i, max, size, start, *u, v;
+    const unsigned int root = 12;
+    const unsigned int nnode = 5290;
+    const unsigned int nedge = 5289;
+    const unsigned int root_index = nnode - 1;
+
+    /* Get the bottom-up traversal. */
+    tree = gnx_read("data/visit/advogato-bfs.csv",
+                    GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+    list = gnx_bottom_up(tree, &root);
+    assert(list);
+    assert(list->size == tree->total_nodes);
+
+    /* Verify the traversal. */
+    max = 0;
+    while (max < root_index) {
+        /* Get the set of leaves of the tree, excluding the root node. */
+        leaf = gnx_init_set_full(GNX_FREE_ELEMENTS);
+        gnx_node_iter_init(&iter, tree);
+        while (gnx_node_iter_next(&iter, &v)) {
+            if ((1 == gnx_degree(tree, &v)) && (v != root)) {
+                u = (unsigned int *)malloc(sizeof(unsigned int));
+                assert(u);
+                *u = v;
+                assert(gnx_set_add(leaf, u));
+            }
+        }
+
+        /* Compare the leaves with the traversal. */
+        size = leaf->size;
+        start = max;
+        max += size;
+        for (i = start; i < max; i++) {
+            u = (unsigned int *)(list->cell[i]);
+            assert(gnx_set_has(leaf, u));
+            assert(gnx_set_delete(leaf, u));
+            assert(gnx_has_node(tree, u));
+            assert(gnx_delete_node(tree, u));
+        }
+        assert(0 == leaf->size);
+        gnx_destroy_set(leaf);
+    }
+
+    /* Only the root node remains. */
+    assert(1 == tree->total_nodes);
+    assert(gnx_has_node(tree, &root));
+    u = (unsigned int *)(list->cell[root_index]);
+    assert(*u == root);
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/* A bottom-up traversal of a breadth-first search tree of the flying teams
+ * network.
+ */
+static void
+bottom_up_flying_teams(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    unsigned int i, *node;
+    const unsigned int root = 1;
+    const unsigned int nnode = 48;
+    const unsigned int nedge = 47;
+
+    tree = gnx_read("data/visit/flying-teams-bfs.csv",
+                    GNX_UNDIRECTED, GNX_NO_SELFLOOP, GNX_UNWEIGHTED);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+    list = gnx_bottom_up(tree, &root);
+    assert(list);
+    assert(list->size == tree->total_nodes);
+
+    /* The first 30 nodes are leaves of T. */
+    for (i = 0; i < 30; i++) {
+        node = (unsigned int *)(list->cell[i]);
+        assert(1 == gnx_degree(tree, node));
+        assert(gnx_delete_node(tree, node));
+    }
+
+    /* The next 12 nodes are leaves of T_1. */
+    for (i = 30; i < 42; i++) {
+        node = (unsigned int *)(list->cell[i]);
+        assert(1 == gnx_degree(tree, node));
+        assert(gnx_delete_node(tree, node));
+    }
+
+    /* The next 4 nodes are leaves of T_2. */
+    for (i = 42; i < 46; i++) {
+        node = (unsigned int *)(list->cell[i]);
+        assert(1 == gnx_degree(tree, node));
+        assert(gnx_delete_node(tree, node));
+    }
+
+    /* The next node is the leaf node 7. */
+    i = 46;
+    node = (unsigned int *)(list->cell[i]);
+    assert(7 == *node);
+    assert(1 == gnx_degree(tree, node));
+    assert(gnx_delete_node(tree, node));
+
+    /* The final node is the root node. */
+    i = 47;
+    node = (unsigned int *)(list->cell[i]);
+    assert(root == *node);
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/* Test the function gnx_bottom_up() under low-memory scenarios.
+ */
+static void
+bottom_up_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxGraph *tree;
+    int alloc_size;
+    const unsigned int tail[1] = {0};
+    const unsigned int head[1] = {1};
+    const unsigned int root = 0;
+    const unsigned int nnode = 2;
+    const unsigned int nedge = 1;
+
+    tree = gnx_new();
+    add_edges(tree, tail, head, &nedge);
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /* Cannot allocate memory for the set of traversal nodes. */
+    alloc_size = GNX_ALLOC_SET_SIZE
+        + (2 * GNX_ALLOC_ARRAY_SIZE)
+        + GNX_ALLOC_QUEUE_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_bottom_up(tree, &root));
+    assert(ENOMEM == errno);
+
+    /* Cannot allocate memory for the queue of nodes in BFS. */
+    alloc_size += GNX_ALLOC_ARRAY_SIZE
+        + (2 * GNX_ALLOC_DICT_SIZE)
+        + GNX_ALLOC_HEAP_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_bottom_up(tree, &root));
+    assert(ENOMEM == errno);
+
+    gnx_destroy(tree);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Bottom-up traversal of a small tree.
+ */
+static void
+bottom_up_small_tree(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    unsigned int i, *node;
+    const unsigned int root = 42;
+    const unsigned int tail[11] = {42, 42, 4, 4, 4, 15,  3,  3,  5,  5, 11};
+    const unsigned int head[11] = { 4, 15, 2, 3, 5,  7, 10, 11, 12, 13, 14};
+    const unsigned int size = 11;
+
+    tree = gnx_new();
+    add_edges(tree, tail, head, &size);
+    assert(12 == tree->total_nodes);
+    list = gnx_bottom_up(tree, &root);
+    assert(list);
+    assert(list->size == tree->total_nodes);
+
+    /* The first 6 nodes are leaves of T. */
+    for (i = 0; i < 6; i++) {
+        node = (unsigned int *)(list->cell[i]);
+        assert(1 == gnx_degree(tree, node));
+        assert(gnx_delete_node(tree, node));
+    }
+
+    /* The next 3 node are leaves of T_1. */
+    for (i = 6; i < 9; i++) {
+        node = (unsigned int *)(list->cell[i]);
+        assert(1 == gnx_degree(tree, node));
+        assert(gnx_delete_node(tree, node));
+    }
+
+    /* The next node is the leaf node 3. */
+    i = 9;
+    node = (unsigned int *)(list->cell[i]);
+    assert(3 == *node);
+    assert(1 == gnx_degree(tree, node));
+    assert(gnx_delete_node(tree, node));
+
+    /* The next node is the leaf node 4. */
+    i = 10;
+    node = (unsigned int *)(list->cell[i]);
+    assert(4 == *node);
+    assert(1 == gnx_degree(tree, node));
+    assert(gnx_delete_node(tree, node));
+
+    /* The final node is the root node. */
+    i = 11;
+    node = (unsigned int *)(list->cell[i]);
+    assert(root == *node);
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
 
 /**************************************************************************
  * breadth-first search
@@ -1301,6 +1540,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/visit/bfs", bfs);
+    g_test_add_func("/tree/bottom-up", bottom_up);
     g_test_add_func("/visit/dfs", dfs);
     g_test_add_func("/visit/pre-order", pre_order);
 

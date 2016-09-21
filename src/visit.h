@@ -31,6 +31,8 @@ GnxGraph* gnx_depth_first_search(GnxGraph *graph,
                                  const unsigned int *s);
 
 /* tree traversal */
+GnxArray* gnx_bottom_up(GnxGraph *tree,
+                        const unsigned int *root);
 GnxArray* gnx_pre_order(GnxGraph *tree,
                         const unsigned int *root,
                         const GnxMethod order);

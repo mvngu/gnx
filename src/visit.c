@@ -24,6 +24,7 @@
 #include "array.h"
 #include "base.h"
 #include "dict.h"
+#include "heap.h"
 #include "query.h"
 #include "queue.h"
 #include "sanity.h"
@@ -45,6 +46,20 @@ static int gnx_i_bfs(GnxGraph *graph,
                      GnxGraph *g,
                      GnxSet *seen,
                      GnxQueue *queue);
+static int gnx_i_bottom_up(GnxGraph *tree,
+                           unsigned int *root,
+                           GnxArray *list,
+                           GnxDict *parent,
+                           GnxDict *degree,
+                           GnxHeap *heap);
+static int gnx_i_bottom_up_add_node(GnxHeap *heap,
+                                    const unsigned int *v,
+                                    const double *key);
+static int gnx_i_bottom_up_bfs(GnxGraph *tree,
+                               unsigned int *root,
+                               GnxDict *parent,
+                               GnxDict *degree,
+                               GnxHeap *heap);
 static int gnx_i_default_order(GnxGraph *graph,
                                unsigned int *v,
                                GnxStack *stack);
@@ -121,6 +136,187 @@ gnx_i_bfs(GnxGraph *graph,
 cleanup:
     errno = ENOMEM;
     return GNX_FAILURE;
+}
+
+/**
+ * @brief Performs the actual bottom-up traversal of the given tree.
+ *
+ * @param tree Apply bottom-up traversal to this tree.
+ * @param root The root of the tree.
+ * @param list An initialized array.
+ * @param parent This will be populated with the parent of each node.  Thus
+ *        <tt>parent[v] = u</tt> means that @c u is the parent of @c v.
+ * @param degree This will be populated with the degree of each node minus one.
+ * @param heap This will hold the nodes to visit.
+ * @return Nonzero if the bottom-up traversal was successful; zero otherwise.
+ */
+static int
+gnx_i_bottom_up(GnxGraph *tree,
+                unsigned int *root,
+                GnxArray *list,
+                GnxDict *parent,
+                GnxDict *degree,
+                GnxHeap *heap)
+{
+    double key = 0.0;
+    int success;
+    unsigned int *du, *dv, *u, v, *w;
+    const double delta = 0.01;
+
+    success = gnx_i_bottom_up_bfs(tree, root, parent, degree, heap);
+    if (!success)
+        return GNX_FAILURE;
+
+    while (heap->size) {
+        key += delta;
+        assert(gnx_heap_pop(heap, &v));
+        dv = (unsigned int *)gnx_dict_has(degree, &v);
+        g_assert(dv);
+
+        /* The node v is a leaf of a vertex deletion sub-tree. */
+        if (0 == *dv) {
+            w = (unsigned int *)malloc(sizeof(unsigned int));
+            if (!w)
+                return GNX_FAILURE;
+            *w = v;
+            assert(gnx_array_append(list, w));
+
+            u = (unsigned int *)gnx_dict_has(parent, &v);
+            g_assert(u);
+            if (*root == *u)
+                continue;
+
+            success = gnx_i_bottom_up_add_node(heap, u, &key);
+            if (!success)
+                return GNX_FAILURE;
+
+            du = (unsigned int *)gnx_dict_has(degree, u);
+            g_assert(du);
+            g_assert(*du);
+            (*du)--;
+        } else {
+            success = gnx_i_bottom_up_add_node(heap, &v, &key);
+            if (!success)
+                return GNX_FAILURE;
+        }
+    }
+
+    w = (unsigned int *)malloc(sizeof(unsigned int));
+    if (!w)
+        return GNX_FAILURE;
+    *w = *root;
+    assert(gnx_array_append(list, w));
+    g_assert(list->size == tree->total_nodes);
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Adds a node to a binary heap.
+ *
+ * @param heap A minimum binary heap.
+ * @param v We want to insert this node into the heap.  If the node is already
+ *        in the heap, we increase the key of the node.
+ * @param key The key that is associated with the node.  After we have added
+ *        the node to the heap and associate the node with this key, we will
+ *        increment the key by a fixed amount.
+ * @param delta The fixed amount by which to increase the key.  The increment
+ *        is done after we have added the node to the heap.
+ * @return Nonzero if we have successfully added the node to the heap; zero
+ *         otherwise.
+ */
+static int
+gnx_i_bottom_up_add_node(GnxHeap *heap,
+                         const unsigned int *v,
+                         const double *key)
+{
+    if (gnx_heap_has(heap, v)) {
+        assert(gnx_heap_increase_key(heap, v, key));
+    } else {
+        if (!gnx_heap_add(heap, v, key))
+            return GNX_FAILURE;
+    }
+
+    return GNX_SUCCESS;
+}
+
+/**
+ * @brief Performs breadth-first search on a tree.
+ *
+ * @param tree Run breadth-first search on this tree.
+ * @param root The root of the tree.
+ * @param parent This will be populated with the parent of each node.  Thus
+ *        <tt>parent[v] = u</tt> means that @c u is the parent of @c v.
+ * @param degree This will be populated with the degree of each node minus one.
+ * @param heap All the leaves of the tree will be stored here.
+ * @return Nonzero if we successfully performed breadth-first search on the
+ *         given tree; zero otherwise.  If we are unable to allocate memory
+ *         during the traversal, then we set @c errno to @c ENOMEM and return
+ *         zero.
+ */
+static int
+gnx_i_bottom_up_bfs(GnxGraph *tree,
+                    unsigned int *root,
+                    GnxDict *parent,
+                    GnxDict *degree,
+                    GnxHeap *heap)
+{
+    GnxNeighborIter iter;
+    GnxQueue *queue = NULL;
+    gnxptr node;
+    unsigned int *n, *v, *w;
+    const double k = 0.0;
+
+    errno = 0;
+    queue = gnx_init_queue();
+    if (!queue)
+        goto cleanup;
+
+    /* The root node is its own parent. */
+    assert(gnx_queue_append(queue, root));
+    assert(gnx_dict_add(parent, root, root));
+
+    /* Perform breadth-first search. */
+    while (queue->size) {
+        v = gnx_queue_pop(queue);
+        g_assert(v);
+
+        gnx_neighbor_iter_init(&iter, tree, v);
+        while (gnx_neighbor_iter_next(&iter, &node, NULL)) {
+            w = (unsigned int *)node;
+            g_assert(w);
+
+            if (gnx_dict_has(parent, w))
+                continue;
+            if (!gnx_dict_add(parent, w, v))
+                goto cleanup;
+
+            n = (unsigned int *)malloc(sizeof(unsigned int));
+            if (!n)
+                goto cleanup;
+
+            *n = gnx_degree(tree, w) - 1;
+            if (!gnx_dict_add(degree, w, n))
+                goto cleanup;
+
+            if (0 == *n) {
+                if (!gnx_heap_add(heap, w, &k))
+                    goto cleanup;
+            } else {
+                if (!gnx_queue_append(queue, w))
+                    goto cleanup;
+            }
+        }
+    }
+
+    gnx_destroy_queue(queue);
+    return GNX_SUCCESS;
+
+cleanup:
+    errno = ENOMEM;
+    gnx_destroy_queue(queue);
+    return GNX_FAILURE;
+
 }
 
 /**
@@ -327,6 +523,88 @@ cleanup:
 /**************************************************************************
  * public interface
  *************************************************************************/
+
+/**
+ * @brief Bottom-up traversal of a tree.
+ *
+ * Let @f$T@f$ be a tree on @f$n > 0@f$ nodes.  Bottom-up traversal starts off
+ * by visiting the leaves of @f$T@f$, i.e. the nodes of @f$T@f$ that each has a
+ * degree of one.  We then consider the sub-tree @f$T_1@f$ that is obtained by
+ * vertex deletion of the leaves of @f$T@f$ and apply bottom-up traversal to
+ * the leaves of @f$T_1@f$.  We then consider the sub-tree @f$T_2@f$ that is
+ * obtained by vertex deletion of the leaves of @f$T_1@f$.  We recursively
+ * apply bottom-up traversal to the leaves of @f$T_2@f$ and its vertex deletion
+ * sub-trees.  The procedure stops when we have percolated up to the root of
+ * @f$T@f$.
+ *
+ * @param tree Apply bottom-up traversal to this tree.
+ * @param root The root of the tree.
+ * @return An array of the nodes of the given tree in bottom-up order.  The
+ *         given root is the last element of the array.  The array size is the
+ *         number of nodes in the tree.   When you no longer need the array,
+ *         you must destroy it via the function gnx_destroy_array().  If we are
+ *         unable to allocate memory during the traversal, then @c errno is set
+ *         to @c ENOMEM and we return @c NULL.
+ */
+GnxArray*
+gnx_bottom_up(GnxGraph *tree,
+              const unsigned int *root)
+{
+    GnxArray *list = NULL;
+    GnxDict *degree = NULL;
+    GnxDict *parent = NULL;
+    GnxHeap *heap = NULL;
+    int success;
+    unsigned int nnode, start;
+
+    errno = 0;
+    g_return_val_if_fail(gnx_is_tree(tree), NULL);
+    nnode = tree->total_nodes;
+    g_return_val_if_fail(nnode <= GNX_MAXIMUM_NODES, NULL);
+    g_return_val_if_fail(gnx_has_node(tree, root), NULL);
+
+    /* This will hold the nodes in bottom-up order. */
+    list = gnx_init_array_full(&(tree->capacity), GNX_FREE_ELEMENTS, GNX_UINT);
+    if (!list)
+        goto cleanup;
+
+    /* This will hold the parent of each node. */
+    parent = gnx_init_dict();
+    if (!parent)
+        goto cleanup;
+
+    /* This will hold the degree of each node.  The degree will be updated
+     * during the traversal.
+     */
+    degree = gnx_init_dict_full(GNX_DONT_FREE_KEYS, GNX_FREE_VALUES);
+    if (!degree)
+        goto cleanup;
+
+    /* This will hold the nodes to visit. */
+    heap = gnx_init_heap();
+    if (!heap)
+        goto cleanup;
+
+    start = *root;
+    success = gnx_i_bottom_up(tree, &start, list, parent, degree, heap);
+    gnx_destroy_dict(degree);
+    gnx_destroy_dict(parent);
+    gnx_destroy_heap(heap);
+
+    if (success)
+        return list;
+
+    gnx_destroy_array(list);
+    return NULL;
+
+cleanup:
+    errno = ENOMEM;
+    gnx_destroy_array(list);
+    gnx_destroy_dict(degree);
+    gnx_destroy_dict(parent);
+    gnx_destroy_heap(heap);
+    return NULL;
+}
 
 /**
  * @brief Traverses a graph via the strategy of breadth-first search.
