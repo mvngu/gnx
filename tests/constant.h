@@ -70,6 +70,12 @@
  */
 #define GNX_ALLOC_BUCKET_SIZE (GNX_ALLOC_ARRAY_SIZE)
 
+/* The number of allocations that is required to initialize a heap.  Any
+ * non-negative integer below this number would result in an out-of-memory
+ * error.
+ */
+#define GNX_ALLOC_HEAP_SIZE (2 + GNX_ALLOC_DICT_SIZE)
+
 /* The number of allocations that is required to add a node to graph->node.
  * Any non-negative integer below this number would result in an out-of-memory
  * error.
