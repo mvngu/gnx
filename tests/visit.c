@@ -1541,7 +1541,7 @@ main(int argc,
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/visit/bfs", bfs);
-    g_test_add_func("/tree/bottom-up", bottom_up);
+    g_test_add_func("/visit/bottom-up", bottom_up);
     g_test_add_func("/visit/dfs", dfs);
     g_test_add_func("/visit/pre-order", pre_order);
 
