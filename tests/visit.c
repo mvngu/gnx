@@ -1111,7 +1111,8 @@ dfs_directed_unweighted(void)
 /* Depth-first search a graph that is directed, does not allow self-loops, and
  * is weighted.
  */
-static void dfs_directed_weighted(void)
+static void
+dfs_directed_weighted(void)
 {
     GnxGraph *graph, *g, *treea, *treeb;
     const double weight[7]     = {0, 1, 2, 3, 4, 5, 6};
