@@ -767,6 +767,130 @@ cleanup:
 }
 
 /**
+ * @brief A post-order traversal of a tree.
+ *
+ * @param tree The tree to traverse.
+ * @param root The root of the tree.
+ * @param order An ordering of the neighbors of a node.  Possible values are:
+ *        <ul>
+ *        <li>#GNX_DEFAULT_ORDER: We iterate over the neighbors of a node in
+ *            the order in which we encounter them.  This ordering is not
+ *            guaranteed to be reproducible.  However, with this ordering we
+ *            have a worst-case time complexity of @f$O(n)@f$ for a tree with
+ *            @f$n@f$ nodes.</li>
+ *        <li>#GNX_SORTED_ORDER: The neighbors of a node are visited in
+ *            increasing order of their IDs.  The worst-case runtime depends on
+ *            the sorting function.</li>
+ *        </ul>
+ * @return An array of the nodes of the tree in post-order.  The array size is
+ *         the number of nodes in the tree.   When you no longer need the
+ *         array, you must destroy it via the function gnx_destroy_array().
+ *         If we are unable to allocate memory during the post-order traversal,
+ *         then @c errno is set to @c ENOMEM and we return @c NULL.
+ */
+GnxArray*
+gnx_post_order(GnxGraph *tree,
+               const unsigned int *root,
+               const GnxMethod order)
+{
+    GnxArray *list = NULL;
+    GnxSet *seen = NULL;
+    GnxStack *stack = NULL;
+    GnxStack *stackB = NULL;
+    int default_order, sorted_order;
+    unsigned int i, nnode, *node, start, *v;
+
+    errno = 0;
+    g_return_val_if_fail(gnx_is_tree(tree), NULL);
+    nnode = tree->total_nodes;
+    g_return_val_if_fail(nnode <= GNX_MAXIMUM_NODES, NULL);
+    g_return_val_if_fail(gnx_has_node(tree, root), NULL);
+    gnx_i_check_order(order);
+    default_order = GNX_DEFAULT_ORDER & order;
+    sorted_order = GNX_SORTED_ORDER & order;
+
+    /* This will hold the nodes in post-order. */
+    list = gnx_init_array_full(&(tree->capacity), GNX_FREE_ELEMENTS, GNX_UINT);
+    if (!list)
+        goto cleanup;
+
+    /* This will hold all nodes that we have visited. */
+    seen = gnx_init_set();
+    if (!seen)
+        goto cleanup;
+
+    /* Push the root onto the empty stack. */
+    start = *root;
+    stack = gnx_init_stack();
+    if (!stack)
+        goto cleanup;
+    if (!gnx_stack_push(stack, &start))
+        goto cleanup;
+
+    /* Perform the post-order traversal. */
+    while (stack->size) {
+        v = gnx_stack_peek(stack);
+        g_assert(v);
+
+        if (gnx_set_has(seen, v)) {
+            v = gnx_stack_pop(stack);
+            g_assert(v);
+
+            node = (unsigned int *)malloc(sizeof(unsigned int));
+            if (!node)
+                goto cleanup;
+            *node = *v;
+            assert(gnx_array_append(list, node));
+
+            continue;
+        }
+
+        if (!gnx_set_add(seen, v))
+            goto cleanup;
+
+        /* A temporary stack.  This will help us to determine which neighbor
+         * we have not yet seen.
+         */
+        stackB = gnx_init_stack();
+        if (!stackB)
+            goto cleanup;
+
+        if (default_order) {
+            if (!gnx_i_default_order(tree, v, stackB))
+                goto cleanup;
+        } else {
+            g_assert(sorted_order);
+            if (!gnx_i_sorted_order(tree, v, stackB))
+                goto cleanup;
+        }
+
+        /* Push onto the stack only those neighbors we have not seen. */
+        for (i = 0; i < stackB->size; i++) {
+            v = (unsigned int *)(stackB->array->cell[i]);
+            if (!gnx_set_has(seen, v)) {
+                if (!gnx_stack_push(stack, v))
+                    goto cleanup;
+            }
+        }
+        gnx_destroy_stack(stackB);
+        stackB = NULL;
+    }
+
+    g_assert(nnode == list->size);
+    gnx_destroy_set(seen);
+    gnx_destroy_stack(stack);
+    return list;
+
+cleanup:
+    errno = ENOMEM;
+    gnx_destroy_array(list);
+    gnx_destroy_set(seen);
+    gnx_destroy_stack(stack);
+    gnx_destroy_stack(stackB);
+    return NULL;
+}
+
+/**
  * @brief A pre-order traversal of a tree.
  *
  * The pre-order traversal of a tree is similar to depth-first search.

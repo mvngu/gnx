@@ -65,6 +65,11 @@ static void dfs_directed_weighted(void);
 static void dfs_undirected_unweighted(void);
 static void dfs_undirected_weighted(void);
 
+/* post-order traversal */
+static void post_order_no_memory(void);
+static void post_order_small_tree(void);
+static void post_order_traversal(void);
+
 /* pre-order traversal */
 static void pre_order_flying_teams_bfs(void);
 static void pre_order_no_memory(void);
@@ -1264,6 +1269,127 @@ dfs_undirected_weighted(void)
 }
 
 /**************************************************************************
+ * post-order traversal
+ *************************************************************************/
+
+static void
+post_order(void)
+{
+    post_order_no_memory();
+    post_order_small_tree();
+    post_order_traversal();
+}
+
+/* Test the function gnx_post_order() under low-memory scenarios.
+ */
+static void
+post_order_no_memory(void)
+{
+#ifdef GNX_ALLOC_TEST
+    GnxGraph *tree;
+    int alloc_size;
+    const unsigned int u = 0;
+
+    tree = gnx_new();
+    assert(gnx_add_node(tree, &u));
+
+    /* Cannot allocate memory to hold the nodes in post-order. */
+    alloc_size = 0;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_post_order(tree, &u, GNX_DEFAULT_ORDER));
+    assert(ENOMEM == errno);
+
+    /* Cannot allocate memory to hold the nodes that we have visited. */
+    alloc_size = GNX_ALLOC_ARRAY_SIZE;
+    gnx_alloc_set_limit(alloc_size);
+    assert(!gnx_post_order(tree, &u, GNX_DEFAULT_ORDER));
+    assert(ENOMEM == errno);
+
+    gnx_destroy(tree);
+    gnx_alloc_reset_limit();
+#endif
+}
+
+/* Post-order traversal of a small tree.
+ */
+static void
+post_order_small_tree(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    const unsigned int nnode = 4;
+    const unsigned int nedge = 3;
+    const unsigned int tail[3] = {0, 1, 1};
+    const unsigned int head[3] = {1, 2, 3};
+    const unsigned int knownA[4] = {2, 3, 1, 0};
+    const unsigned int knownB[4] = {3, 2, 1, 0};
+    const unsigned int root = 0;
+
+    tree = gnx_new();
+    add_edges(tree, tail, head, &nedge);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    /**********************************************************************
+     * Traverse the neighbors in default order.
+     *********************************************************************/
+
+    list = gnx_post_order(tree, &root, GNX_DEFAULT_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &nnode)
+           || compare_arrays(list, knownB, &nnode));
+
+    gnx_destroy_array(list);
+
+    /**********************************************************************
+     * Traverse the neighbors in sorted order.
+     *********************************************************************/
+
+    list = gnx_post_order(tree, &root, GNX_SORTED_ORDER);
+    assert(gnx_is_tree(tree));
+    assert(nnode == tree->total_nodes);
+    assert(nedge == tree->total_edges);
+
+    assert(compare_arrays(list, knownA, &nnode));
+
+    gnx_destroy_array(list);
+    gnx_destroy(tree);
+}
+
+/* A post-order traversal of a tree.
+ */
+static void
+post_order_traversal(void)
+{
+    GnxArray *list;
+    GnxGraph *tree;
+    unsigned int i, node;
+    const unsigned int nnode = 12;
+    const unsigned int nedge = 11;
+    const unsigned int tail[11] = {42, 42, 4, 4, 4, 15,  3,  3,  5,  5, 11};
+    const unsigned int head[11] = { 4, 15, 2, 3, 5,  7, 10, 11, 12, 13, 14};
+    const unsigned int root = 42;
+    const unsigned int known[12] = {2, 10, 14, 11, 3, 12, 13, 5, 4, 7, 15, 42};
+
+    tree = gnx_new();
+    add_edges(tree, tail, head, &nedge);
+    list = gnx_post_order(tree, &root, GNX_SORTED_ORDER);
+
+    /* The known post-order is given in the array 'known'. */
+    for (i = 0; i < nnode; i++) {
+        node = *((unsigned int *)(list->cell[i]));
+        assert(known[i] == node);
+    }
+
+    gnx_destroy(tree);
+    gnx_destroy_array(list);
+}
+
+/**************************************************************************
  * pre-order traversal
  *************************************************************************/
 
@@ -1543,6 +1669,7 @@ main(int argc,
     g_test_add_func("/visit/bfs", bfs);
     g_test_add_func("/visit/bottom-up", bottom_up);
     g_test_add_func("/visit/dfs", dfs);
+    g_test_add_func("/visit/post-order", post_order);
     g_test_add_func("/visit/pre-order", pre_order);
 
     return g_test_run();
